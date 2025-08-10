@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { User } from 'lucide-react';
-import logo from "../../assets/logo.jpeg";
-import Search from "../../assets/search.png";
-import Cart from "../../assets/cart.png";
+import logo from "../assets/logo.jpeg";
+import Search from "../assets/search.png";
+import Cart from "../assets/cart.png";
 
 const NavBar = () => {
   const [menu, setMenu] = useState('home');
@@ -18,19 +18,21 @@ const NavBar = () => {
         <img 
           src={logo} // Use imported Logo variable
           alt="logo" 
-          className="w-12 h-12 rounded-full cursor-pointer object-cover"
+          style={{ width: '60px', height: '60px' }}
+          className=" rounded-full cursor-pointer "
         />
       </div>
 
       {/* Menu Items */}
-      <ul className="flex gap-8 m-0 p-0 list-none font-semibold text-lg flex-1 justify-center">
+      <ul className="flex m-0 p-0 list-none font-semibold text-lg flex-1 justify-center" style={{ gap: '20px' }}>
+
         {menuItems.map((item) => (
           <li
             key={item}
             onClick={() => setMenu(item)}
             className={`cursor-pointer capitalize transition-all duration-300 ${
               menu === item 
-                ? 'pb-0.5 border-b-2 border-solid' 
+                ? 'pb-0.5 border-b-2 ' 
                 : 'hover:text-blue-500 text-gray-700'
             }`}
             style={menu === item ? { 
@@ -48,12 +50,13 @@ const NavBar = () => {
       </ul>
 
       {/* Right side */}
-      <div className="flex items-center gap-6 mr-10">
+      <div className="flex items-center gap-6 mr-10" style={{ transform: 'translateX(-20px)' }}>
         {/* Search Icon */}
         <img 
           src={Search} // Use imported Search variable
           alt="Search" 
-          className="w-6 h-6 cursor-pointer hover:opacity-70 transition-opacity duration-300"
+          style={{ width: '50px', height: '50px' }}
+          className="cursor-pointer hover:opacity-70 transition-opacity duration-300"
         />
         
         {/* Cart Icon */}
@@ -61,10 +64,11 @@ const NavBar = () => {
           <img 
             src={Cart} // Use imported Cart variable
             alt="Cart" 
-            className="w-6 h-6 hover:opacity-70 transition-opacity duration-300"
-          />
+            style={{ width: '40px', height: '40px' }}
+            
+            className="w-6 h-6 hover:opacity-70 transition-opacity duration-300"/>
           {/* Notification Badge */}
-          <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+          <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full border-2 border-white"style={{ backgroundColor: 'red' }} ></span>
         </div>
 
         {/* Sign In Button */}
