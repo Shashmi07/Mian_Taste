@@ -1,22 +1,10 @@
-import React from 'react';
-import Footer from './components/Layout/Footer';
-
-
-
-
+import React from "react";
+import LoginScreen from "./pages/LoginScreen";
+import Footer from "./components/Layout/Footer";
 
 function App() {
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Other content */}
-      <div className="flex-grow">
-        {/* Content here */}
-        
-      </div>
-
-      {/* Footer */}
-      <Footer />
-    </div>
+    <LoginScreen />
   );
 }
 
