@@ -7,7 +7,7 @@ const OrderManagement = () => {
   const [orders] = useState([
     {
       id: 'ORD-001',
-      customerName: 'Raj Patel',
+      customerName: 'hasanga',
       customerPhone: '+94 770132657',
       items: [
         { name: 'Tonkotsu Ramen', quantity: 1, price: 1500 },
