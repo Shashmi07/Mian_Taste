@@ -8,7 +8,7 @@ const OrderManagement = () => {
     {
       id: 'ORD-001',
       customerName: 'Raj Patel',
-      customerPhone: '+94 770132659',
+      customerPhone: '+94 770132657',
       items: [
         { name: 'Tonkotsu Ramen', quantity: 1, price: 1500 },
         { name: 'Gyoza', quantity: 1, price: 650 }
