@@ -44,12 +44,18 @@ const createOrder = async (req, res) => {
 
     await order.save();
     
-    // Populate the order for response
     const populatedOrder = await Order.findById(order._id)
       .populate('createdBy', 'name');
 
-    // Emit socket event for real-time updates
-    req.io.emit('new-order', populatedOrder);
+    // Emit to kitchen for chefs
+    req.io.to('kitchen').emit('new-order', populatedOrder);
+    
+    // Emit to customer's personal room
+    req.io.to(`user_${req.user.id}`).emit('order-created', {
+      orderId: order._id,
+      orderNumber: order.orderId,
+      message: 'Your order has been placed successfully!'
+    });
 
     res.status(201).json({
       success: true,
@@ -68,12 +74,19 @@ const createOrder = async (req, res) => {
 // Update order status
 const updateOrderStatus = async (req, res) => {
   try {
+    console.log('=== UPDATE ORDER STATUS ===');
+    console.log('Request params:', req.params);
+    console.log('Request body:', req.body);
+    console.log('User:', req.user?.id);
+
     const { id } = req.params;
     const { status, cookingStatus } = req.body;
 
     const updateData = {};
     if (status) updateData.status = status;
     if (cookingStatus) updateData.cookingStatus = cookingStatus;
+
+    console.log('Update data:', updateData);
 
     const updatedOrder = await Order.findByIdAndUpdate(
       id,
@@ -84,14 +97,30 @@ const updateOrderStatus = async (req, res) => {
     .populate('assignedChef', 'name');
 
     if (!updatedOrder) {
+      console.log('❌ Order not found with ID:', id);
       return res.status(404).json({ 
         success: false, 
         message: 'Order not found' 
       });
     }
 
-    // Emit socket event
-    req.io.emit('order-updated', updatedOrder);
+    console.log('✅ Order updated successfully');
+    console.log('Updated order:', updatedOrder);
+
+    // Emit socket events
+    console.log('Emitting socket events...');
+    req.io.to('kitchen').emit('order-updated', updatedOrder);
+    req.io.to(`order_${updatedOrder._id}`).emit('order-updated', updatedOrder);
+    
+    req.io.to(`order_${updatedOrder._id}`).emit('order-status-changed', {
+      orderId: updatedOrder._id,
+      orderNumber: updatedOrder.orderId,
+      status: updatedOrder.status,
+      cookingStatus: updatedOrder.cookingStatus,
+      timestamp: new Date().toISOString()
+    });
+
+    console.log('✅ Socket events emitted');
 
     res.json({
       success: true,
@@ -99,6 +128,7 @@ const updateOrderStatus = async (req, res) => {
       order: updatedOrder
     });
   } catch (error) {
+    console.error('❌ Error updating order:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Server error', 
@@ -174,10 +204,62 @@ const deleteOrder = async (req, res) => {
   }
 };
 
+// Get customer's orders
+const getCustomerOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ createdBy: req.user.id })
+      .sort({ createdAt: -1 })
+      .populate('assignedChef', 'name');
+    
+    res.json({
+      success: true,
+      orders
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error', 
+      error: error.message 
+    });
+  }
+};
+
+// Track order by orderId (public route)
+const trackOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    
+    // Find order by orderId (ORD001, ORD002, etc.)
+    const order = await Order.findOne({ orderId: orderId.toUpperCase() })
+      .populate('assignedChef', 'name');
+    
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found. Please check your Order ID.'
+      });
+    }
+
+    res.json({
+      success: true,
+      order
+    });
+  } catch (error) {
+    console.error('Error tracking order:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getOrders,
   createOrder,
   updateOrderStatus,
   acceptOrder,
-  deleteOrder
+  deleteOrder,
+  getCustomerOrders,
+  trackOrder // Export the new function
 };

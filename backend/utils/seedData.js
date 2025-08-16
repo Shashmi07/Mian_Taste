@@ -28,24 +28,36 @@ const seedOrders = [
   {
     table: 'Table 5',
     customerName: 'John Doe',
-    items: ['Chicken Curry', 'Rice', 'Naan Bread'],
-    totalAmount: 2850,
+    items: [
+      { name: 'Chicken Curry', quantity: 1, price: 1200 },
+      { name: 'Rice', quantity: 2, price: 300 },
+      { name: 'Naan Bread', quantity: 2, price: 200 }
+    ],
+    totalAmount: 2000,
     status: 'pending',
     estimatedTime: '20 min'
   },
   {
     table: 'Table 2',
     customerName: 'Jane Smith',
-    items: ['Fish & Chips', 'Salad', 'Lemonade'],
+    items: [
+      { name: 'Fish & Chips', quantity: 1, price: 1500 },
+      { name: 'Salad', quantity: 1, price: 250 },
+      { name: 'Lemonade', quantity: 1, price: 200 }
+    ],
     totalAmount: 1950,
     status: 'accepted',
     cookingStatus: 'preparing',
-    estimatedTime: '10 min'
+    estimatedTime: '15 min'
   },
   {
     table: 'Table 8',
     customerName: 'Mike Johnson',
-    items: ['Pasta', 'Garlic Bread', 'Wine'],
+    items: [
+      { name: 'Pasta', quantity: 1, price: 800 },
+      { name: 'Garlic Bread', quantity: 2, price: 400 },
+      { name: 'Wine', quantity: 1, price: 2000 }
+    ],
     totalAmount: 3200,
     status: 'ready',
     estimatedTime: '5 min'
@@ -53,10 +65,14 @@ const seedOrders = [
   {
     table: 'Table 3',
     customerName: 'Sarah Wilson',
-    items: ['Grilled Salmon', 'Vegetables', 'Rice'],
+    items: [
+      { name: 'Grilled Salmon', quantity: 1, price: 1800 },
+      { name: 'Vegetables', quantity: 1, price: 450 },
+      { name: 'Rice', quantity: 1, price: 400 }
+    ],
     totalAmount: 2650,
     status: 'accepted',
-    cookingStatus: 'started',
+    cookingStatus: 'preparing',
     estimatedTime: '18 min'
   }
 ];

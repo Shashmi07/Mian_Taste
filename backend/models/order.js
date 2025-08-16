@@ -3,8 +3,8 @@ const mongoose = require('mongoose');
 const orderSchema = new mongoose.Schema({
   orderId: {
     type: String,
-    required: true,
     unique: true
+    // Remove required: true since it's auto-generated
   },
   table: {
     type: String,
@@ -15,8 +15,18 @@ const orderSchema = new mongoose.Schema({
     required: true
   },
   items: [{
-    type: String,
-    required: true
+    name: {
+      type: String,
+      required: true
+    },
+    quantity: {
+      type: Number,
+      required: true
+    },
+    price: {
+      type: Number,
+      required: true
+    }
   }],
   totalAmount: {
     type: Number,
@@ -29,8 +39,8 @@ const orderSchema = new mongoose.Schema({
   },
   cookingStatus: {
     type: String,
-    enum: ['started', 'preparing', 'completed'],
-    default: null
+    enum: ['not started', 'preparing', 'cooking', 'plating', 'ready'],
+    default: 'not started'
   },
   priority: {
     type: String,

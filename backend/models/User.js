@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['chef', 'kitchen-staff', 'manager'],
+    enum: ['chef', 'kitchen-staff', 'manager'], // Remove 'customer'
     default: 'chef'
   },
   isActive: {
