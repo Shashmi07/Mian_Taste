@@ -3,33 +3,35 @@ const User = require('../models/User');
 
 const auth = async (req, res, next) => {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+    console.log('=== AUTH MIDDLEWARE ===');
+    const authHeader = req.header('Authorization');
+    console.log('Auth header:', authHeader);
+    
+    const token = authHeader?.replace('Bearer ', '');
+    console.log('Token exists:', !!token);
     
     if (!token) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Access denied. No token provided.' 
-      });
+      return res.status(401).json({ success: false, message: 'No token provided' });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select('-password');
+    console.log('Decoded token:', decoded);
     
-    if (!user || !user.isActive) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Invalid token or user inactive.' 
-      });
+    const user = await User.findById(decoded.userId);
+    console.log('User found:', !!user);
+    
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Invalid token' });
     }
 
     req.user = user;
+    console.log('✅ Auth successful for user:', user.name);
     next();
   } catch (error) {
-    res.status(401).json({ 
-      success: false, 
-      message: 'Invalid token.' 
-    });
+    console.error('❌ Auth error:', error);
+    res.status(401).json({ success: false, message: 'Invalid token' });
   }
 };
 
+// Fix: Export as default function, not as object
 module.exports = auth;

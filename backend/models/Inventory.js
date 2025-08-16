@@ -4,7 +4,7 @@ const inventorySchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    unique: true
+    trim: true
   },
   quantity: {
     type: Number,
@@ -13,32 +13,30 @@ const inventorySchema = new mongoose.Schema({
   },
   unit: {
     type: String,
-    enum: ['g', 'kg'],
+    required: true,
+    enum: ['g', 'kg', 'ml', 'l', 'pcs'],
     default: 'g'
   },
   minStock: {
     type: Number,
-    required: true,
-    min: 0
+    default: 10
   },
   status: {
     type: String,
     enum: ['available', 'low', 'out of stock'],
     default: 'available'
+  },
+  lastUpdated: {
+    type: Date,
+    default: Date.now
   }
 }, {
   timestamps: true
 });
 
-// Update status based on quantity before saving
+// Update lastUpdated on save
 inventorySchema.pre('save', function(next) {
-  if (this.quantity === 0) {
-    this.status = 'out of stock';
-  } else if (this.quantity <= this.minStock * 0.5) {
-    this.status = 'low';
-  } else {
-    this.status = 'available';
-  }
+  this.lastUpdated = new Date();
   next();
 });
 

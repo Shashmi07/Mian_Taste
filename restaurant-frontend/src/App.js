@@ -1,19 +1,74 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import TableReservation from './pages/TableReservation';
-import PaymentGateway from './pages/PaymentGateway';
-import './index.css';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
 import ChefDashboard from './pages/ChefDashboard';
+import LiveTracking from './pages/LiveTracking';
+import './App.css';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    
+    if (token && userData) {
+      setIsAuthenticated(true);
+      setUser(JSON.parse(userData));
+    }
+    setLoading(false);
+  }, []);
+
+  const handleLogin = (userData) => {
+    localStorage.setItem('token', userData.token);
+    localStorage.setItem('user', JSON.stringify(userData.user));
+    setIsAuthenticated(true);
+    setUser(userData.user);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setIsAuthenticated(false);
+    setUser(null);
+  };
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<ChefDashboard />} />
-        <Route path="/Payment" element={<PaymentGateway />} />
-        <Route path="/TableReservation" element={<TableReservation />} />
-
-      </Routes>
+      <div className="App">
+        <Routes>
+          <Route 
+            path="/login" 
+            element={
+              !isAuthenticated ? (
+                <Login onLogin={handleLogin} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            } 
+          />
+          <Route 
+            path="/track-order" 
+            element={<LiveTracking />} 
+          />
+          <Route 
+            path="/" 
+            element={
+              isAuthenticated ? (
+                <ChefDashboard user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            } 
+          />
+        </Routes>
+      </div>
     </Router>
   );
 }

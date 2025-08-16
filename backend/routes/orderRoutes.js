@@ -6,9 +6,9 @@ const {
   updateOrderStatus,
   acceptOrder,
   deleteOrder,
-  trackOrder // Add this new function
+  trackOrder
 } = require('../controllers/orderController');
-const auth = require('../middleware/auth');
+const auth = require('../middleware/auth'); // Fix: Import as default
 
 const router = express.Router();
 
@@ -27,7 +27,7 @@ router.put('/:id/status', auth, updateOrderStatus);
 router.put('/:id/accept', auth, acceptOrder);
 router.delete('/:id', auth, deleteOrder);
 
-// Public route for order tracking (no auth required)
+// Public route for order tracking
 router.get('/track/:orderId', trackOrder);
 
 module.exports = router;
