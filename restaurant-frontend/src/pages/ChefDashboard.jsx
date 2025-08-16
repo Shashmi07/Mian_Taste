@@ -1,71 +1,101 @@
-import React, { useState } from 'react';
-import { Clock, CheckCircle, Package, ChefHat, Timer,Eye,Minus,Bell, Users, Plus,AlertCircle
-} from 'lucide-react';
-
-// Mock data for orders
-const initialOrders = [
-  {
-    id: 'ORD001',
-    table: 'Table 5',
-    customerName: 'John Doe',
-    items: ['Chicken Curry', 'Rice', 'Naan Bread'],
-    totalAmount: 2850,
-    status: 'pending',
-    cookingStatus: null,
-    orderTime: '14:30',
-    estimatedTime: '20 min'
-  },
-  {
-    id: 'ORD002',
-    table: 'Table 2',
-    customerName: 'Jane Smith',
-    items: ['Fish & Chips', 'Salad', 'Lemonade'],
-    totalAmount: 1950,
-    status: 'accepted',
-    cookingStatus: 'preparing',
-    orderTime: '14:25',
-    estimatedTime: '10 min'
-  },
-  {
-    id: 'ORD003',
-    table: 'Table 8',
-    customerName: 'Mike Johnson',
-    items: ['Pasta', 'Garlic Bread', 'Wine'],
-    totalAmount: 3200,
-    status: 'ready',
-    cookingStatus: null,
-    orderTime: '14:15',
-    estimatedTime: '5 min'
-  },
-  {
-    id: 'ORD004',
-    table: 'Table 3',
-    customerName: 'Sarah Wilson',
-    items: ['Grilled Salmon', 'Vegetables', 'Rice'],
-    totalAmount: 2650,
-    status: 'accepted',
-    cookingStatus: 'started',
-    orderTime: '14:35',
-    estimatedTime: '18 min'
-  }
-];
-
-// Mock inventory data
-const initialInventory = [
-  { id: 1, name: 'Chicken', quantity: 25000, unit: 'g', minStock: 10000, status: 'available' },
-  { id: 2, name: 'Rice', quantity: 8000, unit: 'g', minStock: 15000, status: 'low' },
-  { id: 3, name: 'Tomatoes', quantity: 0, unit: 'g', minStock: 5000, status: 'out of stock' },
-  { id: 4, name: 'Onions', quantity: 40000, unit: 'g', minStock: 10000, status: 'available' },
-  { id: 5, name: 'Fish', quantity: 18000, unit: 'g', minStock: 8000, status: 'available' },
-  { id: 6, name: 'Pasta', quantity: 12000, unit: 'g', minStock: 5000, status: 'available' }
-];
+import React, { useState, useEffect } from 'react';
+import { Clock, CheckCircle, Package, ChefHat, Timer, Eye, Minus, Bell, Users, Plus, AlertCircle } from 'lucide-react';
+import { ordersAPI, inventoryAPI } from '../services/api';
+import socketService from '../services/socket';
 
 export default function ChefDashboard() {
-  const [orders, setOrders] = useState(initialOrders);
-  const [inventory, setInventory] = useState(initialInventory);
+  const [orders, setOrders] = useState([]);
+  const [inventory, setInventory] = useState([]);
   const [activeTab, setActiveTab] = useState('orders');
+  const [loading, setLoading] = useState(true);
   const [reduceAmounts, setReduceAmounts] = useState({});
   const [selectedOrderFilter, setSelectedOrderFilter] = useState('all');
+
+  useEffect(() => {
+    // Load initial data
+    loadOrders();
+    loadInventory();
+
+    // Connect to socket for real-time updates
+    socketService.connect(); // Remove the 'const socket =' part
+
+    // Listen for real-time updates
+    socketService.onNewOrder((newOrder) => {
+      setOrders(prev => [newOrder, ...prev]);
+    });
+
+    socketService.onOrderUpdate((updatedOrder) => {
+      setOrders(prev => prev.map(order => 
+        order._id === updatedOrder._id ? updatedOrder : order
+      ));
+    });
+
+    socketService.onInventoryUpdate((updatedItem) => {
+      setInventory(prev => prev.map(item => 
+        item._id === updatedItem._id ? updatedItem : item
+      ));
+    });
+
+    return () => {
+      socketService.disconnect();
+    };
+  }, []);
+
+  const loadOrders = async () => {
+    try {
+      const response = await ordersAPI.getOrders();
+      setOrders(response.data.orders);
+    } catch (error) {
+      console.error('Error loading orders:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadInventory = async () => {
+    try {
+      const response = await inventoryAPI.getInventory();
+      setInventory(response.data.inventory);
+    } catch (error) {
+      console.error('Error loading inventory:', error);
+    }
+  };
+
+  const acceptOrder = async (orderId) => {
+    try {
+      const response = await ordersAPI.acceptOrder(orderId);
+      setOrders(orders.map(order => 
+        order._id === orderId ? response.data.order : order
+      ));
+    } catch (error) {
+      console.error('Error accepting order:', error);
+    }
+  };
+
+  const updateOrderStatus = async (orderId, status, cookingStatus = null) => {
+    try {
+      const data = {};
+      if (status) data.status = status;
+      if (cookingStatus) data.cookingStatus = cookingStatus;
+
+      const response = await ordersAPI.updateOrderStatus(orderId, data);
+      setOrders(orders.map(order => 
+        order._id === orderId ? response.data.order : order
+      ));
+    } catch (error) {
+      console.error('Error updating order:', error);
+    }
+  };
+
+  const updateInventoryQuantity = async (itemId, amount, unit, operation) => {
+    try {
+      await inventoryAPI.updateQuantity(itemId, { operation, amount, unit });
+      // The socket will handle the update, but we can also reload
+      loadInventory();
+    } catch (error) {
+      console.error('Error updating inventory:', error);
+    }
+  };
 
   // Unit conversion helper functions
   const formatQuantity = (quantity, unit) => {
@@ -86,46 +116,6 @@ export default function ChefDashboard() {
     if (quantity === 0) return 'out of stock';
     if (quantity <= minStock * 0.5) return 'low';
     return 'available';
-  };
-
-  // Order management functions
-  const updateOrderStatus = (orderId, newStatus) => {
-    setOrders(orders.map(order => {
-      if (order.id === orderId) {
-        if (newStatus === 'started' || newStatus === 'preparing' || newStatus === 'completed') {
-          return { ...order, cookingStatus: newStatus };
-        } else {
-          return { ...order, status: newStatus };
-        }
-      }
-      return order;
-    }));
-  };
-
-  const acceptOrder = (orderId) => {
-    setOrders(orders.map(order => 
-      order.id === orderId 
-        ? { ...order, status: 'accepted', cookingStatus: null }
-        : order
-    ));
-  };
-
-  // Inventory management functions
-  const updateInventoryByAmount = (itemId, amount, unit, operation) => {
-    const amountInGrams = convertToGrams(amount, unit);
-    setInventory(inventory.map(item => {
-      if (item.id === itemId) {
-        let newQuantity;
-        if (operation === 'reduce') {
-          newQuantity = Math.max(0, item.quantity - amountInGrams);
-        } else if (operation === 'add') {
-          newQuantity = item.quantity + amountInGrams;
-        }
-        const status = updateInventoryStatus(newQuantity, item.minStock);
-        return { ...item, quantity: newQuantity, status };
-      }
-      return item;
-    }));
   };
 
   const getStatusColor = (status) => {
@@ -151,11 +141,11 @@ export default function ChefDashboard() {
     <div className="bg-white rounded-lg p-6 shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h3 className="font-bold text-xl text-gray-900">{order.id}</h3>
+          <h3 className="font-bold text-xl text-gray-900">{order.orderNumber || order._id}</h3>
           <p className="text-gray-700">{order.table} • {order.customerName}</p>
           <p className="text-sm text-gray-500 flex items-center mt-1">
             <Clock size={14} className="mr-1" />
-            {order.orderTime}
+            {new Date(order.createdAt).toLocaleTimeString()}
           </p>
         </div>
         <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(order.status)}`}>
@@ -172,7 +162,8 @@ export default function ChefDashboard() {
           {order.items.map((item, index) => (
             <li key={index} className="flex items-center bg-gray-50 rounded p-2">
               <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-              <span className="text-gray-700">{item}</span>
+              <span className="text-gray-700">{item.name || item}</span>
+              {item.quantity && <span className="ml-auto text-gray-500">x{item.quantity}</span>}
             </li>
           ))}
         </ul>
@@ -182,7 +173,7 @@ export default function ChefDashboard() {
         <span className="font-bold text-xl text-green-700">Rs.{order.totalAmount}</span>
         <div className="flex items-center text-sm text-gray-600">
           <Timer size={16} className="mr-1 text-blue-500" />
-          Est: {order.estimatedTime}
+          Est: {order.estimatedTime || '20 min'}
         </div>
       </div>
 
@@ -195,7 +186,7 @@ export default function ChefDashboard() {
           </h4>
           <div className="flex justify-between items-center space-x-2">
             <button
-              onClick={() => updateOrderStatus(order.id, 'started')}
+              onClick={() => updateOrderStatus(order._id, null, 'started')}
               className={`px-4 py-2 rounded font-medium text-sm ${
                 order.cookingStatus === 'started' || order.cookingStatus === 'preparing' || order.cookingStatus === 'completed'
                   ? 'bg-green-500 text-white'
@@ -210,7 +201,7 @@ export default function ChefDashboard() {
                 : 'bg-gray-300'
             }`}></div>
             <button
-              onClick={() => updateOrderStatus(order.id, 'preparing')}
+              onClick={() => updateOrderStatus(order._id, null, 'preparing')}
               className={`px-4 py-2 rounded font-medium text-sm ${
                 order.cookingStatus === 'preparing' || order.cookingStatus === 'completed'
                   ? 'bg-blue-500 text-white'
@@ -226,7 +217,7 @@ export default function ChefDashboard() {
                 : 'bg-gray-300'
             }`}></div>
             <button
-              onClick={() => updateOrderStatus(order.id, 'completed')}
+              onClick={() => updateOrderStatus(order._id, null, 'completed')}
               className={`px-4 py-2 rounded font-medium text-sm ${
                 order.cookingStatus === 'completed'
                   ? 'bg-purple-500 text-white'
@@ -243,7 +234,7 @@ export default function ChefDashboard() {
       <div className="flex gap-2">
         {order.status === 'pending' && (
           <button
-            onClick={() => acceptOrder(order.id)}
+            onClick={() => acceptOrder(order._id)}
             className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded font-medium"
           >
             Accept Order
@@ -252,7 +243,7 @@ export default function ChefDashboard() {
 
         {order.status === 'accepted' && order.cookingStatus === 'completed' && (
           <button
-            onClick={() => updateOrderStatus(order.id, 'ready')}
+            onClick={() => updateOrderStatus(order._id, 'ready')}
             className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded font-medium"
           >
             Mark Ready
@@ -261,7 +252,7 @@ export default function ChefDashboard() {
 
         {order.status === 'ready' && (
           <button
-            onClick={() => updateOrderStatus(order.id, 'delivered')}
+            onClick={() => updateOrderStatus(order._id, 'delivered')}
             className="flex-1 bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded font-medium"
           >
             Delivered
@@ -275,9 +266,19 @@ export default function ChefDashboard() {
     </div>
   );
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-    
       <nav className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
@@ -291,7 +292,7 @@ export default function ChefDashboard() {
               <button className="relative p-2 text-gray-600 hover:text-gray-900">
                 <Bell size={20} />
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  3
+                  {orders.filter(o => o.status === 'pending').length}
                 </span>
               </button>
               <div className="text-right">
@@ -434,7 +435,7 @@ export default function ChefDashboard() {
                   return false;
                 })
                 .map(order => (
-                  <OrderCard key={order.id} order={order} />
+                  <OrderCard key={order._id} order={order} />
                 ))}
             </div>
 
@@ -485,7 +486,7 @@ export default function ChefDashboard() {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {inventory.map(item => (
-                    <tr key={item.id} className="hover:bg-gray-50">
+                    <tr key={item._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div className="flex items-center">
                           <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
@@ -509,18 +510,18 @@ export default function ChefDashboard() {
                             step="0.1"
                             placeholder="Amount"
                             className="w-20 px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            value={reduceAmounts[`${item.id}_amount`] || ''}
+                            value={reduceAmounts[`${item._id}_amount`] || ''}
                             onChange={(e) => setReduceAmounts({
                               ...reduceAmounts,
-                              [`${item.id}_amount`]: parseFloat(e.target.value) || ''
+                              [`${item._id}_amount`]: parseFloat(e.target.value) || ''
                             })}
                           />
                           <select
                             className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            value={reduceAmounts[`${item.id}_unit`] || 'g'}
+                            value={reduceAmounts[`${item._id}_unit`] || 'g'}
                             onChange={(e) => setReduceAmounts({
                               ...reduceAmounts,
-                              [`${item.id}_unit`]: e.target.value
+                              [`${item._id}_unit`]: e.target.value
                             })}
                           >
                             <option value="g">g</option>
@@ -528,38 +529,38 @@ export default function ChefDashboard() {
                           </select>
                           <button
                             onClick={() => {
-                              const amount = reduceAmounts[`${item.id}_amount`];
-                              const unit = reduceAmounts[`${item.id}_unit`] || 'g';
+                              const amount = reduceAmounts[`${item._id}_amount`];
+                              const unit = reduceAmounts[`${item._id}_unit`] || 'g';
                               if (amount && amount > 0) {
-                                updateInventoryByAmount(item.id, amount, unit, 'add');
+                                updateInventoryQuantity(item._id, amount, unit, 'add');
                                 setReduceAmounts({
                                   ...reduceAmounts, 
-                                  [`${item.id}_amount`]: '',
-                                  [`${item.id}_unit`]: 'g'
+                                  [`${item._id}_amount`]: '',
+                                  [`${item._id}_unit`]: 'g'
                                 });
                               }
                             }}
                             className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded font-medium disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center"
-                            disabled={!reduceAmounts[`${item.id}_amount`] || reduceAmounts[`${item.id}_amount`] <= 0}
+                            disabled={!reduceAmounts[`${item._id}_amount`] || reduceAmounts[`${item._id}_amount`] <= 0}
                           >
                             <Plus size={14} className="mr-1" />
                             Add
                           </button>
                           <button
                             onClick={() => {
-                              const amount = reduceAmounts[`${item.id}_amount`];
-                              const unit = reduceAmounts[`${item.id}_unit`] || 'g';
+                              const amount = reduceAmounts[`${item._id}_amount`];
+                              const unit = reduceAmounts[`${item._id}_unit`] || 'g';
                               if (amount && amount > 0) {
-                                updateInventoryByAmount(item.id, amount, unit, 'reduce');
+                                updateInventoryQuantity(item._id, amount, unit, 'reduce');
                                 setReduceAmounts({
                                   ...reduceAmounts, 
-                                  [`${item.id}_amount`]: '',
-                                  [`${item.id}_unit`]: 'g'
+                                  [`${item._id}_amount`]: '',
+                                  [`${item._id}_unit`]: 'g'
                                 });
                               }
                             }}
                             className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm rounded font-medium disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center"
-                            disabled={!reduceAmounts[`${item.id}_amount`] || reduceAmounts[`${item.id}_amount`] <= 0}
+                            disabled={!reduceAmounts[`${item._id}_amount`] || reduceAmounts[`${item._id}_amount`] <= 0}
                           >
                             <Minus size={14} className="mr-1" />
                             Use
