@@ -35,12 +35,12 @@ export default function PaymentGateway() {
   };
 
   return (
-    <div className="min-h-screen bg-yellow-400">
+    <div className="min-h-screen bg-slate-300">
       <NavBar />
       <div className="pt-24 px-6 py-8">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center mb-8">
-            <button className="flex items-center text-gray-700 hover:text-gray-900 transition-colors">
+            <button className="flex items-left text-gray-700 hover:text-gray-900 transition-colors">
               <ArrowLeft size={20} className="mr-2" />
               Back to Cart
             </button>
