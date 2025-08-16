@@ -1,35 +1,24 @@
 const express = require('express');
 const auth = require('../middleware/auth');
+const { 
+  getInventory, 
+  addInventoryItem, 
+  updateInventoryQuantity, 
+  deleteInventoryItem 
+} = require('../controllers/inventoryController');
 
 const router = express.Router();
 
-// Simple mock inventory to prevent crashes
-router.get('/', auth, async (req, res) => {
-  try {
-    console.log('Getting inventory...');
-    
-    // Mock data for now
-    res.json({
-      success: true,
-      inventory: [
-        { _id: '1', name: 'Rice', quantity: 5000, unit: 'g', status: 'available' },
-        { _id: '2', name: 'Chicken', quantity: 500, unit: 'g', status: 'low' },
-        { _id: '3', name: 'Vegetables', quantity: 2500, unit: 'g', status: 'available' }
-      ]
-    });
-  } catch (error) {
-    console.error('Error fetching inventory:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-});
+// Get all inventory items
+router.get('/', auth, getInventory);
 
-router.put('/:id/quantity', auth, async (req, res) => {
-  try {
-    console.log('Mock inventory update:', req.params.id, req.body);
-    res.json({ success: true, message: 'Updated successfully' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-});
+// Add new inventory item  
+router.post('/', auth, addInventoryItem);
+
+// Update inventory quantity
+router.put('/:id/quantity', auth, updateInventoryQuantity);
+
+// Delete inventory item
+router.delete('/:id', auth, deleteInventoryItem);
 
 module.exports = router;

@@ -67,14 +67,14 @@ export default function OrderCard({ order, onAccept, onUpdateStatus, onUpdateCoo
           {order.items?.map((item, idx) => (
             <li key={idx} className="flex justify-between">
               <span>{item.quantity}x {item.name}</span>
-              <span>₹{item.price}</span>
+              <span>Rs.{item.price}</span> {/* Changed from ₹{item.price} */}
             </li>
           ))}
         </ul>
       </div>
 
       <div className="flex justify-between items-center mb-3">
-        <span className="font-bold">Total: ₹{order.totalAmount}</span>
+        <span className="font-bold">Total: Rs.{order.totalAmount}</span> {/* Changed from ₹{order.totalAmount} */}
         <span className="text-sm text-gray-600 flex items-center">
           <Clock size={14} className="mr-1" />
           {order.estimatedTime}
