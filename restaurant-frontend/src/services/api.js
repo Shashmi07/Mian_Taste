@@ -5,6 +5,11 @@ const API_BASE_URL = 'http://localhost:5000/api';
 // Set up axios defaults
 axios.defaults.baseURL = API_BASE_URL;
 
+// Add authAPI export
+export const authAPI = {
+  login: (email, password) => axios.post('/auth/login', { email, password })
+};
+
 export const ordersAPI = {
   getOrders: () => axios.get('/orders', {
     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -21,6 +26,10 @@ export const ordersAPI = {
 
 export const inventoryAPI = {
   getInventory: () => axios.get('/inventory', {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+  }),
+  
+  addItem: (itemData) => axios.post('/inventory', itemData, {
     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
   }),
   

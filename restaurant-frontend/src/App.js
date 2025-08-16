@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './pages/Login';
+import Login from './components/Login';
 import ChefDashboard from './pages/ChefDashboard';
 import LiveTracking from './pages/LiveTracking';
 import './App.css';
@@ -14,9 +14,23 @@ function App() {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
     
-    if (token && userData) {
-      setIsAuthenticated(true);
-      setUser(JSON.parse(userData));
+    // Only set authenticated if BOTH token and userData exist AND are valid
+    if (token && userData && token.trim() !== '' && userData.trim() !== '') {
+      try {
+        const parsedUser = JSON.parse(userData);
+        if (parsedUser && parsedUser.email) {
+          setIsAuthenticated(true);
+          setUser(parsedUser);
+        } else {
+          // Invalid user data, clear storage
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
+      } catch (error) {
+        // Invalid JSON, clear storage
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
     }
     setLoading(false);
   }, []);
