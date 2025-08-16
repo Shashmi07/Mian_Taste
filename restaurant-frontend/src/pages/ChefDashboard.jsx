@@ -3,7 +3,7 @@ import { Clock, CheckCircle, Package, ChefHat, Timer, Eye, Minus, Bell, Users, P
 import { ordersAPI, inventoryAPI } from '../services/api';
 import socketService from '../services/socket';
 
-export default function ChefDashboard() {
+export default function ChefDashboard({ user, onLogout }) { // Add props here
   const [orders, setOrders] = useState([]);
   const [inventory, setInventory] = useState([]);
   const [activeTab, setActiveTab] = useState('orders');
@@ -296,9 +296,15 @@ export default function ChefDashboard() {
                 </span>
               </button>
               <div className="text-right">
-                <p className="font-semibold text-gray-900">Chef Maria</p>
-                <p className="text-sm text-gray-500">Kitchen Manager</p>
+                <p className="font-semibold text-gray-900">{user?.name || 'Chef'}</p>
+                <p className="text-sm text-gray-500">{user?.role || 'Kitchen Manager'}</p>
               </div>
+              <button
+                onClick={onLogout}
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100"
+              >
+                Logout
+              </button>
             </div>
           </div>
         </div>
