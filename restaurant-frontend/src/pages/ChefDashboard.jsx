@@ -11,6 +11,13 @@ export default function ChefDashboard({ user, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [reduceAmounts, setReduceAmounts] = useState({});
   const [selectedOrderFilter, setSelectedOrderFilter] = useState('all');
+  const [showAddItemForm, setShowAddItemForm] = useState(false);
+  const [newItem, setNewItem] = useState({
+    name: '',
+    quantity: '',
+    unit: 'g',
+    minStock: 10
+  });
 
   useEffect(() => {
     console.log('useEffect running');
@@ -145,6 +152,29 @@ export default function ChefDashboard({ user, onLogout }) {
       loadInventory();
     } catch (error) {
       console.error('Error updating inventory:', error);
+    }
+  };
+
+  const handleAddInventoryItem = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await inventoryAPI.addItem({
+        name: newItem.name,
+        quantity: Number(newItem.quantity),
+        unit: newItem.unit,
+        minStock: Number(newItem.minStock)
+      });
+      
+      if (response.data.success) {
+        loadInventory(); // Refresh inventory list
+        setNewItem({ name: '', quantity: '', unit: 'g', minStock: 10 });
+        setShowAddItemForm(false);
+      } else {
+        alert('Failed to add item: ' + response.data.message);
+      }
+    } catch (error) {
+      console.error('Error adding inventory item:', error);
+      alert('Failed to add item: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -399,8 +429,98 @@ export default function ChefDashboard({ user, onLogout }) {
           <div>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Kitchen Inventory</h2>
+              <button
+                onClick={() => setShowAddItemForm(!showAddItemForm)}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium flex items-center"
+              >
+                <Plus size={16} className="mr-2" />
+                Add New Item
+              </button>
             </div>
 
+            {/* Add Item Form */}
+            {showAddItemForm && (
+              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Inventory Item</h3>
+                <form onSubmit={handleAddInventoryItem} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Item Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newItem.name}
+                      onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="e.g., Chicken, Rice"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Quantity
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      step="0.1"
+                      value={newItem.quantity}
+                      onChange={(e) => setNewItem({ ...newItem, quantity: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Unit
+                    </label>
+                    <select
+                      value={newItem.unit}
+                      onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    >
+                      <option value="g">Grams (g)</option>
+                      <option value="kg">Kilograms (kg)</option>
+                      <option value="ml">Milliliters (ml)</option>
+                      <option value="l">Liters (l)</option>
+                      <option value="pcs">Pieces (pcs)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Min Stock
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      value={newItem.minStock}
+                      onChange={(e) => setNewItem({ ...newItem, minStock: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      placeholder="10"
+                    />
+                  </div>
+                  <div className="md:col-span-4 flex justify-end space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddItemForm(false)}
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium"
+                    >
+                      Add Item
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* Existing Inventory Table */}
             <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
               <table className="w-full">
                 <thead className="bg-gray-50">
