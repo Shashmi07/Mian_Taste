@@ -2,10 +2,22 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    // Use MONGODB_URI (existing variable name)
+    const mongoURI = process.env.MONGODB_URI;
+    
+    if (!mongoURI) {
+      throw new Error('MONGODB_URI is not defined in environment variables');
+    }
+    
+    const conn = await mongoose.connect(mongoURI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+
+    console.log(`Chef Database Connected: ${conn.connection.host}/${conn.connection.name}`);
+    
   } catch (error) {
-    console.error('Database connection error:', error);
+    console.error('Chef database connection error:', error);
     process.exit(1);
   }
 };

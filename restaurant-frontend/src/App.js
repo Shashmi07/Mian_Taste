@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './components/Login';
+import Homepage from './pages/Homepage';
+import TableReservation from './pages/TableReservation';
 import ChefDashboard from './pages/ChefDashboard';
 import LiveTracking from './pages/LiveTracking';
+import PaymentGateway from './pages/PaymentGateway';
+import Login from './components/Login';
 import './App.css';
 
 function App() {
@@ -14,23 +17,9 @@ function App() {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
     
-    // Only set authenticated if BOTH token and userData exist AND are valid
-    if (token && userData && token.trim() !== '' && userData.trim() !== '') {
-      try {
-        const parsedUser = JSON.parse(userData);
-        if (parsedUser && parsedUser.email) {
-          setIsAuthenticated(true);
-          setUser(parsedUser);
-        } else {
-          // Invalid user data, clear storage
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-        }
-      } catch (error) {
-        // Invalid JSON, clear storage
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-      }
+    if (token && userData) {
+      setIsAuthenticated(true);
+      setUser(JSON.parse(userData));
     }
     setLoading(false);
   }, []);
@@ -57,22 +46,34 @@ function App() {
     <Router>
       <div className="App">
         <Routes>
+          {/* Homepage - Public route */}
+          <Route path="/" element={<Homepage />} />
+          <Route path="/home" element={<Homepage />} />
+          
+          {/* Table Reservation - Public route */}
+          <Route path="/table-reservation" element={<TableReservation />} />
+          
+          {/* Payment Gateway - Public route */}
+          <Route path="/payment" element={<PaymentGateway />} />
+          
+          {/* Live tracking - Public route */}
+          <Route path="/track-order" element={<LiveTracking />} />
+          
+          {/* Login route */}
           <Route 
             path="/login" 
             element={
               !isAuthenticated ? (
                 <Login onLogin={handleLogin} />
               ) : (
-                <Navigate to="/" replace />
+                <Navigate to="/chef-dashboard" replace />
               )
             } 
           />
+          
+          {/* Chef Dashboard - Protected route */}
           <Route 
-            path="/track-order" 
-            element={<LiveTracking />} 
-          />
-          <Route 
-            path="/" 
+            path="/chef-dashboard" 
             element={
               isAuthenticated ? (
                 <ChefDashboard user={user} onLogout={handleLogout} />
@@ -81,6 +82,9 @@ function App() {
               )
             } 
           />
+          
+          {/* Default redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
     </Router>

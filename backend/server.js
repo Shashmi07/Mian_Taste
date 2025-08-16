@@ -1,49 +1,49 @@
 const express = require('express');
 const cors = require('cors');
+const dotenv = require('dotenv');
 const http = require('http');
-const { Server } = require('socket.io');
-const connectDB = require('./config/database');
-require('dotenv').config();
+const socketIo = require('socket.io');
 
+// Load environment variables
+dotenv.config();
+
+// Database connections
+const connectDB = require('./config/database'); // Chef database
+const { connectCustomerDB } = require('./config/customerDatabase'); // Customer database
+
+// Initialize Express
 const app = express();
-const server = http.createServer(app);
 
-// Socket.io setup
-const io = new Server(server, {
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Create server
+const server = http.createServer(app);
+const io = socketIo(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
-    methods: ["GET", "POST", "PUT", "DELETE"]
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"]
   }
 });
 
-// Connect to MongoDB
-connectDB();
+// Connect to both databases
+connectDB(); // Chef dashboard database
+connectCustomerDB(); // Customer dashboard database
 
-// Middleware
-app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:3000",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
-app.use(express.json());
+// Routes - Fix the import names to match your actual file names
+const authRoutes = require('./routes/auth'); // Changed from authRoutes
+const orderRoutes = require('./routes/orders'); // Changed from orderRoutes  
+const inventoryRoutes = require('./routes/inventory'); // Changed from inventoryRoutes
+const tableReservationRoutes = require('./routes/tableReservationRoutes');
 
-// Add socket to requests BEFORE routes
-app.use((req, res, next) => {
-  req.io = io;
-  next();
-});
-
-// Import routes - FIXED: Use correct file names
-const authRoutes = require('./routes/auth');
-const orderRoutes = require('./routes/orders'); // Changed from orderRoutes to orders
-const inventoryRoutes = require('./routes/inventory');
-
-// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/inventory', inventoryRoutes);
+app.use('/api/table-reservations', tableReservationRoutes); // Uses customer database
 
-// Socket handlers - Check if this file exists
+// Socket handlers
 try {
   require('./socket/socketHandlers')(io);
 } catch (error) {
@@ -67,13 +67,26 @@ try {
   });
 }
 
-// Basic route
-app.get('/', (req, res) => {
-  res.json({ message: 'Mian Taste API is running!' });
+// Error handling
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    success: false,
+    message: 'Something went wrong!',
+    error: process.env.NODE_ENV === 'development' ? err.message : {}
+  });
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Route not found'
+  });
 });
 
 const PORT = process.env.PORT || 5000;
+
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`CORS enabled for: ${process.env.CLIENT_URL || "http://localhost:3000"}`);
 });
