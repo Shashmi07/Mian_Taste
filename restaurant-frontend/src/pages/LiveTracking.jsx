@@ -256,7 +256,7 @@ const LiveTracking = () => {
                     <div className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(order.status, order.cookingStatus)}`}>
                       {getStatusText(order.status, order.cookingStatus)}
                     </div>
-                    <p className="text-blue-100 text-sm mt-2">Total: ₹{order.totalAmount}</p>
+                    <p className="text-blue-100 text-sm mt-2">Total: Rs.{order.totalAmount}</p>
                   </div>
                 </div>
               </div>
@@ -354,13 +354,13 @@ const LiveTracking = () => {
                     {order.items.map((item, index) => (
                       <div key={index} className="flex justify-between items-center">
                         <span className="text-gray-700">{item.quantity}x {item.name}</span>
-                        <span className="font-medium text-gray-900">₹{item.price}</span>
+                        <span className="font-medium text-gray-900">Rs.{item.price}</span> {/* Changed from ₹{item.price} */}
                       </div>
                     ))}
                   </div>
                   <div className="border-t border-gray-200 mt-3 pt-3 flex justify-between items-center">
                     <div>
-                      <span className="font-semibold text-lg">Total: ₹{order.totalAmount}</span>
+                      <span className="font-semibold text-lg">Total: Rs.{order.totalAmount}</span> {/* Changed from ₹{order.totalAmount} */}
                       <p className="text-sm text-gray-500">Estimated: {order.estimatedTime}</p>
                     </div>
                   </div>

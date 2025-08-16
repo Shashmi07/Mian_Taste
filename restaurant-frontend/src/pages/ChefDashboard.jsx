@@ -21,7 +21,6 @@ export default function ChefDashboard({ user, onLogout }) {
     // Connect socket and join kitchen room
     socketService.connect();
     
-    // Wait for connection then join kitchen
     const connectAndJoin = () => {
       if (socketService.socket) {
         socketService.socket.emit('join-kitchen');
@@ -29,11 +28,9 @@ export default function ChefDashboard({ user, onLogout }) {
       }
     };
 
-    // If already connected, join immediately
     if (socketService.connected) {
       connectAndJoin();
     } else {
-      // Wait for connection
       socketService.socket?.on('connect', connectAndJoin);
     }
 
@@ -45,8 +42,20 @@ export default function ChefDashboard({ user, onLogout }) {
       ));
     });
 
+    // Listen for new orders
+    socketService.onNewOrder((newOrder) => {
+      console.log('New order received:', newOrder);
+      setOrders(prev => [newOrder, ...prev]);
+    });
+
+    // Auto-refresh as backup every 30 seconds
+    const refreshInterval = setInterval(() => {
+      loadOrders();
+    }, 30000);
+
     return () => {
       socketService.disconnect();
+      clearInterval(refreshInterval);
     };
   }, []);
 
