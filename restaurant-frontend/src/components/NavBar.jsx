@@ -2,35 +2,38 @@ import React, { useState } from 'react';
 import { User, Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import logo from "../assets/logo.jpeg";
-import Search from "../assets/search.png";
 import Cart from "../assets/cart.png";
 
 const NavBar = () => {
   const [menu, setMenu] = useState('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const menuItems = ['home', 'menu', 'table reservation', 'contact'];
+  // Updated menu order: moved 'about' to 5th position (end)
+  const menuItems = ['home', 'menu', 'preorder', 'table reservation', 'about'];
 
   const handleMenuClick = (item) => {
     setMenu(item);
     setIsMobileMenuOpen(false); // Close mobile menu when item is clicked
     
-    // Navigation logic
+    // Navigation logic - Updated to use Homepage
     switch(item) {
       case 'home':
-        navigate('/');
+        navigate('/'); // This will load Homepage.jsx
         break;
       case 'menu':
         navigate('/menu');
         break;
+      case 'about':
+        navigate('/about');
+        break;
+      case 'preorder':
+        navigate('/preorder');
+        break;
       case 'table reservation':
         navigate('/table-reservation');
         break;
-      case 'contact':
-        navigate('/contact');
-        break;
       default:
-        navigate('/');
+        navigate('/'); // Default to Homepage
     }
   };
 
@@ -50,7 +53,7 @@ const NavBar = () => {
             src={logo}
             alt="logo" 
             className="w-12 h-12 md:w-15 md:h-15 rounded-full cursor-pointer"
-            onClick={() => handleMenuClick('home')}
+            onClick={() => handleMenuClick('home')} // Will navigate to Homepage
           />
         </div>
 
@@ -70,19 +73,16 @@ const NavBar = () => {
                 color: '#49557e' 
               } : {}}
             >
-              {item === 'table reservation' ? 'Table Reservation' : item}
+              {item === 'table reservation' ? 'Table Reservation' : 
+               item === 'about' ? 'About Us' :
+               item === 'preorder' ? 'Pre-Order' :
+               item}
             </li>
           ))}
         </ul>
 
-        {/* Desktop Right Side Icons */}
+        {/* Desktop Right Side Icons - Removed Search Icon */}
         <div className="hidden md:flex items-center gap-4 lg:gap-6">
-          <img 
-            src={Search}
-            alt="Search" 
-            className="w-8 h-8 lg:w-12 lg:h-12 cursor-pointer hover:opacity-70 transition-opacity duration-300"
-          />
-          
           <div className="relative cursor-pointer">
             <img 
               src={Cart}
@@ -143,7 +143,7 @@ const NavBar = () => {
         />
       )}
 
-      {/* Mobile Menu Slide Panel */}
+      {/* Mobile Menu Slide Panel - Removed Search from mobile menu */}
       <div 
         className={`fixed top-20 right-0 h-screen w-64 z-50 transform transition-transform duration-300 ease-in-out md:hidden ${
           isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
@@ -163,20 +163,13 @@ const NavBar = () => {
                     : 'text-gray-700 hover:text-blue-500 pl-4'
                 }`}
               >
-                {item === 'table reservation' ? 'Table Reservation' : item}
+                {item === 'table reservation' ? 'Table Reservation' : 
+                 item === 'about' ? 'About Us' :
+                 item === 'preorder' ? 'Pre-Order' :
+                 item}
               </li>
             ))}
           </ul>
-
-          {/* Mobile Search */}
-          <div className="flex items-center gap-4 mb-6 pl-4">
-            <img 
-              src={Search}
-              alt="Search" 
-              className="w-8 h-8 cursor-pointer hover:opacity-70 transition-opacity duration-300"
-            />
-            <span className="text-gray-700 font-medium">Search</span>
-          </div>
 
           {/* Mobile Sign In */}
           <button 

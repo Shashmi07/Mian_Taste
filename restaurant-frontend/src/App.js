@@ -1,65 +1,78 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Homepage from './pages/Homepage';
+
+// Import existing pages
+import Homepage from './pages/Homepage'; // Changed from Home to Homepage
+import AboutUs from './pages/AboutUs';
+import PreOrder from './pages/PreOrder';
 import TableReservation from './pages/TableReservation';
+import Login from './components/Login';
 import ChefDashboard from './pages/ChefDashboard';
 import LiveTracking from './pages/LiveTracking';
 import PaymentGateway from './pages/PaymentGateway';
-import Login from './components/Login';
-import './App.css';
+import Menu from './pages/Menu'; // Main menu with category navigation
+
+// Import menu category pages
+import Ramen from './pages/menu/Ramen';
+import Rice from './pages/menu/Rice';
+import Soup from './pages/menu/Soup';
+import Drink from './pages/menu/Drink';
+import More from './pages/menu/More';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check if user is logged in
+    const savedUser = localStorage.getItem('user');
     const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
     
-    if (token && userData) {
+    if (savedUser && token) {
+      setUser(JSON.parse(savedUser));
       setIsAuthenticated(true);
-      setUser(JSON.parse(userData));
     }
-    setLoading(false);
   }, []);
 
   const handleLogin = (userData) => {
-    localStorage.setItem('token', userData.token);
-    localStorage.setItem('user', JSON.stringify(userData.user));
+    setUser(userData);
     setIsAuthenticated(true);
-    setUser(userData.user);
+    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('token', userData.token);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setIsAuthenticated(false);
     setUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
   };
-
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  }
 
   return (
     <Router>
       <div className="App">
         <Routes>
-          {/* Homepage - Public route */}
+          {/* Main pages - Updated to use Homepage */}
           <Route path="/" element={<Homepage />} />
           <Route path="/home" element={<Homepage />} />
-          
-          {/* Table Reservation - Public route */}
+          <Route path="/homepage" element={<Homepage />} />
+          <Route path="/about" element={<AboutUs />} />
+          <Route path="/preorder" element={<PreOrder />} />
           <Route path="/table-reservation" element={<TableReservation />} />
           
-          {/* Payment Gateway - Public route */}
-          <Route path="/payment" element={<PaymentGateway />} />
+          {/* Menu pages - each category shows only its items */}
+          <Route path="/menu" element={<Menu />} />
+          <Route path="/menu/ramen" element={<Ramen />} />
+          <Route path="/menu/rice" element={<Rice />} />
+          <Route path="/menu/soup" element={<Soup />} />
+          <Route path="/menu/drinks" element={<Drink />} />
+          <Route path="/menu/more" element={<More />} />
           
-          {/* Live tracking - Public route */}
+          {/* Backend pages */}
+          <Route path="/payment" element={<PaymentGateway />} />
           <Route path="/track-order" element={<LiveTracking />} />
           
-          {/* Login route */}
+          {/* Auth routes */}
           <Route 
             path="/login" 
             element={
@@ -71,7 +84,6 @@ function App() {
             } 
           />
           
-          {/* Chef Dashboard - Protected route */}
           <Route 
             path="/chef-dashboard" 
             element={
@@ -83,7 +95,6 @@ function App() {
             } 
           />
           
-          {/* Default redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
