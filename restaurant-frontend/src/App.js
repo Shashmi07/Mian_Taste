@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 // Import existing pages
 import Homepage from './pages/Homepage'; // Changed from Home to Homepage
 import AboutUs from './pages/AboutUs';
+import ScrollToTop from './components/ScrollToTop';
 import PreOrder from './pages/PreOrder';
 import TableReservation from './pages/TableReservation';
 import Login from './components/Login';
@@ -50,6 +51,7 @@ function App() {
 
   return (
     <Router>
+        <ScrollToTop />
       <div className="App">
         <Routes>
           {/* Main pages - Updated to use Homepage */}

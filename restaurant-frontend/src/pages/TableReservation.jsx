@@ -26,13 +26,7 @@ export default function TableReservation() {
   const today = new Date().toISOString().split('T')[0];
 
   // Check availability when date or time slot changes
-  useEffect(() => {
-    if (selectedDate && selectedTimeSlot) {
-      checkTableAvailability();
-    }
-  }, [selectedDate, selectedTimeSlot]);
-
-  const checkTableAvailability = async () => {
+  const checkTableAvailability = React.useCallback(async () => {
     try {
       setLoading(true);
       const response = await checkAvailability(selectedDate, selectedTimeSlot);
@@ -47,7 +41,13 @@ export default function TableReservation() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedDate, selectedTimeSlot]);
+
+  useEffect(() => {
+    if (selectedDate && selectedTimeSlot) {
+      checkTableAvailability();
+    }
+  }, [selectedDate, selectedTimeSlot, checkTableAvailability]);
 
   const handleTableSelect = (tableId) => {
     if (!availableTables.includes(tableId)) return;
