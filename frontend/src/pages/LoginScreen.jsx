@@ -1,8 +1,16 @@
 import React, { useState } from "react";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { useNavigate } from "react-router-dom";
+import noodles3 from "../assets/noodles3.jpg";
+import noodles1 from "../assets/noodles1.jpg";
+import noodles from "../assets/noodles.jpg";
+import logo from "../assets/logo.jpg"; 
 
 const LoginScreen = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -10,51 +18,36 @@ const LoginScreen = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-yellow-50 flex relative overflow-hidden">
+    <div className="min-h-screen flex relative overflow-hidden bg-gradient-to-br from-green-50 to-yellow-50">
       {/* Background decorative elements */}
-      <div className="absolute -top-32 -right-32 w-96 h-96 bg-gradient-to-bl from-green-400 to-green-300 rounded-full opacity-20"></div>
-      <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-gradient-to-tr from-yellow-400 to-yellow-300 rounded-full opacity-20"></div>
+      <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-20" style={{background: '#78D860'}}></div>
+      <div className="absolute -bottom-32 -left-32 w-80 h-80 rounded-full opacity-20" style={{background: '#F4CF38'}}></div>
       <div className="absolute top-1/2 right-1/4 w-64 h-64 bg-gradient-to-bl from-orange-300 to-yellow-300 rounded-full opacity-10"></div>
       
-      {/* Floating food elements */}
-      <div className="absolute top-20 left-20 animate-pulse">
-        <div className="w-12 h-12 bg-gradient-to-br from-orange-200 to-orange-300 rounded-full flex items-center justify-center shadow-lg">
-          <span className="text-2xl">🍜</span>
-        </div>
-      </div>
-      <div className="absolute bottom-32 right-20 animate-bounce delay-1000">
-        <div className="w-10 h-10 bg-gradient-to-br from-green-200 to-green-300 rounded-full flex items-center justify-center shadow-lg">
-          <span className="text-xl">🥢</span>
-        </div>
-      </div>
-      <div className="absolute top-1/3 left-1/4 animate-pulse delay-2000">
-        <div className="w-8 h-8 bg-gradient-to-br from-yellow-200 to-yellow-300 rounded-full flex items-center justify-center shadow-lg">
-          <span className="text-lg">🍃</span>
-        </div>
-      </div>
+    
 
       {/* Left side - Food showcase */}
-      <div className="w-1/2 flex items-center justify-center p-12">
+  <div className="w-1/2 h-full flex items-center justify-center p-12">
         <div className="max-w-md">
           {/* Hero food images in artistic layout */}
           <div className="relative mb-8">
             <div className="grid grid-cols-2 gap-4 mb-4">
-              <img
-                src="https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400"
-                alt="Delicious noodles"
-                className="w-40 h-32 object-cover rounded-2xl shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-300"
-              />
-              <img
-                src="https://images.pexels.com/photos/1279330/pexels-photo-1279330.jpeg?auto=compress&cs=tinysrgb&w=400"
-                alt="Steaming bowl"
-                className="w-40 h-40 object-cover rounded-2xl shadow-2xl transform -rotate-2 hover:rotate-0 transition-transform duration-300 mt-4"
-              />
+                <img
+                  src={noodles3}
+                  alt="Delicious noodles"
+                  className="w-40 h-32 object-cover rounded-2xl shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-300"
+                />
+                <img
+                  src={noodles1}
+                  alt="Steaming bowl"
+                  className="w-40 h-40 object-cover rounded-2xl shadow-2xl transform -rotate-2 hover:rotate-0 transition-transform duration-300 mt-4"
+                />
             </div>
-            <img
-              src="https://images.pexels.com/photos/1633578/pexels-photo-1633578.jpeg?auto=compress&cs=tinysrgb&w=400"
-              alt="Traditional ramen"
-              className="w-32 h-28 object-cover rounded-2xl shadow-2xl transform rotate-6 hover:rotate-0 transition-transform duration-300 -mt-8 ml-12"
-            />
+              <img
+                src={noodles}
+                alt="Traditional ramen"
+                className="w-32 h-28 object-cover rounded-2xl shadow-2xl transform rotate-6 hover:rotate-0 transition-transform duration-300 -mt-8 ml-12"
+              />
           </div>
           
           <div className="text-center">
@@ -73,12 +66,12 @@ const LoginScreen = () => {
       </div>
 
       {/* Right side - Login form */}
-      <div className="w-1/2 flex items-center justify-center p-8">
+  <div className="w-1/2 h-full flex items-center justify-center p-8">
         <div className="bg-white bg-opacity-80 backdrop-blur-md rounded-3xl shadow-2xl border border-white border-opacity-20 p-10 w-full max-w-md">
           {/* Logo and title */}
           <div className="text-center mb-8">
             <div className="inline-block p-4 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 shadow-lg mb-4">
-              <span role="img" aria-label="ramen" className="text-4xl">🍜</span>
+              <img src={logo} alt="logo" className="w-16 h-16 object-cover rounded-full" />
             </div>
             <h1 className="text-3xl font-bold text-gray-800 mb-2">Grand Minato</h1>
             <p className="text-gray-600">Welcome back to your culinary journey</p>
@@ -104,11 +97,11 @@ const LoginScreen = () => {
 
             <div className="relative">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full py-4 px-6 pl-12 rounded-2xl bg-gradient-to-r from-green-50 to-green-100 border-2 border-transparent placeholder-green-600 text-gray-800 focus:outline-none focus:border-green-400 focus:bg-white transition-all duration-300"
+                className="w-full py-4 px-6 pl-12 pr-12 rounded-2xl bg-gradient-to-r from-green-50 to-green-100 border-2 border-transparent placeholder-green-600 text-gray-800 focus:outline-none focus:border-green-400 focus:bg-white transition-all duration-300"
                 required
               />
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -116,6 +109,19 @@ const LoginScreen = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 focus:outline-none"
+                tabIndex={-1}
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeIcon className="w-5 h-5" />
+                ) : (
+                  <EyeSlashIcon className="w-5 h-5" />
+                )}
+              </button>
             </div>
 
             <div className="flex items-center justify-between text-sm">
@@ -173,9 +179,13 @@ const LoginScreen = () => {
           {/* Signup link */}
           <p className="text-center text-gray-600">
             Don't have an account?{" "}
-            <a href="/signup" className="text-green-600 hover:text-green-700 font-semibold transition-colors">
+            <button
+              type="button"
+              className="text-green-600 hover:text-green-700 font-semibold transition-colors underline"
+              onClick={() => navigate("/signup")}
+            >
               Sign up now
-            </a>
+            </button>
           </p>
         </div>
       </div>
