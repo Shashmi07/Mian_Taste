@@ -1,359 +1,383 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Heart, Clock, Truck } from 'lucide-react';
+import { ArrowRight, Star, Clock, MapPin, Phone, Users, Award, Heart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
+
+// Import your assets
+import heroImage from '../assets/home.jpg';
+import chineseImage from '../assets/Chineese.jpg';
+import ramenImage from '../assets/RamenNoodles.jpg';
 
 const Homepage = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [cartItems, setCartItems] = useState([]);
+  const navigate = useNavigate();
 
-  const slides = [
+  const heroSlides = [
     {
       id: 1,
-      title: "Today's Special",
-      subtitle: "RAMEN",
-      description: "Authentic tonkotsu broth with fresh noodles. Rich, creamy, and absolutely delicious",
-      bgColor: "from-orange-500 to-orange-600",
-      image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=500&h=400&fit=crop&crop=center"
+      title: "Welcome to",
+      subtitle: "MIAN TASTE",
+      description: "Experience authentic Korean-Japanese fusion cuisine crafted with passion and tradition",
+      bgColor: "from-green-500 to-emerald-600",
+      image: heroImage
     },
     {
       id: 2,
-      title: "Premium",
-      subtitle: "BENTO BOX",
-      description: "Complete meal with rice, protein & sides. Perfectly balanced and nutritious",
-      bgColor: "from-pink-500 to-pink-600",
-      image: "https://images.unsplash.com/photo-1563379091339-03246963d7d3?w=500&h=400&fit=crop&crop=center"
+      title: "Authentic",
+      subtitle: "FLAVORS",
+      description: "Every dish tells a story of heritage, quality ingredients, and culinary excellence",
+      bgColor: "from-orange-500 to-red-500",
+      image: chineseImage
     },
     {
       id: 3,
       title: "Fresh",
-      subtitle: "CHIRASHI BOWL",
-      description: "Assorted sashimi over seasoned rice. Ocean fresh and expertly prepared",
-      bgColor: "from-purple-500 to-purple-600",
-      image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=500&h=400&fit=crop&crop=center"
-    },
-    {
-      id: 4,
-      title: "Chef's Special",
-      subtitle: "SUSHI PLATTER",
-      description: "Hand-crafted sushi selection. Premium ingredients, traditional technique",
-      bgColor: "from-blue-500 to-blue-600",
-      image: "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=500&h=400&fit=crop&crop=center"
+      subtitle: "EXPERIENCE",
+      description: "From our kitchen to your table - where every meal is a celebration of taste",
+      bgColor: "from-purple-500 to-pink-500",
+      image: ramenImage
     }
   ];
 
-  const categories = [
-    { name: "Ramen", icon: "🍜", color: "from-amber-500 to-orange-500" },
-    { name: "Juice", icon: "🥤", color: "from-green-500 to-emerald-500" },
-    { name: "Rice", icon: "🍚", color: "from-red-500 to-pink-500" }
+  const features = [
+    {
+      icon: <Award className="w-8 h-8" />,
+      title: "Award Winning",
+      description: "Recognized for excellence in Asian fusion cuisine",
+      color: "from-yellow-400 to-orange-500"
+    },
+    {
+      icon: <Heart className="w-8 h-8" />,
+      title: "Made with Love",
+      description: "Every dish is prepared with care and passion",
+      color: "from-red-400 to-pink-500"
+    },
+    {
+      icon: <Users className="w-8 h-8" />,
+      title: "Family Friendly",
+      description: "Perfect atmosphere for families and friends",
+      color: "from-blue-400 to-cyan-500"
+    },
+    {
+      icon: <Clock className="w-8 h-8" />,
+      title: "Fresh Daily",
+      description: "Ingredients sourced fresh every morning",
+      color: "from-green-400 to-emerald-500"
+    }
   ];
 
-  const recommendedItems = [
+  const services = [
     {
-      id: 1,
-      name: "Tonkotsu Ramen",
-      price: "Rs. 1500",
-      rating: 4.8,
-      time: "25-30 min",
-      image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&h=300&fit=crop&crop=center",
-      description: "Rich pork bone broth with tender noodles",
-      category: "ramen"
+      title: "Dine In",
+      description: "Experience our warm atmosphere and exceptional service",
+      icon: "🍽️",
+      action: () => navigate('/table-reservation'),
+      buttonText: "Reserve Table"
     },
     {
-      id: 2,
-      name: "Shoyu Ramen",
-      price: "Rs. 1350",
-      rating: 4.7,
-      time: "20-25 min",
-      image: "https://images.unsplash.com/photo-1591814468924-caf88d1232e1?w=400&h=300&fit=crop&crop=center",
-      description: "Light soy sauce based broth",
-      category: "ramen"
+      title: "Pre-Order",
+      description: "Order ahead and skip the wait - your food ready when you arrive",
+      icon: "⏰",
+      action: () => navigate('/preorder'),
+      buttonText: "Pre-Order Now"
     },
     {
-      id: 3,
-      name: "Miso Ramen",
-      price: "Rs. 1400",
-      rating: 4.9,
-      time: "25-30 min",
-      image: "https://images.unsplash.com/photo-1617093727343-374698b1b08d?w=400&h=300&fit=crop&crop=center",
-      description: "Fermented soybean paste broth",
-      category: "ramen"
-    },
-    {
-      id: 4,
-      name: "Chicken Teriyaki Bento",
-      price: "Rs. 1200",
-      rating: 4.6,
-      time: "15-20 min",
-      image: "https://images.unsplash.com/photo-1563379091339-03246963d7d3?w=400&h=300&fit=crop&crop=center",
-      description: "Grilled chicken with teriyaki sauce",
-      category: "rice"
-    },
-    {
-      id: 5,
-      name: "Salmon Sashimi",
-      price: "Rs. 1800",
-      rating: 4.9,
-      time: "10-15 min",
-      image: "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=400&h=300&fit=crop&crop=center",
-      description: "Fresh salmon sliced to perfection",
-      category: "sushi"
-    },
-    {
-      id: 6,
-      name: "Chirashi Bowl",
-      price: "Rs. 2000",
-      rating: 4.8,
-      time: "20-25 min",
-      image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=500&h=400&fit=crop&crop=center",
-      description: "Assorted sashimi over seasoned rice",
-      category: "rice"
-    },
-    {
-      id: 7,
-      name: "Gyoza Dumplings",
-      price: "Rs. 800",
-      rating: 4.5,
-      time: "15-20 min",
-      image: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?w=400&h=300&fit=crop&crop=center",
-      description: "Pan-fried pork dumplings",
-      category: "appetizer"
-    },
-    {
-      id: 8,
-      name: "Tempura Platter",
-      price: "Rs. 1600",
-      rating: 4.7,
-      time: "20-25 min",
-      image: "https://images.unsplash.com/photo-1541529086526-db283c563270?w=400&h=300&fit=crop&crop=center",
-      description: "Assorted vegetables and shrimp tempura",
-      category: "appetizer"
+      title: "Explore Menu",
+      description: "Discover our authentic Korean-Japanese fusion dishes",
+      icon: "📖",
+      action: () => navigate('/menu'),
+      buttonText: "View Menu"
     }
   ];
 
   // Auto-play slideshow
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 6000);
     return () => clearInterval(timer);
-  }, [slides.length]);
-
-  const addToCart = (item) => {
-    setCartItems([...cartItems, item]);
-  };
-
-  const orderFood = (foodType) => {
-    alert(`Great choice! Ordering ${foodType}. Redirecting to menu...`);
-  };
+  }, [heroSlides.length]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      {/* NavBar */}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50">
       <NavBar />
       
-      {/* Main Content */}
-      <div className="pt-24">
-        <main className="max-w-7xl mx-auto px-4 py-10">
-          {/* Hero Slideshow */}
-          <section className="mb-16">
-            <div className="relative h-96 rounded-3xl overflow-hidden shadow-2xl">
-              {slides.map((slide, index) => (
-                <div
-                  key={slide.id}
-                  className={`absolute inset-0 bg-gradient-to-r ${slide.bgColor} transition-opacity duration-500 ${
-                    index === currentSlide ? 'opacity-100' : 'opacity-0'
-                  }`}
-                >
-                  <div className="h-full flex items-center justify-between px-16">
-                    <div className="text-white max-w-lg">
-                      <h2 className="text-5xl font-bold mb-4 drop-shadow-lg">
+      <div className="pt-20">
+        {/* Hero Slideshow */}
+        <section className="relative h-screen">
+          {heroSlides.map((slide, index) => (
+            <div
+              key={slide.id}
+              className={`absolute inset-0 bg-gradient-to-r ${slide.bgColor} transition-opacity duration-1000 ${
+                index === currentSlide ? 'opacity-100' : 'opacity-0'
+              }`}
+            >
+              <div className="h-full flex items-center">
+                <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
+                  
+                  {/* Text Content */}
+                  <div className="text-white space-y-8">
+                    <div className="space-y-4">
+                      <h1 className="text-5xl lg:text-7xl font-bold leading-tight">
                         {slide.title}
                         <br />
-                        <span className="text-6xl">{slide.subtitle}</span>
-                      </h2>
-                      <p className="text-xl mb-8 opacity-90 leading-relaxed">
+                        <span className="text-6xl lg:text-8xl bg-gradient-to-r from-white to-yellow-200 bg-clip-text text-transparent">
+                          {slide.subtitle}
+                        </span>
+                      </h1>
+                      
+                      <p className="text-xl lg:text-2xl opacity-90 leading-relaxed max-w-xl">
                         {slide.description}
                       </p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-4">
                       <button
-                        onClick={() => orderFood(slide.subtitle.toLowerCase())}
-                        className="bg-white/20 border-2 border-white text-white px-8 py-4 rounded-full font-semibold text-lg uppercase tracking-wider hover:bg-white hover:text-gray-800 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
+                        onClick={() => navigate('/menu')}
+                        className="group bg-white text-gray-800 px-8 py-4 rounded-full font-bold text-lg hover:bg-yellow-400 hover:text-gray-900 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl flex items-center justify-center"
                       >
-                        Order Now
+                        Explore Menu
+                        <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      </button>
+                      
+                      <button
+                        onClick={() => navigate('/table-reservation')}
+                        className="bg-transparent border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-gray-800 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl"
+                      >
+                        Reserve Table
                       </button>
                     </div>
-                    <div className="w-80 h-64 rounded-2xl overflow-hidden shadow-2xl">
+                  </div>
+
+                  {/* Image */}
+                  <div className="relative">
+                    <div className="w-full h-96 lg:h-[500px] rounded-3xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
                       <img 
                         src={slide.image} 
                         alt={slide.subtitle}
                         className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextElementSibling.style.display = 'flex';
-                        }}
                       />
-                      <div className="hidden w-full h-full bg-white/20 backdrop-blur-sm items-center justify-center text-8xl">
-                        🍜
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                    </div>
+                    
+                    {/* Floating Badge */}
+                    <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl p-4 shadow-xl">
+                      <div className="flex items-center space-x-2">
+                        <Star className="w-6 h-6 fill-yellow-400 text-yellow-400" />
+                        <div>
+                          <div className="font-bold text-gray-800">4.9 Rating</div>
+                          <div className="text-sm text-gray-600">1000+ Reviews</div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              ))}
-
-              {/* Navigation Arrows */}
-              <button
-                onClick={() => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)}
-                className="absolute left-6 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full transition-all duration-300"
-              >
-                ‹
-              </button>
-              <button
-                onClick={() => setCurrentSlide((prev) => (prev + 1) % slides.length)}
-                className="absolute right-6 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full transition-all duration-300"
-              >
-                ›
-              </button>
-
-              {/* Navigation Dots */}
-              <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3">
-                {slides.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentSlide(index)}
-                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                      index === currentSlide ? 'bg-white scale-125' : 'bg-white/50'
-                    }`}
-                  />
-                ))}
               </div>
             </div>
-          </section>
+          ))}
 
-          {/* Categories Section */}
-          <section className="mb-16">
-            <h2 className="text-3xl font-bold text-gray-800 mb-8">Categories</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {categories.map((category, index) => (
+          {/* Navigation Dots */}
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-3 z-10">
+            {heroSlides.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`w-4 h-4 rounded-full transition-all duration-300 ${
+                  index === currentSlide ? 'bg-white scale-125' : 'bg-white/50'
+                }`}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl lg:text-5xl font-bold text-gray-800 mb-6">
+                Why Choose <span className="text-green-600">Mian Taste</span>?
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                We're passionate about bringing you the finest Korean-Japanese fusion experience with exceptional quality and service
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {features.map((feature, index) => (
                 <div
                   key={index}
-                  className="bg-white rounded-2xl p-8 text-center shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer border-2 border-transparent hover:border-green-500"
+                  className="group bg-gradient-to-br from-white to-gray-50 rounded-3xl p-8 text-center shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
                 >
-                  <div className={`w-20 h-20 bg-gradient-to-r ${category.color} rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-lg`}>
-                    {category.icon}
+                  <div className={`w-20 h-20 bg-gradient-to-r ${feature.color} rounded-2xl flex items-center justify-center mx-auto mb-6 text-white shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                    {feature.icon}
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-800">{category.name}</h3>
+                  <h3 className="text-xl font-bold text-gray-800 mb-3">{feature.title}</h3>
+                  <p className="text-gray-600 leading-relaxed">{feature.description}</p>
                 </div>
               ))}
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* Recommended Section */}
-          <section className="mb-16">
-            <h2 className="text-3xl font-bold text-gray-800 mb-8">Recommended</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {recommendedItems.map((item) => (
+        {/* Services Section */}
+        <section className="py-20 bg-gradient-to-br from-green-50 to-blue-50">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl lg:text-5xl font-bold text-gray-800 mb-6">
+                How Can We <span className="text-green-600">Serve</span> You?
+              </h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                Choose the perfect way to enjoy our delicious food
+              </p>
+            </div>
+
+            <div className="grid lg:grid-cols-3 gap-8">
+              {services.map((service, index) => (
                 <div
-                  key={item.id}
-                  className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
+                  key={index}
+                  className="bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 group"
                 >
-                  <div className="h-48 relative overflow-hidden">
-                    <img 
-                      src={item.image} 
-                      alt={item.name}
-                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextElementSibling.style.display = 'flex';
-                      }}
-                    />
-                    <div className="hidden w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 items-center justify-center text-6xl">
-                      🍜
+                  <div className="text-center space-y-6">
+                    <div className="text-6xl mb-4">{service.icon}</div>
+                    
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-800 mb-4">{service.title}</h3>
+                      <p className="text-gray-600 leading-relaxed mb-8">{service.description}</p>
                     </div>
-                    <button className="absolute top-3 right-3 p-2 bg-white/80 rounded-full text-gray-400 hover:text-red-500 hover:bg-white transition-all duration-200">
-                      <Heart className="w-4 h-4" />
+
+                    <button
+                      onClick={service.action}
+                      className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 px-8 rounded-2xl font-bold text-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 transform group-hover:scale-105 shadow-lg hover:shadow-xl"
+                    >
+                      {service.buttonText}
                     </button>
                   </div>
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-lg font-semibold text-gray-800 line-clamp-1">{item.name}</h3>
-                    </div>
-                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">{item.description}</p>
-                    
-                    <div className="flex items-center space-x-4 mb-4 text-sm text-gray-500">
-                      <div className="flex items-center space-x-1">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span>{item.rating}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Clock className="w-4 h-4" />
-                        <span>{item.time}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Truck className="w-4 h-4" />
-                        <span>Free</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-xl font-semibold text-green-600">{item.price}</span>
-                      <button
-                        onClick={() => addToCart(item)}
-                        className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-semibold transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
-                      >
-                        Add to Cart
-                      </button>
-                    </div>
-                  </div>
                 </div>
               ))}
             </div>
-          </section>
-        </main>
+          </div>
+        </section>
+
+        {/* Location & Contact Section */}
+        <section className="py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl lg:text-5xl font-bold text-gray-800 mb-6">
+                Visit <span className="text-green-600">Our</span> Restaurant
+              </h2>
+              <p className="text-xl text-gray-600">
+                We'd love to welcome you to Mian Taste
+              </p>
+            </div>
+
+            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-3xl overflow-hidden shadow-2xl">
+              <div className="grid lg:grid-cols-2">
+                
+                {/* Contact Info */}
+                <div className="p-12 text-white space-y-8">
+                  <h3 className="text-3xl font-bold mb-8">Get In Touch</h3>
+                  
+                  <div className="space-y-6">
+                    <div className="flex items-start space-x-4">
+                      <MapPin className="w-6 h-6 mt-1 flex-shrink-0" />
+                      <div>
+                        <div className="font-bold text-lg">Location</div>
+                        <div className="opacity-90">364/1, High Level Road<br />Kottawa, Sri Lanka</div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start space-x-4">
+                      <Phone className="w-6 h-6 mt-1 flex-shrink-0" />
+                      <div>
+                        <div className="font-bold text-lg">Contact</div>
+                        <div className="opacity-90">070 178 3446<br />076 983 1520</div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start space-x-4">
+                      <Clock className="w-6 h-6 mt-1 flex-shrink-0" />
+                      <div>
+                        <div className="font-bold text-lg">Hours</div>
+                        <div className="opacity-90">Daily: 11:00 AM - 10:00 PM</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => navigate('/table-reservation')}
+                    className="bg-white text-green-600 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-100 transition-all duration-300 transform hover:-translate-y-1 shadow-lg"
+                  >
+                    Reserve Your Table
+                  </button>
+                </div>
+
+                {/* Map Placeholder */}
+                <div className="bg-gradient-to-br from-green-400 to-green-500 p-12 flex items-center justify-center">
+                  <div className="text-center text-white">
+                    <MapPin className="w-24 h-24 mx-auto mb-6 opacity-80" />
+                    <h4 className="text-2xl font-bold mb-4">Find Us Here</h4>
+                    <p className="text-lg opacity-90">
+                      Located in the heart of Kottawa<br />
+                      Easy parking available
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Footer */}
-        <footer className="bg-gray-800 text-white py-16">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-              <div>
-                <h3 className="text-lg font-semibold mb-4 text-green-400">Quick Links</h3>
+        <footer className="bg-gray-900 text-white py-16">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-12">
+              <h3 className="text-3xl font-bold mb-4">
+                <span className="text-green-400">Mian Taste</span>
+              </h3>
+              <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                Where authentic Korean-Japanese flavors meet exceptional hospitality
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8 mb-12">
+              <div className="text-center">
+                <h4 className="text-lg font-bold mb-4 text-green-400">Quick Links</h4>
                 <ul className="space-y-2">
-                  <li><a href="#menu" className="text-gray-300 hover:text-green-400 transition-colors">Menu</a></li>
-                  <li><a href="#about" className="text-gray-300 hover:text-green-400 transition-colors">About Us</a></li>
-                  <li><a href="#contact" className="text-gray-300 hover:text-green-400 transition-colors">Contact</a></li>
-                  <li><a href="#delivery" className="text-gray-300 hover:text-green-400 transition-colors">Delivery Info</a></li>
+                  <li><button onClick={() => navigate('/menu')} className="text-gray-300 hover:text-green-400 transition-colors">Menu</button></li>
+                  <li><button onClick={() => navigate('/about')} className="text-gray-300 hover:text-green-400 transition-colors">About Us</button></li>
+                  <li><button onClick={() => navigate('/table-reservation')} className="text-gray-300 hover:text-green-400 transition-colors">Reservations</button></li>
+                  <li><button onClick={() => navigate('/preorder')} className="text-gray-300 hover:text-green-400 transition-colors">Pre-Order</button></li>
                 </ul>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-4 text-green-400">Customer Service</h3>
-                <ul className="space-y-2">
-                  <li><a href="#help" className="text-gray-300 hover:text-green-400 transition-colors">Help Center</a></li>
-                  <li><a href="#track" className="text-gray-300 hover:text-green-400 transition-colors">Track Order</a></li>
-                  <li><a href="#feedback" className="text-gray-300 hover:text-green-400 transition-colors">Feedback</a></li>
-                  <li><a href="#support" className="text-gray-300 hover:text-green-400 transition-colors">Support</a></li>
-                </ul>
+              
+              <div className="text-center">
+                <h4 className="text-lg font-bold mb-4 text-green-400">Contact</h4>
+                <div className="space-y-2 text-gray-300">
+                  <p>070 178 3446</p>
+                  <p>076 983 1520</p>
+                  <p>364/1, High Level Road, Kottawa</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-4 text-green-400">Connect With Us</h3>
-                <ul className="space-y-2">
-                  <li><a href="#facebook" className="text-gray-300 hover:text-green-400 transition-colors">Facebook</a></li>
-                  <li><a href="#instagram" className="text-gray-300 hover:text-green-400 transition-colors">Instagram</a></li>
-                  <li><a href="#twitter" className="text-gray-300 hover:text-green-400 transition-colors">Twitter</a></li>
-                  <li><a href="#youtube" className="text-gray-300 hover:text-green-400 transition-colors">YouTube</a></li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-4 text-green-400">Legal</h3>
-                <ul className="space-y-2">
-                  <li><a href="#terms" className="text-gray-300 hover:text-green-400 transition-colors">Terms of Service</a></li>
-                  <li><a href="#privacy" className="text-gray-300 hover:text-green-400 transition-colors">Privacy Policy</a></li>
-                  <li><a href="#cookies" className="text-gray-300 hover:text-green-400 transition-colors">Cookie Policy</a></li>
-                  <li><a href="#refund" className="text-gray-300 hover:text-green-400 transition-colors">Refund Policy</a></li>
-                </ul>
+              
+              <div className="text-center">
+                <h4 className="text-lg font-bold mb-4 text-green-400">Follow Us</h4>
+                <div className="flex justify-center space-x-4">
+                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center hover:bg-green-400 transition-colors cursor-pointer">
+                    f
+                  </div>
+                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center hover:bg-green-400 transition-colors cursor-pointer">
+                    📷
+                  </div>
+                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center hover:bg-green-400 transition-colors cursor-pointer">
+                    🐦
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="border-t border-gray-700 pt-8 mt-8">
-              <p className="text-center text-gray-400 text-sm">
-                &copy; 2023 Your Company Name. All rights reserved.
+            <div className="border-t border-gray-800 pt-8 text-center">
+              <p className="text-gray-400">
+                &copy; 2024 Mian Taste. All rights reserved.
               </p>
             </div>
           </div>

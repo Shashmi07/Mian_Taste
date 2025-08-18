@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, Search } from 'lucide-react';
+import { Star, Search, Clock } from 'lucide-react'; // Added Clock icon
 import NavBar from '../components/NavBar';
 
 // Import all images
@@ -220,42 +220,78 @@ const Menu = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
             {filteredItems.map((item, idx) => (
-              <div key={idx} className="bg-white rounded-2xl p-6 shadow hover:shadow-lg transition-all duration-300">
-                <div className="aspect-square overflow-hidden rounded-xl mb-4">
+              <div key={idx} className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+                
+                {/* Image with Heart Icon */}
+                <div className="relative aspect-square overflow-hidden">
                   <img 
                     src={item.image} 
                     alt={item.name} 
                     className="w-full h-full object-cover"
                   />
+                  {/* Heart Icon - Top Right */}
+                  <button className="absolute top-3 right-3 w-8 h-8 bg-white bg-opacity-80 rounded-full flex items-center justify-center hover:bg-opacity-100 transition-all duration-200">
+                    <svg className="w-4 h-4 text-gray-600 hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                  </button>
                 </div>
-                
-                {/* Rating Stars - Only show for Ramen, Rice, and Soup */}
-                {(item.category === 'Ramen' || item.category === 'Rice' || item.category === 'Soup') && (
-                  <div className="flex items-center justify-center gap-1 mb-3">
-                    {renderStars(item.rating)}
-                    <span className="ml-2 text-sm font-semibold text-yellow-600">
-                      {item.rating}
-                    </span>
+
+                {/* Card Content */}
+                <div className="p-4">
+                  
+                  {/* Item Name */}
+                  <h4 className="font-bold text-lg text-gray-900 mb-2 leading-tight">
+                    {item.name}
+                  </h4>
+                  
+                  {/* Description */}
+                  <p className="text-sm text-gray-600 mb-3 leading-relaxed">
+                    {item.description}
+                  </p>
+                  
+                  {/* Rating and Time Row - Only for food items */}
+                  {(item.category === 'Ramen' || item.category === 'Rice' || item.category === 'Soup') && (
+                    <div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
+                      {/* Rating */}
+                      <div className="flex items-center gap-1">
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <span className="font-medium text-gray-900">{item.rating}</span>
+                      </div>
+                      
+                      {/* Cooking Time */}
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-4 h-4 text-gray-500" />
+                        <span>15-20 min</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* For non-food items, add some spacing */}
+                  {!(item.category === 'Ramen' || item.category === 'Rice' || item.category === 'Soup') && (
+                    <div className="mb-4"></div>
+                  )}
+                  
+                  {/* Price and Add to Cart Row */}
+                  <div className="flex items-center justify-between">
+                    <div className="text-xl font-bold" style={{ color: '#46923c' }}>
+                      {item.price}
+                    </div>
+                    
+                    <button 
+                      className="px-6 py-2 text-white font-semibold rounded-full transition-colors duration-300"
+                      style={{ backgroundColor: '#46923c' }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#5BC142';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = '#46923c';
+                      }}
+                    >
+                      Add to Cart
+                    </button>
                   </div>
-                )}
-                
-                <h4 className="font-bold text-lg text-center text-gray-900 mb-2">
-                  {item.name}
-                </h4>
-                
-                <p className="text-sm text-center text-gray-600 mb-3 leading-relaxed">
-                  {item.description}
-                </p>
-                
-                <p className="text-center font-bold text-lg mb-4" style={{ color: '#46923c' }}>
-                  {item.price}
-                </p>
-                
-                <button 
-                  className="w-full py-3 bg-[#46923c] text-white rounded-full font-semibold hover:bg-[#8bca84] transition-colors duration-300"
-                >
-                  Add to Cart
-                </button>
+                </div>
               </div>
             ))}
           </div>
