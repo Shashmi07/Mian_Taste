@@ -39,7 +39,7 @@ const createOrder = async (req, res) => {
 
     const order = new Order({
       ...req.body,
-      createdBy: req.user.id
+      createdBy: req.user ? req.user.id : null // Handle public orders without authentication
     });
 
     await order.save();
@@ -48,14 +48,18 @@ const createOrder = async (req, res) => {
       .populate('createdBy', 'name');
 
     // Emit to kitchen for chefs
-    req.io.to('kitchen').emit('new-order', populatedOrder);
+    if (req.io) {
+      req.io.to('kitchen').emit('new-order', populatedOrder);
+    }
     
-    // Emit to customer's personal room
-    req.io.to(`user_${req.user.id}`).emit('order-created', {
-      orderId: order._id,
-      orderNumber: order.orderId,
-      message: 'Your order has been placed successfully!'
-    });
+    // Emit to customer's personal room (only if authenticated)
+    if (req.user && req.io) {
+      req.io.to(`user_${req.user.id}`).emit('order-created', {
+        orderId: order._id,
+        orderNumber: order.orderId,
+        message: 'Your order has been placed successfully!'
+      });
+    }
 
     res.status(201).json({
       success: true,
@@ -160,8 +164,16 @@ const acceptOrder = async (req, res) => {
       });
     }
 
-    // Emit socket event
-    req.io.emit('order-accepted', updatedOrder);
+    // Emit socket events for real-time updates
+    req.io.to(`order_${updatedOrder._id}`).emit('order-updated', updatedOrder);
+    req.io.to(`order_${updatedOrder._id}`).emit('order-status-changed', {
+      orderId: updatedOrder._id,
+      status: updatedOrder.status,
+      cookingStatus: updatedOrder.cookingStatus
+    });
+    
+    // Also emit to kitchen for dashboard updates
+    req.io.to('kitchen').emit('order-accepted', updatedOrder);
 
     res.json({
       success: true,

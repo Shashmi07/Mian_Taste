@@ -39,11 +39,22 @@ const addInventoryItem = async (req, res) => {
       });
     }
     
-    // Determine status based on quantity
+    // Determine status based on quantity (convert to base unit for comparison)
+    let quantityInBaseUnit = Number(quantity);
+    let minStockInBaseUnit = Number(minStock);
+    
+    if (unit === 'kg') {
+      quantityInBaseUnit = quantityInBaseUnit * 1000;
+      minStockInBaseUnit = minStockInBaseUnit * 1000;
+    } else if (unit === 'l') {
+      quantityInBaseUnit = quantityInBaseUnit * 1000;
+      minStockInBaseUnit = minStockInBaseUnit * 1000;
+    }
+    
     let status = 'available';
-    if (quantity === 0) {
+    if (quantityInBaseUnit === 0) {
       status = 'out of stock';
-    } else if (quantity <= minStock * 0.5) {
+    } else if (quantityInBaseUnit <= minStockInBaseUnit * 0.5) {
       status = 'low';
     }
     
@@ -102,26 +113,62 @@ const updateInventoryQuantity = async (req, res) => {
       });
     }
     
-    // Convert amount to base unit (grams)
-    let convertedAmount = Number(amount);
+    // Convert both current quantity and operation amount to same base unit for calculation
+    let currentQuantityInBaseUnit = item.quantity;
+    let operationAmountInBaseUnit = Number(amount);
+    
+    // Convert current item quantity to base unit (grams/ml)
+    if (item.unit === 'kg') {
+      currentQuantityInBaseUnit = item.quantity * 1000;
+    } else if (item.unit === 'l') {
+      currentQuantityInBaseUnit = item.quantity * 1000;
+    }
+    
+    // Convert operation amount to base unit (grams/ml)  
     if (unit === 'kg') {
-      convertedAmount = convertedAmount * 1000;
+      operationAmountInBaseUnit = operationAmountInBaseUnit * 1000;
     } else if (unit === 'l') {
-      convertedAmount = convertedAmount * 1000; // Convert to ml
+      operationAmountInBaseUnit = operationAmountInBaseUnit * 1000;
     }
     
     // Update quantity based on operation
-    const originalQuantity = item.quantity;
+    const originalQuantityInBaseUnit = currentQuantityInBaseUnit;
+    let newQuantityInBaseUnit;
+    
     if (operation === 'add') {
-      item.quantity += convertedAmount;
+      newQuantityInBaseUnit = currentQuantityInBaseUnit + operationAmountInBaseUnit;
     } else if (operation === 'reduce') {
-      item.quantity = Math.max(0, item.quantity - convertedAmount);
+      newQuantityInBaseUnit = Math.max(0, currentQuantityInBaseUnit - operationAmountInBaseUnit);
     }
     
-    // Update status based on new quantity
-    if (item.quantity === 0) {
+    // Convert back to item's original unit for storage
+    if (item.unit === 'kg') {
+      item.quantity = newQuantityInBaseUnit / 1000;
+    } else if (item.unit === 'l') {
+      item.quantity = newQuantityInBaseUnit / 1000;
+    } else {
+      item.quantity = newQuantityInBaseUnit;
+    }
+    
+    // Update status based on new quantity (convert to base unit for comparison)
+    let finalQuantityInBaseUnit = item.quantity;
+    if (item.unit === 'kg') {
+      finalQuantityInBaseUnit = item.quantity * 1000;
+    } else if (item.unit === 'l') {
+      finalQuantityInBaseUnit = item.quantity * 1000;
+    }
+    
+    // Convert minStock to base unit for comparison
+    let minStockInBaseUnit = item.minStock;
+    if (item.unit === 'kg') {
+      minStockInBaseUnit = item.minStock * 1000;
+    } else if (item.unit === 'l') {
+      minStockInBaseUnit = item.minStock * 1000;
+    }
+    
+    if (finalQuantityInBaseUnit === 0) {
       item.status = 'out of stock';
-    } else if (item.quantity <= item.minStock * 0.5) {
+    } else if (finalQuantityInBaseUnit <= minStockInBaseUnit * 0.5) {
       item.status = 'low';
     } else {
       item.status = 'available';
@@ -133,8 +180,8 @@ const updateInventoryQuantity = async (req, res) => {
     console.log(`- Item: ${item.name}`);
     console.log(`- Operation: ${operation}`);
     console.log(`- Amount: ${amount} ${unit}`);
-    console.log(`- Old quantity: ${originalQuantity}g`);
-    console.log(`- New quantity: ${item.quantity}g`);
+    console.log(`- Original quantity: ${item.unit === 'kg' ? (originalQuantityInBaseUnit/1000) : originalQuantityInBaseUnit}${item.unit}`);
+    console.log(`- New quantity: ${item.quantity}${item.unit}`);
     console.log(`- Status: ${item.status}`);
     
     // Emit socket event for real-time updates
