@@ -27,7 +27,8 @@ router.put('/:id/status', auth, updateOrderStatus);
 router.put('/:id/accept', auth, acceptOrder);
 router.delete('/:id', auth, deleteOrder);
 
-// Public route for order tracking (no auth required)
+// Public routes (no auth required)
 router.get('/track/:orderId', trackOrder);
+router.post('/public', orderValidation, createOrder); // Public order creation
 
 module.exports = router;

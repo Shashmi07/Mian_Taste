@@ -19,6 +19,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Attach socket.io to request object
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
 // Create server
 const server = http.createServer(app);
 const io = socketIo(server, {
