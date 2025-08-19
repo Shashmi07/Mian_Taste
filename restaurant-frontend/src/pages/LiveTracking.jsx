@@ -132,7 +132,7 @@ const LiveTracking = () => {
     if (status === 'accepted' && cookingStatus === 'preparing') return 'Preparing Ingredients';
     if (status === 'accepted' && cookingStatus === 'cooking') return 'Cooking in Progress';
     if (status === 'accepted' && cookingStatus === 'plating') return 'Final Touches';
-    if (status === 'ready') return 'Ready for Pickup!';
+    if (status === 'ready') return 'Ready for Service!';
     if (status === 'delivered') return 'Order Delivered';
     return 'Processing';
   };
@@ -292,8 +292,8 @@ const LiveTracking = () => {
                       },
                       { 
                         icon: Package, 
-                        title: 'Ready for Pickup', 
-                        desc: 'Your order is ready! Please come collect it',
+                        title: 'Ready for Service', 
+                        desc: 'Your delicious meal is ready! Waiter will serve it to your table shortly',
                         step: 3
                       },
                       { 
@@ -372,8 +372,8 @@ const LiveTracking = () => {
                     <div className="flex items-center">
                       <Package className="text-green-600 mr-3" size={24} />
                       <div>
-                        <h4 className="font-semibold text-green-800">🎉 Your order is ready!</h4>
-                        <p className="text-green-700 text-sm">Please come to the pickup counter to collect your delicious meal.</p>
+                        <h4 className="font-semibold text-green-800">🎉 Your order is ready for service!</h4>
+                        <p className="text-green-700 text-sm">Our waiter will bring your delicious meal to your table shortly.</p>
                       </div>
                     </div>
                   </div>

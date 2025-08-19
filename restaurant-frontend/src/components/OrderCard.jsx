@@ -141,7 +141,7 @@ export default function OrderCard({ order, onAccept, onUpdateStatus, onUpdateCoo
                 className="flex-1 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded font-medium text-sm flex items-center justify-center"
               >
                 <CheckCircle size={14} className="mr-1" />
-                Mark Ready
+                Ready to Serve
               </button>
             )}
           </>
@@ -153,7 +153,7 @@ export default function OrderCard({ order, onAccept, onUpdateStatus, onUpdateCoo
             className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded font-medium text-sm flex items-center justify-center"
           >
             <Users size={14} className="mr-1" />
-            Mark Delivered
+            Served to Table
           </button>
         )}
       </div>
