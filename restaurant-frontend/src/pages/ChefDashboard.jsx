@@ -98,6 +98,14 @@ export default function ChefDashboard({ user, onLogout }) {
         setOrders(prev => prev.map(order => 
           order._id === orderId ? response.data.order : order
         ));
+        
+        // Automatically switch to active orders tab for seamless workflow
+        setSelectedOrderFilter('active');
+        
+        // Optional: Show a brief success message
+        setTimeout(() => {
+          console.log('Order accepted successfully. Switched to Active Orders tab.');
+        }, 100);
       } else {
         alert('Failed to accept order: ' + response.data.message);
       }
@@ -118,6 +126,15 @@ export default function ChefDashboard({ user, onLogout }) {
         setOrders(prev => prev.map(order => 
           order._id === orderId ? response.data.order : order
         ));
+        
+        // Automatically switch to appropriate tab for seamless workflow
+        if (status === 'ready') {
+          setSelectedOrderFilter('ready');
+          console.log('Order marked as ready for service. Switched to Ready Orders tab.');
+        } else if (status === 'delivered') {
+          setSelectedOrderFilter('completed');
+          console.log('Order marked as delivered. Switched to Completed Orders tab.');
+        }
       } else {
         alert('Failed to update status: ' + response.data.message);
       }
@@ -310,7 +327,7 @@ export default function ChefDashboard({ user, onLogout }) {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Ready Orders</p>
+                <p className="text-sm text-gray-600">Ready for Service</p>
                 <p className="text-2xl font-bold text-green-600">
                   {orders.filter(o => o.status === 'ready').length} {/* Changed from 'ready for pickup' */}
                 </p>
@@ -375,7 +392,7 @@ export default function ChefDashboard({ user, onLogout }) {
                 <option value="all">All Orders</option>
                 <option value="pending">Pending</option>
                 <option value="active">Active</option>
-                <option value="ready">Ready</option>
+                <option value="ready">Ready for Service</option>
                 <option value="completed">Completed</option>
               </select>
             </div>
@@ -413,7 +430,7 @@ export default function ChefDashboard({ user, onLogout }) {
                       <p className="text-gray-500">
                         {selectedOrderFilter === 'pending' && 'No new orders waiting.'}
                         {selectedOrderFilter === 'active' && 'No orders being prepared.'}
-                        {selectedOrderFilter === 'ready' && 'No orders ready for pickup.'}
+                        {selectedOrderFilter === 'ready' && 'No orders ready for service.'}
                         {selectedOrderFilter === 'completed' && 'No completed orders.'}
                         {selectedOrderFilter === 'all' && 'No orders at the moment.'}
                       </p>
