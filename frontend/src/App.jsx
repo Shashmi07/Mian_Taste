@@ -7,6 +7,7 @@ import Rice from './Pages/menu/Rice'
 import Soup from './Pages/menu/Soup'
 import Drink from './Pages/menu/Drink'
 import More from './Pages/menu/More'
+import AboutUs from './Pages/AboutUs'
 
 
 
@@ -23,6 +24,8 @@ const App = () => {
         <Route path="/soup" element={<Soup />} />
         <Route path="/drink" element={<Drink />} />
         <Route path="/more" element={<More />} />
+        <Route path="/about" element={<AboutUs />} />
+       
     
 
       </Routes>
