@@ -13,6 +13,7 @@ import More from './Pages/menu/More'
 const App = () => {
   return (
     <BrowserRouter>
+    
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/menu" element={<Menu />} />
