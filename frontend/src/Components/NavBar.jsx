@@ -8,7 +8,7 @@ import Cart from "../assets/cart.png";
 
 const NavBar = () => {
   const [menu, setMenu] = useState('home');
-  const menuItems = ['home', 'menu', 'pre-order', 'table reservation', 'contact'];
+  const menuItems = ['home', 'menu', 'pre-order', 'table reservation', 'About Us'];
 
   return (
     <nav 
@@ -46,7 +46,9 @@ const NavBar = () => {
                 Menu
               </Link>
             ) : item === 'pre-order' ? (
-              'Pre-Order'
+              <Link to="/PreOrder" className="text-inherit no-underline">
+                Pre-Order
+              </Link>
             ) : item === 'table reservation' ? (
               'Table Reservation'
             ) : (
