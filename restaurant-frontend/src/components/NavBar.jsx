@@ -37,6 +37,11 @@ const NavBar = () => {
     }
   };
 
+  const handleSignInClick = () => {
+    navigate('/login'); // Navigate to LoginScreen
+    setIsMobileMenuOpen(false); // Close mobile menu if open
+  };
+
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
@@ -93,6 +98,7 @@ const NavBar = () => {
           </div>
 
           <button 
+            onClick={handleSignInClick}
             className="flex items-center gap-2 bg-transparent text-sm font-medium px-3 py-2 lg:px-4 border-2 rounded-lg cursor-pointer transition-all duration-300 hover:bg-opacity-100"
             style={{
               color: '#49557e',
@@ -173,6 +179,7 @@ const NavBar = () => {
 
           {/* Mobile Sign In */}
           <button 
+            onClick={handleSignInClick}
             className="flex items-center gap-3 bg-transparent font-medium px-4 py-3 border-2 rounded-lg cursor-pointer transition-all duration-300 mx-4"
             style={{
               color: '#49557e',

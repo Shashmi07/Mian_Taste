@@ -264,11 +264,77 @@ const LiveTracking = () => {
               <div className="p-6">
                 {/* Progress Timeline */}
                 <div className="relative mb-6">
+                  {/* Background line */}
                   <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+                  
+                  {/* Progress line with flowing animation */}
                   <div 
-                    className="absolute left-8 top-0 w-0.5 bg-blue-500 transition-all duration-1000"
+                    className="absolute left-8 top-0 w-1 bg-gradient-to-b from-blue-400 to-blue-600 transition-all duration-1000 overflow-hidden rounded-full"
                     style={{ height: `${Math.min((getStatusStep(order.status, order.cookingStatus) / 4) * 100, 100)}%` }}
-                  ></div>
+                  >
+                    {/* Flowing animation - only show if order is in progress */}
+                    {order.status !== 'delivered' && getStatusStep(order.status, order.cookingStatus) > 0 && (
+                      <>
+                        {/* Continuous flowing stream */}
+                        <div 
+                          className="absolute inset-0 opacity-60"
+                          style={{
+                            background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.8) 20%, transparent 40%, rgba(255,255,255,0.6) 60%, transparent 80%, rgba(255,255,255,0.4) 100%)',
+                            animation: 'flowStream 2s linear infinite'
+                          }}
+                        ></div>
+                        
+                        {/* Secondary flowing layer */}
+                        <div 
+                          className="absolute inset-0 opacity-40"
+                          style={{
+                            background: 'linear-gradient(to bottom, rgba(59,130,246,0.6) 0%, transparent 30%, rgba(59,130,246,0.4) 70%, transparent 100%)',
+                            animation: 'flowStream 3s linear infinite reverse'
+                          }}
+                        ></div>
+                        
+                        {/* Fast flowing dots */}
+                        <div 
+                          className="absolute w-full h-2 rounded-full opacity-70"
+                          style={{
+                            background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, transparent 70%)',
+                            animation: 'flowDots 1.5s linear infinite'
+                          }}
+                        ></div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Custom CSS for flowing animations */}
+                  <style dangerouslySetInnerHTML={{
+                    __html: `
+                      @keyframes flowStream {
+                        0% {
+                          transform: translateY(-100%);
+                        }
+                        100% {
+                          transform: translateY(100%);
+                        }
+                      }
+                      
+                      @keyframes flowDots {
+                        0% {
+                          transform: translateY(-20px);
+                          opacity: 0;
+                        }
+                        20% {
+                          opacity: 1;
+                        }
+                        80% {
+                          opacity: 1;
+                        }
+                        100% {
+                          transform: translateY(200px);
+                          opacity: 0;
+                        }
+                      }
+                    `
+                  }} />
 
                   <div className="space-y-8">
                     {[
