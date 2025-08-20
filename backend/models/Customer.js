@@ -79,14 +79,8 @@ customerSchema.pre('save', function(next) {
 
 // Function to get Customer model with customer database connection
 const getCustomerModel = () => {
-  try {
-    const customerConnection = getCustomerConnection();
-    return customerConnection.model('Customer', customerSchema, 'customer-details');
-  } catch (error) {
-    console.error('Error getting customer connection:', error);
-    // Fallback to default connection for development
-    return mongoose.model('Customer', customerSchema, 'customer-details');
-  }
+  const customerConnection = getCustomerConnection();
+  return customerConnection.model('Customer', customerSchema, 'customer-details');
 };
 
 module.exports = getCustomerModel;

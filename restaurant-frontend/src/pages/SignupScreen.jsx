@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
+import { customerAPI } from "../services/api";
 import noodles3 from "../assets/beefRamen.jpg";
 import noodles1 from "../assets/chickenRamen.jpg";
 import noodles from "../assets/ramen.jpg";
@@ -16,19 +17,70 @@ const SignupScreen = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Client-side validation
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      setError("Passwords do not match!");
       return;
     }
-    console.log("Signup attempt:", { username, email, password, address, phoneNumber });
-    
-    // For now, redirect to login after successful signup
-    // In a real app, this would make an API call to register the user
-    alert("Account created successfully! Please login.");
-    navigate("/login");
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long!");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const userData = {
+        username,
+        email,
+        password,
+        phoneNumber,
+        address
+      };
+
+      console.log("Attempting to register customer:", userData);
+      
+      const response = await customerAPI.register(userData);
+      
+      if (response.data.success) {
+        console.log("Registration successful:", response.data);
+        alert("Account created successfully! Please login.");
+        navigate("/login");
+      } else {
+        setError(response.data.message || "Registration failed");
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      
+      // Handle different types of errors
+      if (error.response) {
+        // Server responded with error status
+        const errorMessage = error.response.data?.message || "Registration failed";
+        if (error.response.data?.errors) {
+          // Validation errors from express-validator
+          const validationErrors = error.response.data.errors.map(err => err.msg).join(", ");
+          setError(validationErrors);
+        } else {
+          setError(errorMessage);
+        }
+      } else if (error.request) {
+        // Request made but no response received
+        setError("Network error. Please check your connection and try again.");
+      } else {
+        // Something else happened
+        setError("An unexpected error occurred. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -89,6 +141,12 @@ const SignupScreen = () => {
           </div>
 
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl mb-4">
+                {error}
+              </div>
+            )}
+            
             <div className="relative">
               <input
                 type="text"
@@ -208,12 +266,15 @@ const SignupScreen = () => {
             </div>
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-white font-bold py-4 px-6 rounded-2xl shadow-lg transform hover:scale-105 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-yellow-300"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 px-6 rounded-2xl shadow-lg transform hover:scale-105 disabled:hover:scale-100 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-yellow-300 disabled:cursor-not-allowed"
             >
-              Sign Up
-              <svg className="w-5 h-5 ml-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
+              {loading ? "Creating Account..." : "Sign Up"}
+              {!loading && (
+                <svg className="w-5 h-5 ml-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              )}
             </button>
           </form>
 
