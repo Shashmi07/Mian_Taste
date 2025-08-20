@@ -11,6 +11,7 @@ import Login from './components/Login';
 import LoginScreen from './pages/LoginScreen';
 import SignupScreen from './pages/SignupScreen';
 import ChefDashboard from './pages/ChefDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import LiveTracking from './pages/LiveTracking';
 import PaymentGateway from './pages/PaymentGateway';
 import Menu from './pages/Menu'; // Main menu with category navigation
@@ -112,7 +113,7 @@ function App() {
               !isAuthenticated ? (
                 <Login onLogin={handleLogin} />
               ) : (
-                <Navigate to="/chef-dashboard" replace />
+                <Navigate to="/admin-dashboard" replace />
               )
             } 
           />
@@ -122,6 +123,17 @@ function App() {
             element={
               isAuthenticated ? (
                 <ChefDashboard user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/admin-login" replace />
+              )
+            } 
+          />
+          
+          <Route 
+            path="/admin-dashboard" 
+            element={
+              isAuthenticated ? (
+                <AdminDashboard user={user} onLogout={handleLogout} />
               ) : (
                 <Navigate to="/admin-login" replace />
               )
