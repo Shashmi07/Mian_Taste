@@ -8,6 +8,8 @@ import ScrollToTop from './components/ScrollToTop';
 import PreOrder from './pages/PreOrder';
 import TableReservation from './pages/TableReservation';
 import Login from './components/Login';
+import LoginScreen from './pages/LoginScreen';
+import SignupScreen from './pages/SignupScreen';
 import ChefDashboard from './pages/ChefDashboard';
 import LiveTracking from './pages/LiveTracking';
 import PaymentGateway from './pages/PaymentGateway';
@@ -79,6 +81,29 @@ function App() {
             path="/login" 
             element={
               !isAuthenticated ? (
+                <LoginScreen onLogin={handleLogin} />
+              ) : (
+                <Navigate to="/chef-dashboard" replace />
+              )
+            } 
+          />
+          
+          <Route 
+            path="/signup" 
+            element={
+              !isAuthenticated ? (
+                <SignupScreen />
+              ) : (
+                <Navigate to="/chef-dashboard" replace />
+              )
+            } 
+          />
+          
+          {/* Legacy login component route */}
+          <Route 
+            path="/admin-login" 
+            element={
+              !isAuthenticated ? (
                 <Login onLogin={handleLogin} />
               ) : (
                 <Navigate to="/chef-dashboard" replace />
@@ -92,7 +117,7 @@ function App() {
               isAuthenticated ? (
                 <ChefDashboard user={user} onLogout={handleLogout} />
               ) : (
-                <Navigate to="/login" replace />
+                <Navigate to="/admin-login" replace />
               )
             } 
           />

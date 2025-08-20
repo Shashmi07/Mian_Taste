@@ -12,6 +12,7 @@ export default function ChefDashboard({ user, onLogout }) {
   const [reduceAmounts, setReduceAmounts] = useState({});
   const [selectedOrderFilter, setSelectedOrderFilter] = useState('all');
   const [showAddItemForm, setShowAddItemForm] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [newItem, setNewItem] = useState({
     name: '',
     quantity: '',
@@ -65,6 +66,20 @@ export default function ChefDashboard({ user, onLogout }) {
       clearInterval(refreshInterval);
     };
   }, []);
+
+  // Close notification dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showNotifications && !event.target.closest('.notification-dropdown')) {
+        setShowNotifications(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNotifications]);
 
   const loadOrders = async () => {
     try {
@@ -215,6 +230,11 @@ export default function ChefDashboard({ user, onLogout }) {
     return 'available';
   };
 
+  // Get out of stock items for notifications
+  const getOutOfStockItems = () => {
+    return inventory.filter(item => item.quantity === 0);
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
@@ -259,12 +279,64 @@ export default function ChefDashboard({ user, onLogout }) {
               <h1 className="text-2xl font-bold text-gray-900 ml-3">Chef Dashboard</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <button className="relative p-2 text-gray-600 hover:text-gray-900">
-                <Bell size={20} />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {orders.filter(o => o.status === 'pending').length}
-                </span>
-              </button>
+              <div className="relative">
+                <button 
+                  className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+                  onClick={() => setShowNotifications(!showNotifications)}
+                >
+                  <Bell size={20} />
+                  {getOutOfStockItems().length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                      {getOutOfStockItems().length}
+                    </span>
+                  )}
+                </button>
+                
+                {/* Notification Dropdown */}
+                {showNotifications && (
+                  <div className="notification-dropdown absolute right-0 top-12 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                    <div className="p-4 border-b border-gray-200">
+                      <h3 className="font-semibold text-gray-900 flex items-center">
+                        <AlertCircle className="text-red-500 mr-2" size={18} />
+                        Out of Stock Items
+                      </h3>
+                    </div>
+                    
+                    <div className="max-h-80 overflow-y-auto">
+                      {/* Out of Stock Items Only */}
+                      {getOutOfStockItems().length > 0 ? (
+                        <div className="p-3">
+                          {getOutOfStockItems().map(item => (
+                            <div key={item._id} className="flex justify-between items-center py-2 px-3 bg-red-50 rounded mb-2">
+                              <span className="text-sm text-red-800 font-medium">{item.name}</span>
+                              <span className="text-xs text-red-600 bg-red-200 px-2 py-1 rounded">
+                                0 {item.unit}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="p-4 text-center text-gray-500">
+                          <CheckCircle className="mx-auto mb-2 text-green-500" size={24} />
+                          <p className="text-sm">All items are in stock!</p>
+                        </div>
+                      )}
+                      
+                      <div className="p-3 border-t border-gray-200 bg-gray-50">
+                        <button 
+                          onClick={() => {
+                            setActiveTab('inventory');
+                            setShowNotifications(false);
+                          }}
+                          className="w-full text-sm bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded"
+                        >
+                          Manage Inventory
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="text-right">
                 <p className="font-semibold text-gray-900">{user?.name || 'Chef'}</p>
                 <p className="text-sm text-gray-500">{user?.role || 'Kitchen Manager'}</p>
@@ -292,7 +364,11 @@ export default function ChefDashboard({ user, onLogout }) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Pending Orders</p>
-                <p className="text-2xl font-bold text-orange-600">
+                <p className={`text-2xl font-bold text-orange-600 ${
+                  orders.filter(o => o.status === 'pending').length > 0 
+                    ? 'animate-bounce' 
+                    : ''
+                }`}>
                   {orders.filter(o => o.status === 'pending').length}
                 </p>
               </div>
