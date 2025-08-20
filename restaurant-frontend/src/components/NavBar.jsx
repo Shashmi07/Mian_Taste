@@ -16,8 +16,29 @@ const NavBar = () => {
   // Updated menu order: moved 'about' to 5th position (end)
   const menuItems = ['home', 'menu', 'preorder', 'table reservation', 'about'];
 
-  // Simplified authentication check
+  // Check for customer authentication
   const checkAuth = () => {
+    // Check for customer authentication first
+    const customerToken = localStorage.getItem('customerToken');
+    const customerUser = localStorage.getItem('customerUser');
+    
+    if (customerToken && customerUser) {
+      try {
+        const userData = JSON.parse(customerUser);
+        setAuthState({
+          isAuthenticated: true,
+          user: userData,
+          type: 'customer'
+        });
+        return;
+      } catch (error) {
+        console.error('Error parsing customer data:', error);
+        localStorage.removeItem('customerUser');
+        localStorage.removeItem('customerToken');
+      }
+    }
+    
+    // Fallback to admin/chef authentication
     const savedUser = localStorage.getItem('user');
     const token = localStorage.getItem('token');
     
@@ -26,23 +47,23 @@ const NavBar = () => {
         const userData = JSON.parse(savedUser);
         setAuthState({
           isAuthenticated: true,
-          user: userData
+          user: userData,
+          type: 'admin'
         });
+        return;
       } catch (error) {
-        console.error('Error parsing user data:', error);
+        console.error('Error parsing admin user data:', error);
         localStorage.removeItem('user');
         localStorage.removeItem('token');
-        setAuthState({
-          isAuthenticated: false,
-          user: null
-        });
       }
-    } else {
-      setAuthState({
-        isAuthenticated: false,
-        user: null
-      });
     }
+    
+    // No authentication found
+    setAuthState({
+      isAuthenticated: false,
+      user: null,
+      type: null
+    });
   };
 
   // Check auth on mount and set up listeners
@@ -85,11 +106,18 @@ const NavBar = () => {
   }, [showProfileMenu]);
 
   const handleLogout = () => {
+    // Clear customer authentication
+    localStorage.removeItem('customerUser');
+    localStorage.removeItem('customerToken');
+    
+    // Clear admin authentication (fallback)
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    
     setAuthState({
       isAuthenticated: false,
-      user: null
+      user: null,
+      type: null
     });
     setShowProfileMenu(false);
     
@@ -212,30 +240,57 @@ const NavBar = () => {
             <div className="relative profile-menu" key={`authenticated-${authState.user.email}`}>
               <button 
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center gap-2 bg-transparent text-sm font-medium px-3 py-2 lg:px-4 border-2 rounded-lg cursor-pointer transition-all duration-300 hover:bg-blue-600 hover:text-white"
+                className="flex items-center gap-3 bg-white bg-opacity-20 backdrop-blur-sm text-sm font-medium px-4 py-2 lg:px-5 lg:py-3 border-2 border-white border-opacity-30 rounded-xl cursor-pointer transition-all duration-300 hover:bg-white hover:bg-opacity-30 hover:shadow-lg transform hover:scale-105"
                 style={{
-                  color: '#49557e',
-                  borderColor: '#49557e'
+                  color: '#2d3748',
+                  boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)'
                 }}
               >
-                <User size={16} />
-                <span className="hidden lg:inline">{authState.user.name || authState.user.email}</span>
+                <User size={20} className="text-blue-600" />
+                <span className="hidden lg:block text-sm font-semibold">
+                  {authState.user.username || authState.user.name || 'User'}
+                </span>
               </button>
 
-              {/* Profile Dropdown */}
+              {/* Enhanced Profile Dropdown */}
               {showProfileMenu && (
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
-                  <div className="p-3 border-b">
-                    <p className="font-medium text-gray-900">{authState.user.name || 'Customer'}</p>
-                    <p className="text-sm text-gray-600">{authState.user.email}</p>
+                <div className="absolute right-0 top-full mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+                  <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 text-white">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                        <User size={24} className="text-white" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-lg">{authState.user.username || authState.user.name || 'User'}</p>
+                        <p className="text-sm opacity-90">{authState.user.email}</p>
+                      </div>
+                    </div>
                   </div>
-                  <button 
-                    onClick={handleLogout}
-                    className="w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2 text-red-600"
-                  >
-                    <LogOut size={16} />
-                    Logout
-                  </button>
+                  
+                  {authState.type === 'customer' && (
+                    <div className="p-2">
+                      <button 
+                        onClick={() => {
+                          navigate('/profile');
+                          setShowProfileMenu(false);
+                        }}
+                        className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700 rounded-lg transition-colors"
+                      >
+                        <User size={18} />
+                        <span className="font-medium">My Profile</span>
+                      </button>
+                    </div>
+                  )}
+                  
+                  <div className="border-t border-gray-100 p-2">
+                    <button 
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-3 hover:bg-red-50 flex items-center gap-3 text-red-600 rounded-lg transition-colors"
+                    >
+                      <LogOut size={18} />
+                      <span className="font-medium">Sign Out</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -318,21 +373,37 @@ const NavBar = () => {
 
           {/* Mobile Authentication Section */}
           {authState.isAuthenticated && authState.user ? (
-            <div>
-              <div className="px-4 py-3 border-b border-gray-300 mb-4">
-                <p className="font-medium text-gray-900">{authState.user.name || 'Customer'}</p>
-                <p className="text-sm text-gray-600">{authState.user.email}</p>
+            <div className="border-t border-white border-opacity-30 pt-6 mt-6">
+              <div className="bg-white bg-opacity-20 backdrop-blur-sm px-4 py-4 border border-white border-opacity-30 rounded-xl mb-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <User size={24} className="text-blue-600" />
+                  <div>
+                    <p className="font-semibold text-gray-800">{authState.user.username || authState.user.name || 'User'}</p>
+                    <p className="text-sm text-gray-600">{authState.user.email}</p>
+                  </div>
+                </div>
+                
+                {authState.type === 'customer' && (
+                  <button 
+                    onClick={() => {
+                      navigate('/profile');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 bg-white bg-opacity-30 font-medium px-4 py-3 border border-white border-opacity-50 rounded-lg cursor-pointer transition-all duration-300 mb-3 text-gray-700"
+                  >
+                    <User size={20} />
+                    My Profile
+                  </button>
+                )}
+                
+                <button 
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 bg-red-500 bg-opacity-20 font-medium px-4 py-3 border border-red-400 border-opacity-50 rounded-lg cursor-pointer transition-all duration-300 text-red-700"
+                >
+                  <LogOut size={20} />
+                  Sign Out
+                </button>
               </div>
-              <button 
-                onClick={handleLogout}
-                className="flex items-center gap-3 bg-transparent font-medium px-4 py-3 border-2 rounded-lg cursor-pointer transition-all duration-300 mx-4 text-red-600"
-                style={{
-                  borderColor: '#dc2626'
-                }}
-              >
-                <LogOut size={20} />
-                Logout
-              </button>
             </div>
           ) : (
             <button 

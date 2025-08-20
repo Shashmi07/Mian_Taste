@@ -10,6 +10,24 @@ export const authAPI = {
   login: (email, password) => axios.post('/auth/login', { email, password })
 };
 
+// Customer API for customer authentication and registration
+export const customerAPI = {
+  register: (userData) => axios.post('/customers/register', userData),
+  login: (email, password) => axios.post('/customers/login', { email, password }),
+  getProfile: () => {
+    const token = localStorage.getItem('customerToken');
+    return axios.get('/customers/profile', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  },
+  updateProfile: (profileData) => {
+    const token = localStorage.getItem('customerToken');
+    return axios.put('/customers/profile', profileData, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  }
+};
+
 export const ordersAPI = {
   getOrders: () => axios.get('/orders', {
     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }

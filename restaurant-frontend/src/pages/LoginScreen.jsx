@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
-import { authAPI } from "../services/api";
+import { customerAPI } from "../services/api";
 import noodles3 from "../assets/beefRamen.jpg";
 import noodles1 from "../assets/chickenRamen.jpg";
 import noodles from "../assets/ramen.jpg";
@@ -9,8 +9,8 @@ import logo from "../assets/logo.jpeg";
 
 const LoginScreen = ({ onLogin }) => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("maria@restaurant.com"); // Pre-fill with demo credentials
-  const [password, setPassword] = useState("chef123"); // Pre-fill with demo credentials
+  const [email, setEmail] = useState(""); // Remove pre-filled demo credentials
+  const [password, setPassword] = useState(""); // Remove pre-filled demo credentials
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -21,20 +21,29 @@ const LoginScreen = ({ onLogin }) => {
     setError('');
     
     try {
-      const response = await authAPI.login(email, password);
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      const response = await customerAPI.login(email, password);
+      
+      // Save customer authentication data
+      localStorage.setItem('customerToken', response.data.data.token);
+      localStorage.setItem('customerUser', JSON.stringify(response.data.data.user));
+      
+      // Dispatch custom event to notify NavBar and other components
+      window.dispatchEvent(new CustomEvent('authChange'));
       
       if (onLogin) {
         onLogin(response.data);
-        navigate('/'); // Redirect to homepage
-      } else {
-        // Fallback navigation if no onLogin prop
-        navigate('/');
       }
+      
+      navigate('/'); // Redirect to homepage
     } catch (error) {
       console.error('Login failed:', error);
-      setError(error.response?.data?.message || 'Login failed. Please check your credentials.');
+      if (error.response) {
+        setError(error.response.data?.message || 'Login failed. Please check your credentials.');
+      } else if (error.request) {
+        setError('Network error. Please check your connection and try again.');
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -104,13 +113,6 @@ const LoginScreen = ({ onLogin }) => {
               {error}
             </div>
           )}
-
-          {/* Demo credentials info */}
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 text-blue-700 rounded-2xl text-sm">
-            <strong>Demo Credentials:</strong><br />
-            Email: maria@restaurant.com<br />
-            Password: chef123
-          </div>
 
           {/* Login form */}
           <form onSubmit={handleSubmit} className="space-y-6">

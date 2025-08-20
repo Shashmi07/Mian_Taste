@@ -1,4 +1,4 @@
-const Customer = require('../models/Customer');
+const getCustomerModel = require('../models/Customer');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 
@@ -12,6 +12,9 @@ const generateToken = (id) => {
 // Register new customer
 const registerCustomer = async (req, res) => {
   try {
+    // Get Customer model
+    const Customer = getCustomerModel();
+    
     // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -75,6 +78,9 @@ const registerCustomer = async (req, res) => {
 // Login customer
 const loginCustomer = async (req, res) => {
   try {
+    // Get Customer model
+    const Customer = getCustomerModel();
+    
     // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -143,6 +149,9 @@ const loginCustomer = async (req, res) => {
 // Get customer profile
 const getCustomerProfile = async (req, res) => {
   try {
+    // Get Customer model
+    const Customer = getCustomerModel();
+    
     const customer = await Customer.findById(req.user.id).select('-password');
     if (!customer) {
       return res.status(404).json({
@@ -178,6 +187,9 @@ const getCustomerProfile = async (req, res) => {
 // Update customer profile
 const updateCustomerProfile = async (req, res) => {
   try {
+    // Get Customer model
+    const Customer = getCustomerModel();
+    
     const { username, phoneNumber, address } = req.body;
     
     const customer = await Customer.findById(req.user.id);
