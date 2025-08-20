@@ -27,9 +27,10 @@ const LoginScreen = ({ onLogin }) => {
       
       if (onLogin) {
         onLogin(response.data);
+        navigate('/'); // Redirect to homepage
       } else {
         // Fallback navigation if no onLogin prop
-        navigate('/chef-dashboard');
+        navigate('/');
       }
     } catch (error) {
       console.error('Login failed:', error);

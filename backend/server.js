@@ -43,11 +43,13 @@ const authRoutes = require('./routes/auth'); // Changed from authRoutes
 const orderRoutes = require('./routes/orders'); // Changed from orderRoutes  
 const inventoryRoutes = require('./routes/inventory'); // Changed from inventoryRoutes
 const tableReservationRoutes = require('./routes/tableReservationRoutes');
+const customerRoutes = require('./routes/customerRoutes'); // Customer registration and authentication
 
 app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/table-reservations', tableReservationRoutes); // Uses customer database
+app.use('/api/customers', customerRoutes); // Customer authentication and profile management
 
 // Socket handlers
 try {

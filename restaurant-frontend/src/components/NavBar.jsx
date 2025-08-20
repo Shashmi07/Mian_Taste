@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { User, Menu, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, Menu, X, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import logo from "../assets/logo.jpeg";
 import Cart from "../assets/cart.png";
@@ -7,9 +7,97 @@ import Cart from "../assets/cart.png";
 const NavBar = () => {
   const [menu, setMenu] = useState('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [authState, setAuthState] = useState({
+    isAuthenticated: false,
+    user: null
+  });
   const navigate = useNavigate();
   // Updated menu order: moved 'about' to 5th position (end)
   const menuItems = ['home', 'menu', 'preorder', 'table reservation', 'about'];
+
+  // Simplified authentication check
+  const checkAuth = () => {
+    const savedUser = localStorage.getItem('user');
+    const token = localStorage.getItem('token');
+    
+    if (savedUser && token) {
+      try {
+        const userData = JSON.parse(savedUser);
+        setAuthState({
+          isAuthenticated: true,
+          user: userData
+        });
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        setAuthState({
+          isAuthenticated: false,
+          user: null
+        });
+      }
+    } else {
+      setAuthState({
+        isAuthenticated: false,
+        user: null
+      });
+    }
+  };
+
+  // Check auth on mount and set up listeners
+  useEffect(() => {
+    checkAuth();
+
+    // Listen for auth changes
+    const handleAuthChange = () => {
+      checkAuth();
+    };
+
+    // Listen for storage changes
+    const handleStorageChange = (e) => {
+      if (e.key === 'user' || e.key === 'token' || e.key === null) {
+        checkAuth();
+      }
+    };
+
+    window.addEventListener('authChange', handleAuthChange);
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('authChange', handleAuthChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showProfileMenu && !event.target.closest('.profile-menu')) {
+        setShowProfileMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showProfileMenu]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    setAuthState({
+      isAuthenticated: false,
+      user: null
+    });
+    setShowProfileMenu(false);
+    
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('authChange'));
+    
+    navigate('/');
+  };
 
   const handleMenuClick = (item) => {
     setMenu(item);
@@ -37,8 +125,30 @@ const NavBar = () => {
     }
   };
 
-  const handleSignInClick = () => {
-    navigate('/login'); // Navigate to LoginScreen
+  const handleSignInClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log('Sign In button clicked'); // Debug log
+    console.log('Current auth state:', authState); // Debug auth state
+    
+    // Try multiple approaches to ensure navigation works
+    try {
+      // Method 1: React Router navigate
+      navigate('/login');
+      
+      // Method 2: Fallback - direct window location (if navigate fails)
+      setTimeout(() => {
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      }, 100);
+    } catch (error) {
+      console.error('Navigation error:', error);
+      // Method 3: Last resort - direct location change
+      window.location.href = '/login';
+    }
+    
     setIsMobileMenuOpen(false); // Close mobile menu if open
   };
 
@@ -97,25 +207,54 @@ const NavBar = () => {
             <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full border-2 border-white bg-red-500"></span>
           </div>
 
-          <button 
-            onClick={handleSignInClick}
-            className="flex items-center gap-2 bg-transparent text-sm font-medium px-3 py-2 lg:px-4 border-2 rounded-lg cursor-pointer transition-all duration-300 hover:bg-opacity-100"
-            style={{
-              color: '#49557e',
-              borderColor: '#49557e'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = '#49557e';
-              e.target.style.color = 'white';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'transparent';
-              e.target.style.color = '#49557e';
-            }}
-          >
-            <User size={16} />
-            <span className="hidden lg:inline">Sign In</span>
-          </button>
+          {/* Authentication Section */}
+          {authState.isAuthenticated && authState.user ? (
+            <div className="relative profile-menu" key={`authenticated-${authState.user.email}`}>
+              <button 
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center gap-2 bg-transparent text-sm font-medium px-3 py-2 lg:px-4 border-2 rounded-lg cursor-pointer transition-all duration-300 hover:bg-blue-600 hover:text-white"
+                style={{
+                  color: '#49557e',
+                  borderColor: '#49557e'
+                }}
+              >
+                <User size={16} />
+                <span className="hidden lg:inline">{authState.user.name || authState.user.email}</span>
+              </button>
+
+              {/* Profile Dropdown */}
+              {showProfileMenu && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
+                  <div className="p-3 border-b">
+                    <p className="font-medium text-gray-900">{authState.user.name || 'Customer'}</p>
+                    <p className="text-sm text-gray-600">{authState.user.email}</p>
+                  </div>
+                  <button 
+                    onClick={handleLogout}
+                    className="w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2 text-red-600"
+                  >
+                    <LogOut size={16} />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button 
+              key="sign-in-button"
+              onClick={handleSignInClick}
+              type="button"
+              className="flex items-center gap-2 bg-transparent text-sm font-medium px-3 py-2 lg:px-4 border-2 rounded-lg cursor-pointer transition-all duration-300 hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{
+                color: '#49557e',
+                borderColor: '#49557e'
+              }}
+              aria-label="Sign In"
+            >
+              <User size={16} />
+              <span className="hidden lg:inline">Sign In</span>
+            </button>
+          )}
         </div>
 
         {/* Mobile Menu Icons */}
@@ -177,26 +316,37 @@ const NavBar = () => {
             ))}
           </ul>
 
-          {/* Mobile Sign In */}
-          <button 
-            onClick={handleSignInClick}
-            className="flex items-center gap-3 bg-transparent font-medium px-4 py-3 border-2 rounded-lg cursor-pointer transition-all duration-300 mx-4"
-            style={{
-              color: '#49557e',
-              borderColor: '#49557e'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = '#49557e';
-              e.target.style.color = 'white';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'transparent';
-              e.target.style.color = '#49557e';
-            }}
-          >
-            <User size={20} />
-            Sign In
-          </button>
+          {/* Mobile Authentication Section */}
+          {authState.isAuthenticated && authState.user ? (
+            <div>
+              <div className="px-4 py-3 border-b border-gray-300 mb-4">
+                <p className="font-medium text-gray-900">{authState.user.name || 'Customer'}</p>
+                <p className="text-sm text-gray-600">{authState.user.email}</p>
+              </div>
+              <button 
+                onClick={handleLogout}
+                className="flex items-center gap-3 bg-transparent font-medium px-4 py-3 border-2 rounded-lg cursor-pointer transition-all duration-300 mx-4 text-red-600"
+                style={{
+                  borderColor: '#dc2626'
+                }}
+              >
+                <LogOut size={20} />
+                Logout
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={handleSignInClick}
+              className="flex items-center gap-3 bg-transparent font-medium px-4 py-3 border-2 rounded-lg cursor-pointer transition-all duration-300 mx-4 hover:bg-blue-600 hover:text-white"
+              style={{
+                color: '#49557e',
+                borderColor: '#49557e'
+              }}
+            >
+              <User size={20} />
+              Sign In
+            </button>
+          )}
         </div>
       </div>
 

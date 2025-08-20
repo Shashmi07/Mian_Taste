@@ -42,6 +42,9 @@ function App() {
     setIsAuthenticated(true);
     localStorage.setItem('user', JSON.stringify(userData));
     localStorage.setItem('token', userData.token);
+    
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('authChange'));
   };
 
   const handleLogout = () => {
@@ -49,6 +52,9 @@ function App() {
     setIsAuthenticated(false);
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('authChange'));
   };
 
   return (
@@ -83,7 +89,7 @@ function App() {
               !isAuthenticated ? (
                 <LoginScreen onLogin={handleLogin} />
               ) : (
-                <Navigate to="/chef-dashboard" replace />
+                <Navigate to="/" replace />
               )
             } 
           />
@@ -94,7 +100,7 @@ function App() {
               !isAuthenticated ? (
                 <SignupScreen />
               ) : (
-                <Navigate to="/chef-dashboard" replace />
+                <Navigate to="/" replace />
               )
             } 
           />
