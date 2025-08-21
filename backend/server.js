@@ -15,7 +15,12 @@ const { connectCustomerDB } = require('./config/customerDatabase'); // Customer 
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -44,12 +49,14 @@ const orderRoutes = require('./routes/orders'); // Changed from orderRoutes
 const inventoryRoutes = require('./routes/inventory'); // Changed from inventoryRoutes
 const tableReservationRoutes = require('./routes/tableReservationRoutes');
 const customerRoutes = require('./routes/customerRoutes'); // Customer registration and authentication
+const menuRoutes = require('./routes/menuRoutes'); // Menu management routes
 
 app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/table-reservations', tableReservationRoutes); // Uses customer database
 app.use('/api/customers', customerRoutes); // Customer authentication and profile management
+app.use('/api/menu', menuRoutes); // Menu items API
 
 // Socket handlers
 try {

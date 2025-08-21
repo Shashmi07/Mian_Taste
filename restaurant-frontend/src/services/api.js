@@ -55,3 +55,21 @@ export const inventoryAPI = {
     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
   })
 };
+
+export const menuAPI = {
+  getAllMenuItems: () => axios.get('/menu'),
+  
+  getMenuItemsByCategory: (category) => axios.get(`/menu/category/${category}`),
+  
+  createMenuItem: (itemData) => axios.post('/menu', itemData, {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+  }),
+  
+  updateMenuItem: (itemId, itemData) => axios.put(`/menu/${itemId}`, itemData, {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+  }),
+  
+  deleteMenuItem: (itemId) => axios.delete(`/menu/${itemId}`, {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+  })
+};
