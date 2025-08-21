@@ -1,108 +1,140 @@
-import React, { useState } from 'react';
-import { Star, Search, Clock } from 'lucide-react'; // Added Clock icon
+import React, { useState, useEffect } from 'react';
+import { Star, Search, Clock } from 'lucide-react';
 import NavBar from '../components/NavBar';
 
-// Import all images
-// Ramen images
-import eggRamen from '../assets/eggRamen.jpg';
-import chickenRamen from '../assets/chickenRamen.jpg';
-import porkRamen from '../assets/porkRamen.jpg';
-import beefRamen from '../assets/beefRamen.jpg';
-import veganRamen from '../assets/veganRamen.jpeg';
-import seafoodRamen from '../assets/SeafoodRamen.jpg';
-import beefandPorkRamen from '../assets/beefandPorkRamen.jpg';
-import buldakChicken from '../assets/buldakChicken.jpg';
-import blackRamen from '../assets/blackRamen.jpg';
-import buldakPork from '../assets/buldakPork.jpg';
-import buldakBeef from '../assets/buldakBeef.jpg';
-import beefPorkBuldak from '../assets/beefPorkBuldak.jpg';
-import cheeseRamen from '../assets/cheeseRamen.png';
-import cheeseChicken from '../assets/cheeseChicken.jpg';
-import cheesePork from '../assets/cheesePork.jpg';
-import cheeseBeef from '../assets/beefCheese.jpg';
-import cheeseBeefPork from '../assets/beefPork.jpg';
+// Import all images from MenuItems folder and create mapping
+import chickenRamen from '../assets/MenuItems/chickenRamen.jpg';
+import eggRamen from '../assets/MenuItems/eggRamen.jpg';
+import porkRamen from '../assets/MenuItems/porkRamen.jpg';
+import beefRamen from '../assets/MenuItems/beefRamen.jpg';
+import veganRamen from '../assets/MenuItems/veganRamen.jpeg';
+import seafoodRamen from '../assets/MenuItems/SeafoodRamen.jpg';
+import beefandPorkRamen from '../assets/MenuItems/beefandPorkRamen.jpg';
+import buldakChicken from '../assets/MenuItems/buldakChicken.jpg';
+import blackRamen from '../assets/MenuItems/blackRamen.jpg';
+import buldakPork from '../assets/MenuItems/buldakPork.jpg';
+import buldakBeef from '../assets/MenuItems/buldakBeef.jpg';
+import beefPorkBuldak from '../assets/MenuItems/beefPorkBuldak.jpg';
+import cheeseRamen from '../assets/MenuItems/cheeseRamen.png';
+import cheeseChicken from '../assets/MenuItems/cheeseChicken.jpg';
+import cheesePork from '../assets/MenuItems/cheesePork.jpg';
+import cheeseBeef from '../assets/MenuItems/beefCheese.jpg';
+import cheeseBeefPork from '../assets/MenuItems/beefPork.jpg';
 
 // Rice images
-import chickenFriedRice from '../assets/rice.png';
-import eggRice from '../assets/eggRice.png';
-import vegetableRice from '../assets/vegetableRice.jpg';
-import porkRice from '../assets/porkRice.jpg';
-import beefRice from '../assets/beefRice.jpg';
-import porkAndBeefRice from '../assets/beefPorkRice.jpg';
+import chickenFriedRice from '../assets/MenuItems/rice.png';
+import eggRice from '../assets/MenuItems/eggRice.png';
+import vegetableRice from '../assets/MenuItems/vegetableRice.jpg';
+import porkRice from '../assets/MenuItems/porkRice.jpg';
+import beefRice from '../assets/MenuItems/beefRice.jpg';
+import porkAndBeefRice from '../assets/MenuItems/beefPorkRice.jpg';
 
 // Soup images
-import chickenSoup from '../assets/chickenSoup.jpg';
-import beefSoup from '../assets/beefSoup.jpg';
-import porkSoup from '../assets/porkSoup.jpg';
-import beefPorkSoup from '../assets/beefPorkSoup.jpg';
+import chickenSoup from '../assets/MenuItems/chickenSoup.jpg';
+import beefSoup from '../assets/MenuItems/beefSoup.jpg';
+import porkSoup from '../assets/MenuItems/porkSoup.jpg';
+import beefPorkSoup from '../assets/MenuItems/beefPorkSoup.jpg';
 
 // Drink images
-import coke from '../assets/cocacola.jpg';
-import sprite from '../assets/sprite.jpeg';
-import gingerBeer from '../assets/gingerBeer.png';
-import orange from '../assets/orangeJuice.jpg';
+import coke from '../assets/MenuItems/cocacola.jpg';
+import sprite from '../assets/MenuItems/sprite.jpeg';
+import gingerBeer from '../assets/MenuItems/gingerBeer.png';
+import orange from '../assets/MenuItems/orangeJuice.jpg';
+import watermelon from '../assets/MenuItems/watermelon.jpg';
 
 // More images
-import wooden from '../assets/wooden.jpg';
-import bamboo from '../assets/bamboo.jpg';
+import wooden from '../assets/MenuItems/wooden.jpg';
+import bamboo from '../assets/MenuItems/bamboo.jpg';
+
+// Default image for fallback
+import ramenDefault from '../assets/ramen.jpg';
+
+// Create image mapping
+const imageMap = {
+  // Ramen images
+  'chickenRamen.jpg': chickenRamen,
+  'eggRamen.jpg': eggRamen,
+  'porkRamen.jpg': porkRamen,
+  'beefRamen.jpg': beefRamen,
+  'veganRamen.jpeg': veganRamen,
+  'SeafoodRamen.jpg': seafoodRamen,
+  'beefandPorkRamen.jpg': beefandPorkRamen,
+  'buldakChicken.jpg': buldakChicken,
+  'blackRamen.jpg': blackRamen,
+  'buldakPork.jpg': buldakPork,
+  'buldakBeef.jpg': buldakBeef,
+  'beefPorkBuldak.jpg': beefPorkBuldak,
+  'cheeseRamen.png': cheeseRamen,
+  'cheeseChicken.jpg': cheeseChicken,
+  'cheesePork.jpg': cheesePork,
+  'beefCheese.jpg': cheeseBeef,
+  'beefPork.jpg': cheeseBeefPork,
+  
+  // Rice images
+  'rice.png': chickenFriedRice,
+  'eggRice.png': eggRice,
+  'vegetableRice.jpg': vegetableRice,
+  'porkRice.jpg': porkRice,
+  'beefRice.jpg': beefRice,
+  'beefPorkRice.jpg': porkAndBeefRice,
+  
+  // Soup images
+  'chickenSoup.jpg': chickenSoup,
+  'beefSoup.jpg': beefSoup,
+  'porkSoup.jpg': porkSoup,
+  'beefPorkSoup.jpg': beefPorkSoup,
+  
+  // Drink images
+  'cocacola.jpg': coke,
+  'sprite.jpeg': sprite,
+  'gingerBeer.png': gingerBeer,
+  'orangeJuice.jpg': orange,
+  'watermelon.jpg': watermelon,
+  
+  // More images
+  'wooden.jpg': wooden,
+  'bamboo.jpg': bamboo
+};
 
 const Menu = () => {
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
+  const [allMenuItems, setAllMenuItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // All menu items with categories and ratings
-  const allMenuItems = [
-    // Ramen items
-    { name: "Chicken Ramen", price: "RS.1100", image: chickenRamen, description: "Bowl of ramen with tender chicken", category: "Ramen", rating: 4.8 },
-    { name: "Egg Ramen", price: "RS.950", image: eggRamen, description: "Delicious ramen with soft-boiled egg", category: "Ramen", rating: 4.5 },
-    { name: "Pork Ramen", price: "RS.1300", image: porkRamen, description: "Bowl of ramen with juicy pork slices", category: "Ramen", rating: 4.9 },
-    { name: "Beef Ramen", price: "RS.1500", image: beefRamen, description: "Delicious ramen with flavorful beef slices", category: "Ramen", rating: 4.7 },
-    { name: "Seafood Ramen", price: "RS.1400", image: seafoodRamen, description: "Fresh seafood in savory ramen broth", category: "Ramen", rating: 4.6 },
-    { name: "Vegan Ramen", price: "RS.850", image: veganRamen, description: "Fresh vegetables in light ramen broth", category: "Ramen", rating: 4.3 },
-    { name: "Pork and Beef Ramen", price: "RS.1600", image: beefandPorkRamen, description: "Bowl of ramen with both pork and beef slices", category: "Ramen", rating: 4.9 },
-    { name: "Buldak Chicken Ramen", price: "RS.1200", image: buldakChicken, description: "Spicy Buldak chicken ramen", category: "Ramen", rating: 4.8 },
-    { name: "Buldak Black Ramen", price: "RS.950", image: blackRamen, description: "Spicy Buldak black ramen", category: "Ramen", rating: 4.4 },
-    { name: "Buldak Pork Ramen", price: "RS.1300", image: buldakPork, description: "Spicy Buldak pork ramen", category: "Ramen", rating: 4.7 },
-    { name: "Buldak Beef Ramen", price: "RS.1400", image: buldakBeef, description: "Spicy Buldak beef ramen", category: "Ramen", rating: 4.8 },
-    { name: "Buldak Beef & Pork Ramen", price: "RS.1500", image: beefPorkBuldak, description: "Spicy Buldak pork and beef ramen", category: "Ramen", rating: 4.9 },
-    { name: "Cheese Ramen", price: "RS.1000", image: cheeseRamen, description: "Creamy ramen topped with melted cheese", category: "Ramen", rating: 4.6 },
-    { name: "Cheese Chicken Ramen", price: "RS.1250", image: cheeseChicken, description: "Delicious cheese ramen with tender chicken", category: "Ramen", rating: 4.8 },
-    { name: "Cheese Pork Ramen", price: "RS.1350", image: cheesePork, description: "Delicious cheese ramen with pork slices", category: "Ramen", rating: 4.7 },
-    { name: "Cheese Beef Ramen", price: "RS.1500", image: cheeseBeef, description: "Creamy cheese ramen with flavorful beef", category: "Ramen", rating: 4.9 },
-    { name: "Cheese Beef and Pork Ramen", price: "RS.1600", image: cheeseBeefPork, description: "Cheese ramen with both beef and pork slices", category: "Ramen", rating: 4.8 },
+  // Fetch menu items from database
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:5000/api/menu');
+        if (response.ok) {
+          const data = await response.json();
+          setAllMenuItems(data);
+        } else {
+          console.error('Failed to fetch menu items');
+        }
+      } catch (error) {
+        console.error('Error fetching menu items:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Rice items
-    { name: "Chicken Fried Rice", price: "RS.1100", image: chickenFriedRice, description: "Delicious fried rice with chicken", category: "Rice", rating: 4.5 },
-    { name: "Vegetable Fried Rice", price: "RS.950", image: vegetableRice, description: "Fried rice with fresh vegetables", category: "Rice", rating: 4.2 },
-    { name: "Egg Fried Rice", price: "RS.950", image: eggRice, description: "Golden fried rice with fluffy egg", category: "Rice", rating: 4.4 },
-    { name: "Pork Fried Rice", price: "RS.1300", image: porkRice, description: "Savory rice with pork pieces", category: "Rice", rating: 4.6 },
-    { name: "Beef Fried Rice", price: "RS.1500", image: beefRice, description: "Fried rice with flavorful beef", category: "Rice", rating: 4.7 },
-    { name: "Beef & Pork Fried Rice", price: "RS.1600", image: porkAndBeefRice, description: "Tasty mix of beef and pork in fried rice", category: "Rice", rating: 4.8 },
+    fetchMenuItems();
+  }, []);
 
-    // Soup items
-    { name: "Chicken Soup", price: "RS.400", image: chickenSoup, description: "Warm soup with tender chicken", category: "Soup", rating: 4.3 },
-    { name: "Pork Soup", price: "RS.500", image: porkSoup, description: "Classic pork soup", category: "Soup", rating: 4.4 },
-    { name: "Beef and Pork Soup", price: "RS.650", image: beefPorkSoup, description: "Soup with mix of pork and beef", category: "Soup", rating: 4.6 },
-    { name: "Beef Soup", price: "RS.600", image: beefSoup, description: "Beef soup with vegetables", category: "Soup", rating: 4.5 },
-
-    // Drink items
-    { name: "Coke", price: "RS.120", image: coke, description: "Cocacola 250ml Bottle", category: "Drinks", rating: 4.2 },
-    { name: "Ginger Beer", price: "RS.150", image: gingerBeer, description: "Ginger Beer 250ml Bottle", category: "Drinks", rating: 4.0 },
-    { name: "Sprite", price: "RS.120", image: sprite, description: "Sprite 250ml Bottle", category: "Drinks", rating: 4.1 },
-    { name: "Orange Juice", price: "RS.200", image: orange, description: "Freshly squeezed orange juice", category: "Drinks", rating: 4.5 },
-
-    // More items
-    { name: "Wooden Chopsticks", price: "RS.50", image: wooden, description: "One wooden chopstick", category: "More", rating: 4.0 },
-    { name: "Bamboo Chopsticks", price: "RS.100", image: bamboo, description: "One bamboo chopstick", category: "More", rating: 4.3 },
-  ];
+  // Helper function to get image from mapping
+  const getItemImage = (imageName) => {
+    return imageMap[imageName] || ramenDefault;
+  };
 
   const categories = ['All', 'Ramen', 'Rice', 'Soup', 'Drinks', 'More'];
 
   // Filter items based on active category and search term
   const filteredItems = allMenuItems.filter(item => {
     const matchesCategory = activeCategory === 'All' || item.category === activeCategory;
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -209,7 +241,17 @@ const Menu = () => {
 
       {/* Menu Items Grid */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {filteredItems.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="mx-auto h-12 w-12 text-gray-400 mb-4 animate-spin">
+              <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Loading menu items...</h3>
+            <p className="text-gray-500">Please wait while we fetch the latest menu</p>
+          </div>
+        ) : filteredItems.length === 0 ? (
           <div className="text-center py-12">
             <Search className="mx-auto h-12 w-12 text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No items found</h3>
@@ -219,13 +261,13 @@ const Menu = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-            {filteredItems.map((item, idx) => (
-              <div key={idx} className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+            {filteredItems.map((item) => (
+              <div key={item._id} className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
                 
                 {/* Image with Heart Icon */}
                 <div className="relative aspect-square overflow-hidden">
                   <img 
-                    src={item.image} 
+                    src={getItemImage(item.image)} 
                     alt={item.name} 
                     className="w-full h-full object-cover"
                   />
@@ -247,7 +289,7 @@ const Menu = () => {
                   
                   {/* Description */}
                   <p className="text-sm text-gray-600 mb-3 leading-relaxed">
-                    {item.description}
+                    {item.description || 'Delicious and freshly prepared'}
                   </p>
                   
                   {/* Rating and Time Row - Only for food items */}
@@ -255,8 +297,8 @@ const Menu = () => {
                     <div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
                       {/* Rating */}
                       <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="font-medium text-gray-900">{item.rating}</span>
+                        {renderStars(item.rating || 4.5)}
+                        <span className="ml-1 font-medium text-gray-900">{item.rating || 4.5}</span>
                       </div>
                       
                       {/* Cooking Time */}

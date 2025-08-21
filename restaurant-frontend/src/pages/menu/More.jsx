@@ -2,8 +2,8 @@ import React from 'react'
 import NavBar from '../../components/NavBar' // Fixed: components (lowercase)
 import MenuCategary from '../../components/MenuCategary' // Fixed: components (lowercase)
 
-import wooden from '../../assets/wooden.jpg'
-import bamboo from '../../assets/bamboo.jpg'
+import wooden from '../../assets/MenuItems/wooden.jpg'
+import bamboo from '../../assets/MenuItems/bamboo.jpg'
 
 
 const MoreItems = [

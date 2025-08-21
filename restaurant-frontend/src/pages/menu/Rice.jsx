@@ -3,12 +3,12 @@ import NavBar from '../../components/NavBar' // Fixed: components (lowercase)
 import MenuCategary from '../../components/MenuCategary' // Fixed: components (lowercase)
 
 // Image imports for mapping
-import chickenFriedRice from '../../assets/rice.png'
-import eggRice from '../../assets/eggRice.png'
-import vegetableRice from '../../assets/vegetableRice.jpg'
-import porkRice from '../../assets/porkRice.jpg'
-import beefRice from '../../assets/beefRice.jpg'
-import porkAndBeefRice from '../../assets/beefPorkRice.jpg'
+import chickenFriedRice from '../../assets/MenuItems/rice.png'
+import eggRice from '../../assets/MenuItems/eggRice.png'
+import vegetableRice from '../../assets/MenuItems/vegetableRice.jpg'
+import porkRice from '../../assets/MenuItems/porkRice.jpg'
+import beefRice from '../../assets/MenuItems/beefRice.jpg'
+import porkAndBeefRice from '../../assets/MenuItems/beefPorkRice.jpg'
 
 // Image mapping for dynamic image loading
 const imageMap = {

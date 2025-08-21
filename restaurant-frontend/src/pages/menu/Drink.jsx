@@ -2,10 +2,10 @@ import React from 'react'
 import MenuCategary from '../../components/MenuCategary' // Fixed: components (lowercase)
 import NavBar from '../../components/NavBar'; // Fixed: components (lowercase)
 
-import coke from '../../assets/cocacola.jpg'
-import sprite from '../../assets/sprite.jpeg'
-import gingerBeer from '../../assets/gingerBeer.png'
-import orange from '../../assets/orangeJuice.jpg'
+import coke from '../../assets/MenuItems/cocacola.jpg'
+import sprite from '../../assets/MenuItems/sprite.jpeg'
+import gingerBeer from '../../assets/MenuItems/gingerBeer.png'
+import orange from '../../assets/MenuItems/orangeJuice.jpg'
 
 const DrinkItems = [
     { name: "Coke", price: "RS.120", image: coke, description: "Cocacola 250ml Bottle" },
