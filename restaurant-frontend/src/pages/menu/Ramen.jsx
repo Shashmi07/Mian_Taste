@@ -3,23 +3,23 @@ import NavBar from '../../components/NavBar'; // Fixed: components (lowercase)
 import MenuCategary from '../../components/MenuCategary'; // Fixed: components (lowercase)
 
 // Image imports for mapping
-import eggRamen from '../../assets/eggRamen.jpg';
-import chickenRamen from '../../assets/chickenRamen.jpg';
-import porkRamen from '../../assets/porkRamen.jpg';
-import beefRamen from '../../assets/beefRamen.jpg';
-import veganRamen from '../../assets/veganRamen.jpeg';
-import seafoodRamen from '../../assets/SeafoodRamen.jpg';
-import beefandPorkRamen from '../../assets/beefandPorkRamen.jpg';
-import buldakChicken from '../../assets/buldakChicken.jpg';
-import blackRamen from '../../assets/blackRamen.jpg';
-import buldakPork from '../../assets/buldakPork.jpg';
-import buldakBeef from '../../assets/buldakBeef.jpg';
-import beefPorkBuldak from '../../assets/beefPorkBuldak.jpg';
-import cheeseRamen from '../../assets/cheeseRamen.png';
-import cheeseChicken from '../../assets/cheeseChicken.jpg';
-import cheesePork from '../../assets/cheesePork.jpg';
-import cheeseBeef from '../../assets/beefCheese.jpg';
-import cheeseBeefPork from '../../assets/beefPork.jpg';
+import eggRamen from '../../assets/MenuItems/eggRamen.jpg';
+import chickenRamen from '../../assets/MenuItems/chickenRamen.jpg';
+import porkRamen from '../../assets/MenuItems/porkRamen.jpg';
+import beefRamen from '../../assets/MenuItems/beefRamen.jpg';
+import veganRamen from '../../assets/MenuItems/veganRamen.jpeg';
+import seafoodRamen from '../../assets/MenuItems/SeafoodRamen.jpg';
+import beefandPorkRamen from '../../assets/MenuItems/beefandPorkRamen.jpg';
+import buldakChicken from '../../assets/MenuItems/buldakChicken.jpg';
+import blackRamen from '../../assets/MenuItems/blackRamen.jpg';
+import buldakPork from '../../assets/MenuItems/buldakPork.jpg';
+import buldakBeef from '../../assets/MenuItems/buldakBeef.jpg';
+import beefPorkBuldak from '../../assets/MenuItems/beefPorkBuldak.jpg';
+import cheeseRamen from '../../assets/MenuItems/cheeseRamen.png';
+import cheeseChicken from '../../assets/MenuItems/cheeseChicken.jpg';
+import cheesePork from '../../assets/MenuItems/cheesePork.jpg';
+import cheeseBeef from '../../assets/MenuItems/beefCheese.jpg';
+import cheeseBeefPork from '../../assets/MenuItems/beefPork.jpg';
 
 // Image mapping for dynamic image loading
 const imageMap = {

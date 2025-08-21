@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { customerAPI } from "../services/api";
-import noodles3 from "../assets/beefRamen.jpg";
-import noodles1 from "../assets/chickenRamen.jpg";
+import noodles3 from "../assets/MenuItems/beefRamen.jpg";
+import noodles1 from "../assets/MenuItems/chickenRamen.jpg";
 import noodles from "../assets/ramen.jpg";
 import logo from "../assets/logo.jpeg";
 

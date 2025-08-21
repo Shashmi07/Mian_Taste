@@ -2,10 +2,10 @@ import React from 'react'
 import MenuCategary from '../../components/MenuCategary'; // Fixed: components (lowercase)
 import NavBar from '../../components/NavBar'; // Fixed: components (lowercase)
 
-import chickenSoup from '../../assets/chickenSoup.jpg'
-import beefSoup from '../../assets/beefSoup.jpg'
-import porkSoup from '../../assets/porkSoup.jpg'
-import beefPorkSoup from '../../assets/beefPorkSoup.jpg'
+import chickenSoup from '../../assets/MenuItems/chickenSoup.jpg'
+import beefSoup from '../../assets/MenuItems/beefSoup.jpg'
+import porkSoup from '../../assets/MenuItems/porkSoup.jpg'
+import beefPorkSoup from '../../assets/MenuItems/beefPorkSoup.jpg'
 
 const soupItem = [
     { name: "Chicken Soup", price: "RS.400", image: chickenSoup, description: "Warm soup with tender chicken" },
