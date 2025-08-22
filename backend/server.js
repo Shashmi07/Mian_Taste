@@ -10,6 +10,7 @@ dotenv.config();
 // Database connections
 const connectDB = require('./config/database'); // Chef database
 const { connectCustomerDB } = require('./config/customerDatabase'); // Customer database
+const { connectAdminDB } = require('./config/adminDatabase'); // Admin database
 
 // Initialize Express
 const app = express();
@@ -39,9 +40,10 @@ const io = socketIo(server, {
   }
 });
 
-// Connect to both databases
+// Connect to all databases
 connectDB(); // Chef dashboard database
 connectCustomerDB(); // Customer dashboard database
+connectAdminDB(); // Admin dashboard database
 
 // Routes - Fix the import names to match your actual file names
 const authRoutes = require('./routes/auth'); // Changed from authRoutes
@@ -50,6 +52,8 @@ const inventoryRoutes = require('./routes/inventory'); // Changed from inventory
 const tableReservationRoutes = require('./routes/tableReservationRoutes');
 const customerRoutes = require('./routes/customerRoutes'); // Customer registration and authentication
 const menuRoutes = require('./routes/menuRoutes'); // Menu management routes
+const userManagementRoutes = require('./routes/userManagement'); // User management routes
+const adminAuthRoutes = require('./routes/adminAuth'); // Admin authentication routes
 
 app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
@@ -57,6 +61,8 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/table-reservations', tableReservationRoutes); // Uses customer database
 app.use('/api/customers', customerRoutes); // Customer authentication and profile management
 app.use('/api/menu', menuRoutes); // Menu items API
+app.use('/api/user-management', userManagementRoutes); // User management API
+app.use('/api/admin-auth', adminAuthRoutes); // Admin authentication API
 
 // Socket handlers
 try {
