@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit2, Trash2, User, Mail, Phone, Shield, UserCheck, RefreshCw, AlertCircle } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, User, Mail, Phone, Shield, UserCheck, RefreshCw, AlertCircle, X } from 'lucide-react';
 import { userManagementService } from '../../services/userManagementAPI';
 
 const UserManagement = () => {
@@ -22,6 +22,28 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [addUserLoading, setAddUserLoading] = useState(false);
+  const [showEditUserModal, setShowEditUserModal] = useState(false);
+  const [editUserLoading, setEditUserLoading] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    fullName: '',
+    role: 'waiter',
+    phoneNumber: '',
+    address: ''
+  });
+  const [editFormData, setEditFormData] = useState({
+    username: '',
+    email: '',
+    fullName: '',
+    role: 'waiter',
+    phoneNumber: '',
+    address: ''
+  });
 
   // Fetch users data
   const fetchUsers = async () => {
@@ -63,30 +85,211 @@ const UserManagement = () => {
   // Toggle user status
   const handleToggleStatus = async (userId, userType) => {
     try {
+      setError(null);
       const response = await userManagementService.toggleUserStatus(userId, userType);
       if (response.success) {
         // Refresh the users list
         await fetchUsers();
+        // Show brief success message
+        const action = response.message.includes('activated') ? 'activated' : 'deactivated';
+        console.log(`User ${action} successfully`);
       }
     } catch (error) {
       console.error('Error toggling user status:', error);
-      setError('Failed to update user status.');
+      if (error.response && error.response.data && error.response.data.message) {
+        setError(error.response.data.message);
+      } else {
+        setError('Failed to update user status. Please try again.');
+      }
     }
   };
 
-  // Delete user
+  // Delete user (soft delete - deactivate)
   const handleDeleteUser = async (userId, userType) => {
-    if (window.confirm('Are you sure you want to deactivate this user?')) {
+    // Find the user to get their name for confirmation
+    const user = users.find(u => u._id === userId);
+    const userName = user ? (user.fullName || user.username) : 'this user';
+    
+    if (window.confirm(`Are you sure you want to permanently deactivate ${userName}? This action will set their status to inactive.`)) {
       try {
+        setError(null);
         const response = await userManagementService.deleteUser(userId, userType);
         if (response.success) {
           // Refresh the users list
           await fetchUsers();
+          console.log('User deactivated successfully');
         }
       } catch (error) {
-        console.error('Error deleting user:', error);
-        setError('Failed to delete user.');
+        console.error('Error deactivating user:', error);
+        if (error.response && error.response.data && error.response.data.message) {
+          setError(error.response.data.message);
+        } else {
+          setError('Failed to deactivate user. Please try again.');
+        }
       }
+    }
+  };
+
+  // Handle add user form input changes
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Reset form data
+  const resetForm = () => {
+    setFormData({
+      username: '',
+      email: '',
+      password: '',
+      fullName: '',
+      role: 'waiter',
+      phoneNumber: '',
+      address: ''
+    });
+    setError(null);
+  };
+
+  // Handle add user submission
+  const handleAddUser = async (e) => {
+    e.preventDefault();
+    setAddUserLoading(true);
+    setError(null);
+
+    try {
+      // Validate required fields
+      if (!formData.username || !formData.email || !formData.password || 
+          !formData.fullName || !formData.phoneNumber) {
+        setError('All required fields must be filled out.');
+        return;
+      }
+
+      // Validate email format
+      const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+      if (!emailRegex.test(formData.email)) {
+        setError('Please enter a valid email address.');
+        return;
+      }
+
+      // Validate password length
+      if (formData.password.length < 6) {
+        setError('Password must be at least 6 characters long.');
+        return;
+      }
+
+      const response = await userManagementService.createStaffUser(formData);
+      
+      if (response.success) {
+        // Success - close modal and refresh users
+        setShowAddUserModal(false);
+        resetForm();
+        await fetchUsers();
+        // Show success message briefly
+        setError(null);
+      }
+    } catch (error) {
+      console.error('Error adding user:', error);
+      if (error.response && error.response.data && error.response.data.message) {
+        setError(error.response.data.message);
+      } else {
+        setError('Failed to add user. Please try again.');
+      }
+    } finally {
+      setAddUserLoading(false);
+    }
+  };
+
+  // Handle opening add user modal
+  const handleOpenAddUserModal = () => {
+    resetForm();
+    setShowAddUserModal(true);
+  };
+
+  // Handle edit user form input changes
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Reset edit form data
+  const resetEditForm = () => {
+    setEditFormData({
+      username: '',
+      email: '',
+      fullName: '',
+      role: 'waiter',
+      phoneNumber: '',
+      address: ''
+    });
+    setEditingUser(null);
+    setError(null);
+  };
+
+  // Handle opening edit user modal
+  const handleOpenEditUserModal = (user) => {
+    setEditingUser(user);
+    setEditFormData({
+      username: user.username || '',
+      email: user.email || '',
+      fullName: user.fullName || user.username || '',
+      role: user.role || 'waiter',
+      phoneNumber: user.phoneNumber || '',
+      address: user.address || ''
+    });
+    setError(null);
+    setShowEditUserModal(true);
+  };
+
+  // Handle edit user submission
+  const handleEditUser = async (e) => {
+    e.preventDefault();
+    if (!editingUser) return;
+
+    setEditUserLoading(true);
+    setError(null);
+
+    try {
+      // Validate required fields
+      if (!editFormData.username || !editFormData.email || !editFormData.fullName || !editFormData.phoneNumber) {
+        setError('All required fields must be filled out.');
+        return;
+      }
+
+      // Validate email format
+      const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+      if (!emailRegex.test(editFormData.email)) {
+        setError('Please enter a valid email address.');
+        return;
+      }
+
+      const response = await userManagementService.updateUser(
+        editingUser._id,
+        editFormData,
+        editingUser.userType
+      );
+      
+      if (response.success) {
+        // Success - close modal and refresh users
+        setShowEditUserModal(false);
+        resetEditForm();
+        await fetchUsers();
+        setError(null);
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+      if (error.response && error.response.data && error.response.data.message) {
+        setError(error.response.data.message);
+      } else {
+        setError('Failed to update user. Please try again.');
+      }
+    } finally {
+      setEditUserLoading(false);
     }
   };
 
@@ -173,7 +376,10 @@ const UserManagement = () => {
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
           </button>
-          <button className="btn-primary flex items-center space-x-2">
+          <button 
+            onClick={handleOpenAddUserModal}
+            className="btn-primary flex items-center space-x-2"
+          >
             <Plus className="w-5 h-5" />
             <span>Add User</span>
           </button>
@@ -319,6 +525,7 @@ const UserManagement = () => {
                     <td>
                       <div className="flex space-x-2">
                         <button 
+                          onClick={() => handleOpenEditUserModal(user)}
                           className="text-blue-600 hover:text-blue-800 transition-colors"
                           title="Edit user"
                         >
@@ -355,6 +562,327 @@ const UserManagement = () => {
           )}
           </div>
         </>
+      )}
+
+      {/* Add User Modal */}
+      {showAddUserModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-800">Add New User</h2>
+              <button
+                onClick={() => setShowAddUserModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-4 flex items-center space-x-2">
+                <AlertCircle className="w-5 h-5" />
+                <span className="text-sm">{error}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleAddUser} className="space-y-4">
+              <div>
+                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="fullName"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleFormChange}
+                  className="form-input w-full"
+                  placeholder="Enter full name"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                  Username <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="username"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleFormChange}
+                  className="form-input w-full"
+                  placeholder="Enter username"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleFormChange}
+                  className="form-input w-full"
+                  placeholder="Enter email address"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                  Password <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleFormChange}
+                  className="form-input w-full"
+                  placeholder="Enter password (min. 6 characters)"
+                  required
+                  minLength={6}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+                  Role <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleFormChange}
+                  className="form-select w-full"
+                  required
+                >
+                  <option value="admin">Admin</option>
+                  <option value="chef">Chef</option>
+                  <option value="waiter">Waiter</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone Number <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="tel"
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={handleFormChange}
+                  className="form-input w-full"
+                  placeholder="Enter phone number (e.g., +1234567890 or 0771234567)"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
+                  Address
+                </label>
+                <textarea
+                  id="address"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleFormChange}
+                  className="form-input w-full"
+                  placeholder="Enter address (optional)"
+                  rows={2}
+                />
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAddUserModal(false)}
+                  className="btn-secondary flex-1"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={addUserLoading}
+                  className="btn-primary flex-1 flex items-center justify-center space-x-2"
+                >
+                  {addUserLoading ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Adding...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      <span>Add User</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {showEditUserModal && editingUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-800">
+                Edit User: {editingUser.fullName || editingUser.username}
+              </h2>
+              <button
+                onClick={() => setShowEditUserModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-4 flex items-center space-x-2">
+                <AlertCircle className="w-5 h-5" />
+                <span className="text-sm">{error}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleEditUser} className="space-y-4">
+              <div>
+                <label htmlFor="editFullName" className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="editFullName"
+                  name="fullName"
+                  value={editFormData.fullName}
+                  onChange={handleEditFormChange}
+                  className="form-input w-full"
+                  placeholder="Enter full name"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="editUsername" className="block text-sm font-medium text-gray-700 mb-1">
+                  Username <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="editUsername"
+                  name="username"
+                  value={editFormData.username}
+                  onChange={handleEditFormChange}
+                  className="form-input w-full"
+                  placeholder="Enter username"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="editEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  id="editEmail"
+                  name="email"
+                  value={editFormData.email}
+                  onChange={handleEditFormChange}
+                  className="form-input w-full"
+                  placeholder="Enter email address"
+                  required
+                />
+              </div>
+
+              {editingUser.userType === 'staff' && (
+                <div>
+                  <label htmlFor="editRole" className="block text-sm font-medium text-gray-700 mb-1">
+                    Role <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="editRole"
+                    name="role"
+                    value={editFormData.role}
+                    onChange={handleEditFormChange}
+                    className="form-select w-full"
+                    required
+                  >
+                    <option value="admin">Admin</option>
+                    <option value="chef">Chef</option>
+                    <option value="waiter">Waiter</option>
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label htmlFor="editPhoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone Number <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="tel"
+                  id="editPhoneNumber"
+                  name="phoneNumber"
+                  value={editFormData.phoneNumber}
+                  onChange={handleEditFormChange}
+                  className="form-input w-full"
+                  placeholder="Enter phone number (e.g., +1234567890 or 0771234567)"
+                  required
+                />
+              </div>
+
+              <div>
+                <label htmlFor="editAddress" className="block text-sm font-medium text-gray-700 mb-1">
+                  Address
+                </label>
+                <textarea
+                  id="editAddress"
+                  name="address"
+                  value={editFormData.address}
+                  onChange={handleEditFormChange}
+                  className="form-input w-full"
+                  placeholder="Enter address (optional)"
+                  rows={2}
+                />
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowEditUserModal(false)}
+                  className="btn-secondary flex-1"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editUserLoading}
+                  className="btn-primary flex-1 flex items-center justify-center space-x-2"
+                >
+                  {editUserLoading ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Edit2 className="w-4 h-4" />
+                      <span>Update User</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

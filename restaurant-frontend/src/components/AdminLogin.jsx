@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { ChefHat } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { adminAuthAPI } from '../services/api';
 
-export default function Login({ onLogin }) {
+export default function AdminLogin({ onLogin }) {
   const navigate = useNavigate();
   const [credentials, setCredentials] = useState({ 
     email: '', 
@@ -14,21 +14,17 @@ export default function Login({ onLogin }) {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    console.log('Login form submitted with:', credentials);
     setLoading(true);
     setError('');
     
     try {
-      console.log('Attempting login...');
       const response = await adminAuthAPI.login(credentials.email, credentials.password);
-      console.log('Login response:', response);
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       onLogin(response.data);
       
-      // Redirect to chef dashboard after successful login
-      console.log('Redirecting to chef dashboard...');
-      navigate('/chef-dashboard');
+      // Redirect to admin dashboard after successful login
+      navigate('/admin-dashboard');
     } catch (error) {
       console.error('Login failed:', error);
       setError(error.response?.data?.message || 'Login failed');
@@ -38,16 +34,16 @@ export default function Login({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
       <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-lg">
         <div className="text-center mb-8">
-          <div className="bg-orange-500 p-3 rounded-full w-16 h-16 mx-auto mb-4">
-            <ChefHat className="text-white w-10 h-10" />
+          <div className="bg-blue-500 p-3 rounded-full w-16 h-16 mx-auto mb-4">
+            <Shield className="text-white w-10 h-10" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Chef Dashboard
+            Admin Dashboard
           </h2>
-          <p className="text-gray-600">Sign in to manage your kitchen</p>
+          <p className="text-gray-600">Sign in to manage the restaurant</p>
         </div>
         
         {error && (
@@ -65,7 +61,7 @@ export default function Login({ onLogin }) {
               type="email"
               value={credentials.email}
               onChange={(e) => setCredentials({...credentials, email: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             />
           </div>
@@ -78,7 +74,7 @@ export default function Login({ onLogin }) {
               type="password"
               value={credentials.password}
               onChange={(e) => setCredentials({...credentials, password: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             />
           </div>
@@ -86,7 +82,7 @@ export default function Login({ onLogin }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white p-3 rounded-lg font-medium transition duration-200"
+            className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white p-3 rounded-lg font-medium transition duration-200"
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
@@ -94,7 +90,7 @@ export default function Login({ onLogin }) {
         
         <div className="mt-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
           <strong>Note:</strong><br />
-          Use your chef credentials from the admin dashboard
+          Use your admin credentials to access the dashboard
         </div>
       </div>
     </div>
