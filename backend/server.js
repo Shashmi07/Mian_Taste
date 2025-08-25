@@ -17,7 +17,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -35,7 +35,7 @@ app.use((req, res, next) => {
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000", "http://localhost:3001"],
     methods: ["GET", "POST"]
   }
 });
@@ -54,6 +54,7 @@ const customerRoutes = require('./routes/customerRoutes'); // Customer registrat
 const menuRoutes = require('./routes/menuRoutes'); // Menu management routes
 const userManagementRoutes = require('./routes/userManagement'); // User management routes
 const adminAuthRoutes = require('./routes/adminAuth'); // Admin authentication routes
+const adminInventoryRoutes = require('./routes/adminInventory'); // Admin inventory routes (read-only)
 
 app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
@@ -63,6 +64,7 @@ app.use('/api/customers', customerRoutes); // Customer authentication and profil
 app.use('/api/menu', menuRoutes); // Menu items API
 app.use('/api/user-management', userManagementRoutes); // User management API
 app.use('/api/admin-auth', adminAuthRoutes); // Admin authentication API
+app.use('/api/admin-inventory', adminInventoryRoutes); // Admin inventory API (read-only)
 
 // Socket handlers
 try {

@@ -83,10 +83,21 @@ export default function ChefDashboard({ user, onLogout }) {
 
   const loadOrders = async () => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found, redirecting to login');
+        onLogout();
+        return;
+      }
       const response = await ordersAPI.getOrders();
       setOrders(response.data.orders || []);
     } catch (error) {
       console.error('Error loading orders:', error);
+      if (error.response?.status === 401) {
+        console.error('Authentication failed, redirecting to login');
+        onLogout();
+        return;
+      }
       setOrders([]);
     } finally {
       setLoading(false);
@@ -95,10 +106,21 @@ export default function ChefDashboard({ user, onLogout }) {
 
   const loadInventory = async () => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found, redirecting to login');
+        onLogout();
+        return;
+      }
       const response = await inventoryAPI.getInventory();
       setInventory(response.data.inventory || []);
     } catch (error) {
       console.error('Error loading inventory:', error);
+      if (error.response?.status === 401) {
+        console.error('Authentication failed, redirecting to login');
+        onLogout();
+        return;
+      }
       setInventory([]);
     }
   };

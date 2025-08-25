@@ -227,7 +227,7 @@ const getAllReservations = async (req, res) => {
     }
 
     const reservations = await TableReservation.find(query)
-      .sort({ reservationDate: 1, timeSlot: 1 })
+      .sort({ createdAt: -1 })  // Sort by creation date, newest first
       .select('-__v');
 
     res.json({

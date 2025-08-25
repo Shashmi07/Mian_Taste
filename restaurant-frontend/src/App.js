@@ -8,6 +8,7 @@ import ScrollToTop from './components/ScrollToTop';
 import PreOrder from './pages/PreOrder';
 import TableReservation from './pages/TableReservation';
 import Login from './components/Login';
+import AdminLogin from './components/AdminLogin';
 import LoginScreen from './pages/LoginScreen';
 import SignupScreen from './pages/SignupScreen';
 import ChefDashboard from './pages/ChefDashboard';
@@ -15,6 +16,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import LiveTracking from './pages/LiveTracking';
 import PaymentGateway from './pages/PaymentGateway';
 import Menu from './pages/Menu'; // Main menu with category navigation
+import Cart from './pages/Cart';
 
 // Import menu category pages
 import Ramen from './pages/menu/Ramen';
@@ -23,9 +25,11 @@ import Soup from './pages/menu/Soup';
 import Drink from './pages/menu/Drink';
 import More from './pages/menu/More';
 
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Check if user is logged in
@@ -36,12 +40,15 @@ function App() {
       setUser(JSON.parse(savedUser));
       setIsAuthenticated(true);
     }
+    setLoading(false);
   }, []);
 
   const handleLogin = (userData) => {
-    setUser(userData);
+    // userData is the full response with { success, message, token, user }
+    const userObj = userData.user || userData;
+    setUser(userObj);
     setIsAuthenticated(true);
-    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('user', JSON.stringify(userObj));
     localStorage.setItem('token', userData.token);
     
     // Dispatch custom event to notify other components
@@ -57,6 +64,17 @@ function App() {
     // Dispatch custom event to notify other components
     window.dispatchEvent(new CustomEvent('authChange'));
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Router>
@@ -80,6 +98,7 @@ function App() {
           <Route path="/menu/more" element={<More />} />
           
           {/* Backend pages */}
+          <Route path="/cart" element={<Cart />} />
           <Route path="/payment" element={<PaymentGateway />} />
           <Route path="/track-order" element={<LiveTracking />} />
           
@@ -106,33 +125,46 @@ function App() {
             } 
           />
           
-          {/* Legacy login component route */}
+          {/* Admin login component route */}
           <Route 
             path="/admin-login" 
-            element={
-              !isAuthenticated ? (
-                <Login onLogin={handleLogin} />
-              ) : (
-                <Navigate to="/admin-dashboard" replace />
-              )
-            } 
+            element={<AdminLogin onLogin={handleLogin} />}
           />
           
           <Route 
             path="/chef-dashboard" 
             element={
-              isAuthenticated ? (
+              loading ? (
+                <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading...</p>
+                  </div>
+                </div>
+              ) : isAuthenticated && user?.role === 'chef' ? (
                 <ChefDashboard user={user} onLogout={handleLogout} />
               ) : (
-                <Navigate to="/admin-login" replace />
+                <Navigate to="/chef-login" replace />
               )
             } 
+          />
+
+          <Route 
+            path="/chef-login" 
+            element={<Login onLogin={handleLogin} />}
           />
           
           <Route 
             path="/admin-dashboard" 
             element={
-              isAuthenticated ? (
+              loading ? (
+                <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading...</p>
+                  </div>
+                </div>
+              ) : isAuthenticated && (user?.role === 'admin' || user?.role === 'waiter') ? (
                 <AdminDashboard user={user} onLogout={handleLogout} />
               ) : (
                 <Navigate to="/admin-login" replace />

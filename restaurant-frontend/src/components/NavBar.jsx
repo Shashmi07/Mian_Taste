@@ -226,7 +226,10 @@ const NavBar = () => {
 
         {/* Desktop Right Side Icons - Removed Search Icon */}
         <div className="hidden md:flex items-center gap-4 lg:gap-6">
-          <div className="relative cursor-pointer">
+          <div 
+            className="relative cursor-pointer"
+            onClick={() => navigate('/cart')}
+          >
             <img 
               src={Cart}
               alt="Cart" 
@@ -315,7 +318,10 @@ const NavBar = () => {
         {/* Mobile Menu Icons */}
         <div className="flex md:hidden items-center gap-3 ml-auto">
           {/* Mobile Cart Icon */}
-          <div className="relative cursor-pointer">
+          <div 
+            className="relative cursor-pointer"
+            onClick={() => navigate('/cart')}
+          >
             <img 
               src={Cart}
               alt="Cart" 

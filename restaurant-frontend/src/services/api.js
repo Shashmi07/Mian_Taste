@@ -5,9 +5,20 @@ const API_BASE_URL = 'http://localhost:5000/api';
 // Set up axios defaults
 axios.defaults.baseURL = API_BASE_URL;
 
-// Add authAPI export
+// Chef authAPI export
 export const authAPI = {
   login: (email, password) => axios.post('/auth/login', { email, password })
+};
+
+// Admin authAPI export
+export const adminAuthAPI = {
+  login: (email, password) => axios.post('/admin-auth/login', { email, password }),
+  getProfile: () => {
+    const token = localStorage.getItem('token');
+    return axios.get('/admin-auth/me', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  }
 };
 
 // Customer API for customer authentication and registration
