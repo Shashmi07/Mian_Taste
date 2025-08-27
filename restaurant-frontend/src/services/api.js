@@ -50,7 +50,13 @@ export const ordersAPI = {
   
   updateOrderStatus: (orderId, data) => axios.put(`/orders/${orderId}/status`, data, {
     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-  })
+  }),
+  
+  // Public order creation (no auth required)
+  createOrder: (orderData) => axios.post('/orders/public', orderData),
+  
+  // Track order (no auth required)
+  trackOrder: (orderId) => axios.get(`/orders/track/${orderId}`)
 };
 
 export const inventoryAPI = {

@@ -282,7 +282,7 @@ export default function ChefDashboard({ user, onLogout }) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-500 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading dashboard...</p>
         </div>
       </div>
@@ -291,19 +291,19 @@ export default function ChefDashboard({ user, onLogout }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b">
+      <nav className="bg-gradient-to-r from-red-900 to-red-700 text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
-              <div className="bg-orange-500 p-2 rounded-lg">
+              <div className="bg-red-600 p-2 rounded-lg">
                 <ChefHat className="text-white" size={24} />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 ml-3">Chef Dashboard</h1>
+              <h1 className="text-2xl font-bold text-white ml-3">Chef Dashboard</h1>
             </div>
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <button 
-                  className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+                  className="relative p-2 text-red-100 hover:text-white hover:bg-red-800 hover:bg-opacity-30 rounded-lg"
                   onClick={() => setShowNotifications(!showNotifications)}
                 >
                   <Bell size={20} />
@@ -339,7 +339,7 @@ export default function ChefDashboard({ user, onLogout }) {
                         </div>
                       ) : (
                         <div className="p-4 text-center text-gray-500">
-                          <CheckCircle className="mx-auto mb-2 text-green-500" size={24} />
+                          <CheckCircle className="mx-auto mb-2 text-red-500" size={24} />
                           <p className="text-sm">All items are in stock!</p>
                         </div>
                       )}
@@ -350,7 +350,7 @@ export default function ChefDashboard({ user, onLogout }) {
                             setActiveTab('inventory');
                             setShowNotifications(false);
                           }}
-                          className="w-full text-sm bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded"
+                          className="w-full text-sm bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded"
                         >
                           Manage Inventory
                         </button>
@@ -360,12 +360,12 @@ export default function ChefDashboard({ user, onLogout }) {
                 )}
               </div>
               <div className="text-right">
-                <p className="font-semibold text-gray-900">{user?.name || 'Chef'}</p>
-                <p className="text-sm text-gray-500">{user?.role || 'Kitchen Manager'}</p>
+                <p className="font-semibold text-white">{user?.name || 'Chef'}</p>
+                <p className="text-sm text-red-100">{user?.role || 'Kitchen Manager'}</p>
               </div>
               <button
                 onClick={onLogout}
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg hover:bg-gray-100"
+                className="text-red-100 hover:text-white px-3 py-2 rounded-lg hover:bg-red-800 hover:bg-opacity-30"
               >
                 Logout
               </button>
@@ -386,7 +386,7 @@ export default function ChefDashboard({ user, onLogout }) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Pending Orders</p>
-                <p className={`text-2xl font-bold text-orange-600 ${
+                <p className={`text-2xl font-bold text-red-600 ${
                   orders.filter(o => o.status === 'pending').length > 0 
                     ? 'animate-bounce' 
                     : ''
@@ -394,7 +394,7 @@ export default function ChefDashboard({ user, onLogout }) {
                   {orders.filter(o => o.status === 'pending').length}
                 </p>
               </div>
-              <Clock className="text-orange-500" size={24} />
+              <Clock className="text-red-500" size={24} />
             </div>
           </button>
 
@@ -408,11 +408,11 @@ export default function ChefDashboard({ user, onLogout }) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Active Orders</p>
-                <p className="text-2xl font-bold text-blue-600">
+                <p className="text-2xl font-bold text-red-600">
                   {orders.filter(o => o.status === 'accepted' || o.status === 'preparing' || o.status === 'finished').length}
                 </p>
               </div>
-              <ChefHat className="text-blue-500" size={24} />
+              <ChefHat className="text-red-500" size={24} />
             </div>
           </button>
 
@@ -426,11 +426,11 @@ export default function ChefDashboard({ user, onLogout }) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Ready for Service</p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-2xl font-bold text-red-600">
                   {orders.filter(o => o.status === 'ready').length} {/* Changed from 'ready for pickup' */}
                 </p>
               </div>
-              <CheckCircle className="text-green-500" size={24} />
+              <CheckCircle className="text-red-500" size={24} />
             </div>
           </button>
 
@@ -458,7 +458,7 @@ export default function ChefDashboard({ user, onLogout }) {
             onClick={() => setActiveTab('orders')}
             className={`flex-1 py-3 px-4 rounded-md font-medium text-center ${
               activeTab === 'orders'
-                ? 'bg-blue-500 text-white'
+                ? 'bg-red-600 text-white'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
@@ -469,7 +469,7 @@ export default function ChefDashboard({ user, onLogout }) {
             onClick={() => setActiveTab('inventory')}
             className={`flex-1 py-3 px-4 rounded-md font-medium text-center ${
               activeTab === 'inventory'
-                ? 'bg-green-500 text-white'
+                ? 'bg-red-600 text-white'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
@@ -485,7 +485,7 @@ export default function ChefDashboard({ user, onLogout }) {
               <select 
                 value={selectedOrderFilter}
                 onChange={(e) => setSelectedOrderFilter(e.target.value)}
-                className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
               >
                 <option value="all">All Orders</option>
                 <option value="pending">Pending</option>
@@ -546,7 +546,7 @@ export default function ChefDashboard({ user, onLogout }) {
               <h2 className="text-2xl font-bold text-gray-900">Kitchen Inventory</h2>
               <button
                 onClick={() => setShowAddItemForm(!showAddItemForm)}
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium flex items-center"
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium flex items-center"
               >
                 <Plus size={16} className="mr-2" />
                 Add New Item
@@ -567,7 +567,7 @@ export default function ChefDashboard({ user, onLogout }) {
                       required
                       value={newItem.name}
                       onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                       placeholder="e.g., Chicken, Rice"
                     />
                   </div>
@@ -582,7 +582,7 @@ export default function ChefDashboard({ user, onLogout }) {
                       step="0.1"
                       value={newItem.quantity}
                       onChange={(e) => setNewItem({ ...newItem, quantity: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                       placeholder="0"
                     />
                   </div>
@@ -593,7 +593,7 @@ export default function ChefDashboard({ user, onLogout }) {
                     <select
                       value={newItem.unit}
                       onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     >
                       <option value="g">Grams (g)</option>
                       <option value="kg">Kilograms (kg)</option>
@@ -612,7 +612,7 @@ export default function ChefDashboard({ user, onLogout }) {
                       min="1"
                       value={newItem.minStock}
                       onChange={(e) => setNewItem({ ...newItem, minStock: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                       placeholder="10"
                     />
                   </div>
@@ -626,7 +626,7 @@ export default function ChefDashboard({ user, onLogout }) {
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium"
+                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium"
                     >
                       Add Item
                     </button>
@@ -651,7 +651,7 @@ export default function ChefDashboard({ user, onLogout }) {
                     <tr key={item._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div className="flex items-center">
-                          <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                          <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
                           <div className="font-semibold text-gray-900">{item.name}</div>
                         </div>
                       </td>
@@ -702,7 +702,7 @@ export default function ChefDashboard({ user, onLogout }) {
                                 });
                               }
                             }}
-                            className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded font-medium disabled:bg-gray-300"
+                            className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded font-medium disabled:bg-gray-300"
                             disabled={!reduceAmounts[`${item._id}_amount`] || reduceAmounts[`${item._id}_amount`] <= 0}
                           >
                             <Plus size={14} className="mr-1" />

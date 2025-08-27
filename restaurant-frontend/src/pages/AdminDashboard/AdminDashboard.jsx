@@ -9,7 +9,8 @@ import {
   LogOut,
   X,
   MenuIcon,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  QrCode
 } from 'lucide-react';
 
 // Import dashboard components
@@ -20,6 +21,7 @@ import UserManagement from './UserManagement';
 import TableReservation from './TableReservation';
 import InventoryManagement from './InventoryManagement';
 import Settings from './Settings';
+import QRGenerator from './QRGenerator';
 
 const AdminDashboard = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -32,6 +34,7 @@ const AdminDashboard = ({ user, onLogout }) => {
     { id: 'users', name: 'User Management', icon: Users },
     { id: 'reservations', name: 'Table Reservations', icon: Calendar },
     { id: 'inventory', name: 'Inventory', icon: Package },
+    { id: 'qr-generator', name: 'QR Code Generator', icon: QrCode },
     { id: 'settings', name: 'Settings', icon: SettingsIcon },
   ];
 
@@ -49,6 +52,8 @@ const AdminDashboard = ({ user, onLogout }) => {
         return <TableReservation />;
       case 'inventory':
         return <InventoryManagement />;
+      case 'qr-generator':
+        return <QRGenerator />;
       case 'settings':
         return <Settings />;
       default:

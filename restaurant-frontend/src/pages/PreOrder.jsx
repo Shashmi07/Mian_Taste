@@ -1,85 +1,309 @@
-// src/App.js
-import React from "react";
-import noodlesImg from "../assets/spisy.png"; 
-import NavBar from "../components/NavBar"; // Fixed import path
+import React, { useState, useEffect } from 'react';
+import { Menu, Calendar, Clock, ShoppingBag, Truck, UtensilsCrossed, ChevronDown, Star, Plus, Minus } from 'lucide-react';
+import NavBar from '../components/NavBar';
+import { Link } from 'react-router-dom';
+import { menuAPI } from '../services/api';
+import Footer from '../components/footer';
 
-const PreOrder = () => {
+function PreOrder() {
+  const [selectedOrderType, setSelectedOrderType] = useState('dine-in');
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedTime, setSelectedTime] = useState('');
+  const [showMenu, setShowMenu] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
+  const [menuItems, setMenuItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch menu items from API
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      try {
+        setLoading(true);
+        const response = await menuAPI.getAllMenuItems();
+        setMenuItems(response.data || []);
+      } catch (error) {
+        console.error('Error fetching menu items:', error);
+        // Fallback to sample data if API fails
+        setMenuItems([
+          {
+            _id: 1,
+            name: "Peking Duck",
+            description: "Traditional roasted duck with pancakes, scallions, and hoisin sauce",
+            price: 38.99,
+            category: "Signature Dishes",
+            image: "https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400"
+          },
+          {
+            _id: 2,
+            name: "Kung Pao Chicken",
+            description: "Spicy stir-fried chicken with peanuts, vegetables, and chili peppers",
+            price: 16.99,
+            category: "Main Courses",
+            image: "https://images.pexels.com/photos/1640774/pexels-photo-1640774.jpeg?auto=compress&cs=tinysrgb&w=400"
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMenuItems();
+  }, []);
+ 
+
+  // Time slots
+  const timeSlots = [
+    '11:30 AM', '12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM', '2:00 PM',
+    '5:30 PM', '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM'
+  ];
+
+  const addToCart = (item) => {
+    const itemId = item._id || item.id;
+    const existingItem = cartItems.find(cartItem => cartItem._id === itemId || cartItem.id === itemId);
+    if (existingItem) {
+      setCartItems(cartItems.map(cartItem =>
+        (cartItem._id === itemId || cartItem.id === itemId)
+          ? { ...cartItem, quantity: cartItem.quantity + 1 }
+          : cartItem
+      ));
+    } else {
+      setCartItems([...cartItems, { ...item, id: itemId, _id: itemId, quantity: 1 }]);
+    }
+  };
+
+  const removeFromCart = (itemId) => {
+    setCartItems(cartItems.filter(item => item.id !== itemId));
+  };
+
+  const updateQuantity = (itemId, newQuantity) => {
+    if (newQuantity === 0) {
+      removeFromCart(itemId);
+    } else {
+      setCartItems(cartItems.map(item =>
+        item.id === itemId ? { ...item, quantity: newQuantity } : item
+      ));
+    }
+  };
+
+  const getTotalPrice = () => {
+    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0).toFixed(2);
+  };
+
+  const getTotalItems = () => {
+    return cartItems.reduce((total, item) => total + item.quantity, 0);
+  };
+
   return (
-    <div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Navigation */}
       <NavBar />
 
-      <div className="font-sans bg-gray-50 min-h-screen flex items-center justify-center">
-        {/* Hero Section */}
-        <section className="flex flex-col md:flex-row items-center justify-center px-6 py-16">
-          
-          {/* Image */}
-          <div> 
-            <img
-              src={noodlesImg}
-              alt="Korean-Japanese Fusion Noodles"
-              className="w-[350px] h-[350px] object-cover rounded-full shadow-lg"
-            />
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-r from-orange-900 to-orange-400 text-white py-16">
+        <div className="absolute inset-0 bg-black opacity-20"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">Pre-Order Your Favorites</h1>
+          <p className="text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed">
+            Skip the wait and enjoy authentic Chinese cuisine on your schedule
+          </p>
+        </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Order Options */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Order Type Selection */}
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Choose Your Order Type</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button
+                  onClick={() => setSelectedOrderType('dine-in')}
+                  className={`p-6 rounded-lg border-2 transition-all duration-300 ${
+                    selectedOrderType === 'dine-in'
+                      ? 'border-red-600 bg-red-50 text-red-600'
+                      : 'border-gray-200 hover:border-red-300 hover:bg-red-50'
+                  }`}
+                >
+                  <UtensilsCrossed className="h-12 w-12 mx-auto mb-3" />
+                  <h3 className="text-lg font-semibold mb-2">Dine In</h3>
+                  <p className="text-sm text-gray-600">Reserve your table and enjoy our restaurant atmosphere</p>
+                </button>
+
+                <button
+                  onClick={() => setSelectedOrderType('takeaway')}
+                  className={`p-6 rounded-lg border-2 transition-all duration-300 ${
+                    selectedOrderType === 'takeaway'
+                      ? 'border-red-600 bg-red-50 text-red-600'
+                      : 'border-gray-200 hover:border-red-300 hover:bg-red-50'
+                  }`}
+                >
+                  <ShoppingBag className="h-12 w-12 mx-auto mb-3" />
+                  <h3 className="text-lg font-semibold mb-2">Takeaway</h3>
+                  <p className="text-sm text-gray-600">Pick up your order at your convenience</p>
+                </button>
+
+                <button
+                  onClick={() => setSelectedOrderType('delivery')}
+                  className={`p-6 rounded-lg border-2 transition-all duration-300 ${
+                    selectedOrderType === 'delivery'
+                      ? 'border-red-600 bg-red-50 text-red-600'
+                      : 'border-gray-200 hover:border-red-300 hover:bg-red-50'
+                  }`}
+                >
+                  <Truck className="h-12 w-12 mx-auto mb-3" />
+                  <h3 className="text-lg font-semibold mb-2">Delivery</h3>
+                  <p className="text-sm text-gray-600">Get your food delivered to your doorstep</p>
+                </button>
+              </div>
+            </div>
+
+            {/* Date and Time Selection */}
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Date & Time</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <Calendar className="inline h-4 w-4 mr-2" />
+                    Select Date
+                  </label>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <Clock className="inline h-4 w-4 mr-2" />
+                    Select Time
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={selectedTime}
+                      onChange={(e) => setSelectedTime(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 appearance-none"
+                    >
+                      <option value="">Choose time slot</option>
+                      {timeSlots.map((time) => (
+                        <option key={time} value={time}>{time}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Menu Section */}
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Our Menu</h2>
+                <Link to="/menu">
+                  <button className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                    View Full Menu
+                  </button>
+                </Link>
+              </div>
+              <p className="text-gray-600">Browse our full menu to add items to your pre-order.</p>
+            </div>
           </div>
 
-          {/* Text Content */}
-          <div className="md:ml-16 mt-8 md:mt-0 max-w-lg">
-            <p className="text-gray-600 text-lg">Welcome to</p>
-            <h1 className="text-4xl font-bold text-gray-900 flex items-center gap-2">
-              Mian Taste <br /> Restaurant
-            </h1>
-            <p className="mt-4 text-gray-600 leading-relaxed">
-              Delve into the rich flavors of authentic Korean-Japanese fusion cuisine, ready for
-              you to savor and enjoy. Experience the perfect blend of traditional techniques and modern innovation.
-            </p>
-            <div className="flex gap-4 mt-6">
-              <button 
-                className="px-6 py-2 text-white font-medium rounded-full shadow-md transition-colors"
-                style={{ backgroundColor: '#78D860' }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#5BC142'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = '#78D860'}
-                onClick={() => window.location.href = '/menu'}
-              >
-                Order Now
-              </button>
-              <button 
-                className="px-6 py-2 border-2 text-gray-700 font-medium rounded-full shadow-md transition-colors hover:bg-gray-50"
-                style={{ borderColor: '#78D860' }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#78D860';
-                  e.target.style.color = 'white';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'transparent';
-                  e.target.style.color = '#374151';
-                }}
-                onClick={() => window.location.href = '/about'}
-              >
-                Learn More
-              </button>
-            </div>
-          </div>
-        </section>
+          {/* Right Column - Order Summary */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow-lg p-6 sticky top-24">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Order Summary</h3>
+              
+              {/* Order Details */}
+              <div className="space-y-3 mb-6">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Order Type:</span>
+                  <span className="font-medium capitalize">{selectedOrderType.replace('-', ' ')}</span>
+                </div>
+                {selectedDate && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Date:</span>
+                    <span className="font-medium">{new Date(selectedDate).toLocaleDateString()}</span>
+                  </div>
+                )}
+                {selectedTime && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Time:</span>
+                    <span className="font-medium">{selectedTime}</span>
+                  </div>
+                )}
+              </div>
 
-        {/* Quick Features */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-          <div className="flex items-center space-x-8 text-sm text-gray-500">
-            <div className="flex items-center space-x-2">
-              <span className="text-2xl">🍜</span>
-              <span>Authentic Ramen</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-2xl">🥟</span>
-              <span>Fresh Dumplings</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-2xl">🚚</span>
-              <span>Fast Delivery</span>
+              {/* Cart Items */}
+              <div className="border-t pt-4">
+                <h4 className="font-semibold text-gray-900 mb-3">Cart Items ({getTotalItems()})</h4>
+                {cartItems.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No items in cart</p>
+                ) : (
+                  <div className="space-y-3">
+                    {cartItems.map((item) => (
+                      <div key={item.id} className="flex justify-between items-center">
+                        <div className="flex-1">
+                          <h5 className="text-sm font-medium text-gray-900">{item.name}</h5>
+                          <p className="text-xs text-gray-500">${item.price} each</p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"
+                          >
+                            <Minus className="h-3 w-3" />
+                          </button>
+                          <span className="text-sm font-medium w-8 text-center">{item.quantity}</span>
+                          <button
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"
+                          >
+                            <Plus className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Total */}
+              {cartItems.length > 0 && (
+                <div className="border-t pt-4 mt-4">
+                  <div className="flex justify-between items-center text-lg font-bold">
+                    <span>Total:</span>
+                    <span className="text-red-600">${getTotalPrice()}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Place Order Button */}
+              <button
+                disabled={!selectedDate || !selectedTime || cartItems.length === 0}
+                className={`w-full mt-6 py-3 px-4 rounded-lg font-semibold transition-colors ${
+                  selectedDate && selectedTime && cartItems.length > 0
+                    ? 'bg-red-600 text-white hover:bg-red-700'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                Place Pre-Order
+              </button>
+
+              <p className="text-xs text-gray-500 mt-3 text-center">
+                You will receive a confirmation email with order details
+              </p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
-};
+}
 
 export default PreOrder;

@@ -149,26 +149,26 @@ const LiveTracking = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-gradient-to-r from-red-900 to-red-700 text-white shadow-lg">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => navigate('/')}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+                className="p-2 text-red-100 hover:text-white hover:bg-red-800 hover:bg-opacity-30 rounded-lg"
               >
                 <ArrowLeft size={20} />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">🍽️ Mian Taste</h1>
-                <p className="text-gray-600">Live Order Tracking</p>
+                <h1 className="text-2xl font-bold text-white">🍽️ Mian Taste</h1>
+                <p className="text-red-100">Live Order Tracking</p>
               </div>
             </div>
             {order && (
               <button
                 onClick={refreshOrder}
                 disabled={loading}
-                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg disabled:opacity-50"
+                className="flex items-center space-x-2 px-4 py-2 text-red-100 hover:text-white hover:bg-red-800 hover:bg-opacity-30 rounded-lg disabled:opacity-50"
               >
                 <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
                 <span>Refresh</span>
@@ -209,7 +209,7 @@ const LiveTracking = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                  className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                 >
                   {loading ? 'Searching...' : 'Track Order'}
                 </button>
@@ -245,18 +245,18 @@ const LiveTracking = () => {
             {/* Order Card */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
               {/* Order Header */}
-              <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 text-white">
+              <div className="bg-gradient-to-r from-red-900 to-red-700 p-6 text-white">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-2xl font-bold">Order {order.orderId}</h3>
-                    <p className="text-blue-100">{order.table} • {order.customerName}</p>
-                    <p className="text-blue-100 text-sm">{new Date(order.createdAt).toLocaleString()}</p>
+                    <p className="text-red-100">{order.table} • {order.customerName}</p>
+                    <p className="text-red-100 text-sm">{new Date(order.createdAt).toLocaleString()}</p>
                   </div>
                   <div className="text-right">
                     <div className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(order.status, order.cookingStatus)}`}>
                       {getStatusText(order.status, order.cookingStatus)}
                     </div>
-                    <p className="text-blue-100 text-sm mt-2">Total: Rs.{order.totalAmount}</p>
+                    <p className="text-red-100 text-sm mt-2">Total: Rs.{order.totalAmount}</p>
                   </div>
                 </div>
               </div>
@@ -269,7 +269,7 @@ const LiveTracking = () => {
                   
                   {/* Progress line with flowing animation */}
                   <div 
-                    className="absolute left-8 top-0 w-1 bg-gradient-to-b from-blue-400 to-blue-600 transition-all duration-1000 overflow-hidden rounded-full"
+                    className="absolute left-8 top-0 w-1 bg-gradient-to-b from-red-400 to-red-600 transition-all duration-1000 overflow-hidden rounded-full"
                     style={{ height: `${Math.min((getStatusStep(order.status, order.cookingStatus) / 4) * 100, 100)}%` }}
                   >
                     {/* Flowing animation - only show if order is in progress */}
@@ -288,7 +288,7 @@ const LiveTracking = () => {
                         <div 
                           className="absolute inset-0 opacity-40"
                           style={{
-                            background: 'linear-gradient(to bottom, rgba(59,130,246,0.6) 0%, transparent 30%, rgba(59,130,246,0.4) 70%, transparent 100%)',
+                            background: 'linear-gradient(to bottom, rgba(220,38,38,0.6) 0%, transparent 30%, rgba(220,38,38,0.4) 70%, transparent 100%)',
                             animation: 'flowStream 3s linear infinite reverse'
                           }}
                         ></div>
@@ -378,20 +378,20 @@ const LiveTracking = () => {
                         <div key={index} className="relative flex items-start">
                           <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all duration-500 z-10 ${
                             isActive 
-                              ? 'bg-blue-500 border-blue-500 text-white' 
+                              ? 'bg-red-600 border-red-600 text-white' 
                               : 'bg-white border-gray-300 text-gray-400'
                           }`}>
                             <Icon size={16} />
                           </div>
                           <div className="ml-4 flex-1">
                             <div className="flex items-center space-x-3">
-                              <h4 className={`font-semibold ${isCurrent ? 'text-blue-600' : isActive ? 'text-gray-900' : 'text-gray-400'}`}>
+                              <h4 className={`font-semibold ${isCurrent ? 'text-red-600' : isActive ? 'text-gray-900' : 'text-gray-400'}`}>
                                 {step.title}
                               </h4>
                               {isCurrent && order.status !== 'delivered' && (
                                 <span className="flex items-center">
-                                  <span className="text-sm bg-blue-100 text-blue-600 px-2 py-1 rounded-full flex items-center">
-                                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-2"></div>
+                                  <span className="text-sm bg-red-100 text-red-600 px-2 py-1 rounded-full flex items-center">
+                                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse mr-2"></div>
                                     Current
                                   </span>
                                 </span>
@@ -401,7 +401,7 @@ const LiveTracking = () => {
                               {step.desc}
                             </p>
                             {isCurrent && order.cookingStatus && order.cookingStatus !== 'not started' && (
-                              <p className="text-sm text-blue-600 font-medium mt-2 flex items-center">
+                              <p className="text-sm text-red-600 font-medium mt-2 flex items-center">
                                 <Timer size={14} className="mr-1" />
                                 Kitchen Status: {order.cookingStatus.charAt(0).toUpperCase() + order.cookingStatus.slice(1)}
                               </p>
