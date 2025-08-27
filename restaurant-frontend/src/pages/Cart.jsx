@@ -1,68 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Minus, Trash2, ShoppingCart, ArrowLeft, Clock, Star } from 'lucide-react';
+import { Plus, Minus, Trash2, ShoppingCart, ArrowLeft, Clock, Star, QrCode } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import NavBar from '../components/NavBar';
+import { useCart } from '../context/CartContext';
+import { ordersAPI } from '../services/api';
 
 const Cart = () => {
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState([
-    // Sample cart items - replace with actual cart state management
-    {
-      id: '1',
-      name: 'Chicken Ramen',
-      description: 'Rich and flavorful chicken broth with tender noodles',
-      price: 1200,
-      quantity: 2,
-      image: '/api/placeholder/150/150',
-      category: 'Ramen',
-      rating: 4.5
-    },
-    {
-      id: '2',
-      name: 'Beef Fried Rice',
-      description: 'Wok-fried rice with tender beef and vegetables',
-      price: 950,
-      quantity: 1,
-      image: '/api/placeholder/150/150',
-      category: 'Rice',
-      rating: 4.3
-    },
-    {
-      id: '3',
-      name: 'Coca Cola',
-      description: 'Refreshing soft drink',
-      price: 200,
-      quantity: 2,
-      image: '/api/placeholder/150/150',
-      category: 'Drinks'
-    }
-  ]);
+  const { items: cartItems, subtotal, tax, total, updateQuantity, removeFromCart } = useCart();
 
   const [isTableOrder, setIsTableOrder] = useState(false);
   const [tableNumber, setTableNumber] = useState('');
-
-  // Calculate totals
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const tax = Math.round(subtotal * 0.1); // 10% tax
-  const total = subtotal + tax;
-
-  // Update quantity
-  const updateQuantity = (id, change) => {
-    setCartItems(items => 
-      items.map(item => {
-        if (item.id === id) {
-          const newQuantity = Math.max(0, item.quantity + change);
-          return newQuantity === 0 ? null : { ...item, quantity: newQuantity };
-        }
-        return item;
-      }).filter(Boolean)
-    );
-  };
-
-  // Remove item completely
-  const removeItem = (id) => {
-    setCartItems(items => items.filter(item => item.id !== id));
-  };
+  const [customerName, setCustomerName] = useState('');
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [isQROrder, setIsQROrder] = useState(false);
+  
+  // Check for QR order and auto-fill table number
+  useEffect(() => {
+    const qrTable = localStorage.getItem('qrTableNumber');
+    if (qrTable) {
+      setIsQROrder(true);
+      setIsTableOrder(true);
+      setTableNumber(qrTable);
+      setCustomerName('Table ' + qrTable + ' Guest');
+    }
+  }, []);
 
   // Render star rating
   const renderStars = (rating) => {
@@ -95,27 +56,97 @@ const Cart = () => {
     return stars;
   };
 
+  // Handle order creation
+  const handleCreateOrder = async () => {
+    if (cartItems.length === 0) return;
+    
+    // Validation
+    if (!customerName.trim()) {
+      alert('Please enter your name');
+      return;
+    }
+    
+    if (isTableOrder && !tableNumber.trim()) {
+      alert('Please enter table number for dine-in orders');
+      return;
+    }
+
+    setIsCreatingOrder(true);
+
+    try {
+      // Prepare order data according to the backend model
+      const orderData = {
+        table: isTableOrder ? tableNumber.trim() : 'Pre-order',
+        customerName: customerName.trim(),
+        items: cartItems.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        totalAmount: total,
+        notes: isTableOrder ? `Dine-in order for ${tableNumber}` : 'Pre-order for pickup'
+      };
+
+      console.log('Creating order:', orderData);
+
+      // Create order
+      const response = await ordersAPI.createOrder(orderData);
+      
+      if (response.data.success) {
+        const order = response.data.order;
+        console.log('Order created successfully:', order);
+        
+        // Store order info for payment page
+        localStorage.setItem('currentOrder', JSON.stringify({
+          orderId: order.orderId,
+          orderNumber: order._id,
+          total: total,
+          items: cartItems,
+          customerName: customerName,
+          table: isTableOrder ? tableNumber : 'Pre-order',
+          createdAt: new Date().toISOString()
+        }));
+
+        // Navigate to payment
+        navigate('/payment');
+      } else {
+        throw new Error(response.data.message || 'Failed to create order');
+      }
+    } catch (error) {
+      console.error('Error creating order:', error);
+      alert(error.response?.data?.message || 'Failed to create order. Please try again.');
+    } finally {
+      setIsCreatingOrder(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <NavBar />
-      
       {/* Header */}
-      <div className="bg-white shadow-sm sticky top-20 z-10 pt-6 pb-4">
+      <div className="bg-gradient-to-r from-red-900 to-red-700 text-white shadow-lg sticky top-0 z-10 pt-6 pb-4">
         <div className="max-w-4xl mx-auto px-6">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => navigate(-1)}
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              className="p-2 rounded-full hover:bg-red-800 hover:bg-opacity-30 transition-colors text-red-100 hover:text-white"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
+              <ArrowLeft className="w-5 h-5 text-red-100" />
             </button>
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full" style={{ backgroundColor: '#46923c' }}>
+              <div className="p-2 rounded-full bg-red-600">
                 <ShoppingCart className="w-6 h-6 text-white" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Your Cart</h1>
-                <p className="text-gray-600">{cartItems.length} items</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-bold text-white">Your Cart</h1>
+                  {isQROrder && (
+                    <div className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
+                      <QrCode className="w-4 h-4" />
+                      Table {tableNumber}
+                    </div>
+                  )}
+                </div>
+                <p className="text-red-100">{cartItems.length} items</p>
               </div>
             </div>
           </div>
@@ -132,9 +163,9 @@ const Cart = () => {
             <button 
               onClick={() => navigate('/menu')}
               className="px-6 py-3 text-white font-semibold rounded-full transition-colors duration-300"
-              style={{ backgroundColor: '#46923c' }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#5BC142'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = '#46923c'}
+              style={{ backgroundColor: '#dc2626' }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#b91c1c'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = '#dc2626'}
             >
               Browse Menu
             </button>
@@ -179,7 +210,7 @@ const Cart = () => {
                         
                         {/* Remove button */}
                         <button 
-                          onClick={() => removeItem(item.id)}
+                          onClick={() => removeFromCart(item.id)}
                           className="p-2 rounded-full hover:bg-red-50 text-red-500 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -188,7 +219,7 @@ const Cart = () => {
                       
                       {/* Price and Quantity Controls */}
                       <div className="flex justify-between items-center mt-4">
-                        <div className="text-lg font-bold" style={{ color: '#46923c' }}>
+                        <div className="text-lg font-bold" style={{ color: '#dc2626' }}>
                           Rs. {item.price * item.quantity}
                           <span className="text-sm text-gray-500 font-normal ml-1">
                             (Rs. {item.price} each)
@@ -198,9 +229,9 @@ const Cart = () => {
                         {/* Quantity Controls */}
                         <div className="flex items-center gap-3">
                           <button 
-                            onClick={() => updateQuantity(item.id, -1)}
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
                             className="w-8 h-8 rounded-full border-2 flex items-center justify-center hover:bg-gray-100 transition-colors"
-                            style={{ borderColor: '#46923c', color: '#46923c' }}
+                            style={{ borderColor: '#dc2626', color: '#dc2626' }}
                           >
                             <Minus className="w-4 h-4" />
                           </button>
@@ -210,11 +241,11 @@ const Cart = () => {
                           </span>
                           
                           <button 
-                            onClick={() => updateQuantity(item.id, 1)}
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             className="w-8 h-8 rounded-full flex items-center justify-center text-white transition-colors"
-                            style={{ backgroundColor: '#46923c' }}
-                            onMouseEnter={(e) => e.target.style.backgroundColor = '#5BC142'}
-                            onMouseLeave={(e) => e.target.style.backgroundColor = '#46923c'}
+                            style={{ backgroundColor: '#dc2626' }}
+                            onMouseEnter={(e) => e.target.style.backgroundColor = '#b91c1c'}
+                            onMouseLeave={(e) => e.target.style.backgroundColor = '#dc2626'}
                           >
                             <Plus className="w-4 h-4" />
                           </button>
@@ -228,7 +259,7 @@ const Cart = () => {
               {/* Add more items button */}
               <button 
                 onClick={() => navigate('/menu')}
-                className="w-full p-4 border-2 border-dashed rounded-2xl text-gray-600 hover:border-[#46923c] hover:text-[#46923c] transition-colors"
+                className="w-full p-4 border-2 border-dashed rounded-2xl text-gray-600 hover:border-red-600 hover:text-red-600 transition-colors"
               >
                 + Add more items
               </button>
@@ -239,31 +270,59 @@ const Cart = () => {
               <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-32">
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
                 
+                {/* Customer Name Input */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Customer Name * 
+                    {isQROrder && <span className="text-sm text-red-600 font-normal">(QR Order)</span>}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={isQROrder ? "Table Guest (auto-filled)" : "Enter your name"}
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent ${isQROrder ? 'bg-green-50' : ''}`}
+                    style={{ '--tw-ring-color': '#46923c' }}
+                    required
+                  />
+                  {isQROrder && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      ✅ Auto-filled for QR table order. You can edit if needed.
+                    </p>
+                  )}
+                </div>
+
                 {/* Order type selection */}
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">Order Type</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Order Type
+                    {isQROrder && <span className="text-sm text-red-600 font-normal">(Auto-selected)</span>}
+                  </label>
                   <div className="space-y-2">
-                    <label className="flex items-center">
+                    <label className={`flex items-center ${isQROrder ? 'opacity-75' : ''}`}>
                       <input 
                         type="radio" 
                         name="orderType" 
                         value="dine-in"
                         checked={isTableOrder}
-                        onChange={() => setIsTableOrder(true)}
+                        onChange={() => !isQROrder && setIsTableOrder(true)}
+                        disabled={isQROrder}
                         className="mr-3"
-                        style={{ accentColor: '#46923c' }}
+                        style={{ accentColor: '#dc2626' }}
                       />
                       <span>Dine-in (QR Code Order)</span>
+                      {isQROrder && <span className="ml-2 text-green-600">✓</span>}
                     </label>
-                    <label className="flex items-center">
+                    <label className={`flex items-center ${isQROrder ? 'opacity-50' : ''}`}>
                       <input 
                         type="radio" 
                         name="orderType" 
                         value="preorder"
                         checked={!isTableOrder}
-                        onChange={() => setIsTableOrder(false)}
+                        onChange={() => !isQROrder && setIsTableOrder(false)}
+                        disabled={isQROrder}
                         className="mr-3"
-                        style={{ accentColor: '#46923c' }}
+                        style={{ accentColor: '#dc2626' }}
                       />
                       <span>Pre-order</span>
                     </label>
@@ -272,15 +331,25 @@ const Cart = () => {
                   {/* Table number input for dine-in */}
                   {isTableOrder && (
                     <div className="mt-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Table Number</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Table Number *
+                        {isQROrder && <span className="text-sm text-red-600 font-normal">(QR Detected)</span>}
+                      </label>
                       <input
                         type="text"
-                        placeholder="e.g., Table 5"
+                        placeholder={isQROrder ? "Table detected from QR" : "e.g., Table 5"}
                         value={tableNumber}
                         onChange={(e) => setTableNumber(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-                        style={{ '--tw-ring-color': '#46923c' }}
+                        className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent ${isQROrder ? 'bg-green-50' : ''}`}
+                        style={{ '--tw-ring-color': '#dc2626' }}
+                        readOnly={isQROrder}
+                        required
                       />
+                      {isQROrder && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          ✅ Table detected from QR code scan.
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -298,37 +367,33 @@ const Cart = () => {
                   <hr className="border-gray-200" />
                   <div className="flex justify-between text-lg font-bold text-gray-900">
                     <span>Total</span>
-                    <span style={{ color: '#46923c' }}>Rs. {total}</span>
+                    <span style={{ color: '#dc2626' }}>Rs. {total}</span>
                   </div>
                 </div>
 
                 {/* Checkout button */}
                 <button 
-                  onClick={() => navigate('/payment')}
-                  disabled={isTableOrder && !tableNumber.trim()}
+                  onClick={handleCreateOrder}
+                  disabled={isCreatingOrder || !customerName.trim() || (isTableOrder && !tableNumber.trim())}
                   className="w-full py-4 text-white font-bold rounded-full transition-all duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: isTableOrder && !tableNumber.trim() ? '#9ca3af' : '#46923c' }}
+                  style={{ 
+                    backgroundColor: (isCreatingOrder || !customerName.trim() || (isTableOrder && !tableNumber.trim())) ? '#9ca3af' : '#dc2626' 
+                  }}
                   onMouseEnter={(e) => {
-                    if (!(isTableOrder && !tableNumber.trim())) {
-                      e.target.style.backgroundColor = '#5BC142';
+                    if (!(isCreatingOrder || !customerName.trim() || (isTableOrder && !tableNumber.trim()))) {
+                      e.target.style.backgroundColor = '#b91c1c';
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (!(isTableOrder && !tableNumber.trim())) {
-                      e.target.style.backgroundColor = '#46923c';
+                    if (!(isCreatingOrder || !customerName.trim() || (isTableOrder && !tableNumber.trim()))) {
+                      e.target.style.backgroundColor = '#dc2626';
                     }
                   }}
                 >
-                  Proceed to Payment
+                  {isCreatingOrder ? 'Creating Order...' : 'Create Order & Proceed to Payment'}
                 </button>
 
-                {/* Estimated time */}
-                <div className="mt-4 p-3 bg-green-50 rounded-lg">
-                  <div className="flex items-center gap-2 text-sm" style={{ color: '#46923c' }}>
-                    <Clock className="w-4 h-4" />
-                    <span className="font-medium">Estimated time: 25-30 minutes</span>
-                  </div>
-                </div>
+                
               </div>
             </div>
           </div>

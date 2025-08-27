@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { User, Menu, X, LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { User, Menu, X, LogOut, Mail, MapPin, ShoppingCart } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 import logo from "../assets/logo.jpeg";
 import Cart from "../assets/cart.png";
 
 const NavBar = () => {
-  const [menu, setMenu] = useState('home');
+  const [menu, setMenu] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [authState, setAuthState] = useState({
@@ -13,8 +14,33 @@ const NavBar = () => {
     user: null
   });
   const navigate = useNavigate();
+  const location = useLocation();
+  const { itemCount } = useCart();
   // Updated menu order: moved 'about' to 5th position (end)
   const menuItems = ['home', 'menu', 'preorder', 'table reservation', 'about'];
+
+  // Function to determine active menu based on current path
+  const getActiveMenuFromPath = (pathname) => {
+    if (pathname === '/' || pathname === '/home') return 'home';
+    if (pathname === '/menu') return 'menu';
+    if (pathname === '/preorder') return 'preorder';
+    if (pathname === '/table-reservation') return 'table reservation';
+    if (pathname === '/about') return 'about';
+    // For other pages, don't highlight any menu item
+    return null;
+  };
+
+  // Update active menu based on current location
+  useEffect(() => {
+    const activeMenu = getActiveMenuFromPath(location.pathname);
+    setMenu(activeMenu); // This will be null for pages not in main menu
+  }, [location.pathname]);
+
+  // Hide navbar on certain pages
+  const shouldHideNavbar = () => {
+    const hiddenPages = ['/cart'];
+    return hiddenPages.includes(location.pathname);
+  };
 
   // Check for customer authentication
   const checkAuth = () => {
@@ -184,11 +210,15 @@ const NavBar = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
+  // Don't render navbar if it should be hidden
+  if (shouldHideNavbar()) {
+    return null;
+  }
+
   return (
     <>
       <nav 
-        className="fixed top-0 w-full flex items-center h-20 z-50 shadow-md px-4 md:px-10" 
-        style={{ backgroundColor: '#78D860' }}
+        className="fixed top-0 w-full flex items-center h-20 z-50 shadow-lg px-4 md:px-10 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900"
       >
         {/* Logo */}
         <div className="flex items-center">
@@ -209,11 +239,11 @@ const NavBar = () => {
               className={`cursor-pointer capitalize transition-all duration-300 ${
                 menu === item 
                   ? 'pb-0.5 border-b-2' 
-                  : 'hover:text-blue-500 text-gray-700'
+                  : 'hover:text-red-400 text-gray-200'
               }`}
               style={menu === item ? { 
-                borderBottomColor: '#49557e',
-                color: '#49557e' 
+                borderBottomColor: '#dc2626',
+                color: '#dc2626' 
               } : {}}
             >
               {item === 'table reservation' ? 'Table Reservation' : 
@@ -226,16 +256,41 @@ const NavBar = () => {
 
         {/* Desktop Right Side Icons - Removed Search Icon */}
         <div className="hidden md:flex items-center gap-4 lg:gap-6">
+          {/* Mailbox Icon */}
+          <div 
+            className="relative cursor-pointer"
+            onClick={() => navigate('/order-confirmations')}
+          >
+            <Mail 
+              size={28}
+              className="text-gray-300 hover:text-red-400 transition-colors duration-300"
+            />
+          </div>
+
+          {/* Order Tracking Icon */}
+          <div 
+            className="relative cursor-pointer"
+            onClick={() => navigate('/track-order')}
+          >
+            <MapPin 
+              size={28}
+              className="text-gray-300 hover:text-red-400 transition-colors duration-300"
+            />
+          </div>
+
           <div 
             className="relative cursor-pointer"
             onClick={() => navigate('/cart')}
           >
-            <img 
-              src={Cart}
-              alt="Cart" 
-              className="w-6 h-6 lg:w-10 lg:h-10 hover:opacity-70 transition-opacity duration-300"
+            <ShoppingCart 
+              size={28}
+              className="text-gray-300 hover:text-red-400 transition-colors duration-300"
             />
-            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full border-2 border-white bg-red-500"></span>
+            {itemCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-5 h-5 flex items-center justify-center text-xs font-bold text-white bg-red-500 rounded-full border-2 border-white px-1">
+                {itemCount > 99 ? '99+' : itemCount}
+              </span>
+            )}
           </div>
 
           {/* Authentication Section */}
@@ -243,13 +298,13 @@ const NavBar = () => {
             <div className="relative profile-menu" key={`authenticated-${authState.user.email}`}>
               <button 
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center gap-3 bg-white bg-opacity-20 backdrop-blur-sm text-sm font-medium px-4 py-2 lg:px-5 lg:py-3 border-2 border-white border-opacity-30 rounded-xl cursor-pointer transition-all duration-300 hover:bg-white hover:bg-opacity-30 hover:shadow-lg transform hover:scale-105"
+                className="flex items-center gap-3 bg-red-600 bg-opacity-90 backdrop-blur-sm text-sm font-medium px-4 py-2 lg:px-5 lg:py-3 border-2 border-red-400 border-opacity-50 rounded-xl cursor-pointer transition-all duration-300 hover:bg-red-700 hover:shadow-lg transform hover:scale-105"
                 style={{
-                  color: '#2d3748',
-                  boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)'
+                  color: '#ffffff',
+                  boxShadow: '0 4px 15px rgba(220, 38, 38, 0.3)'
                 }}
               >
-                <User size={20} className="text-blue-600" />
+                <User size={20} className="text-white" />
                 <span className="hidden lg:block text-sm font-semibold">
                   {authState.user.username || authState.user.name || 'User'}
                 </span>
@@ -258,7 +313,7 @@ const NavBar = () => {
               {/* Enhanced Profile Dropdown */}
               {showProfileMenu && (
                 <div className="absolute right-0 top-full mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
-                  <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 text-white">
+                  <div className="bg-gradient-to-r from-red-600 to-red-700 p-4 text-white">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
                         <User size={24} className="text-white" />
@@ -302,10 +357,10 @@ const NavBar = () => {
               key="sign-in-button"
               onClick={handleSignInClick}
               type="button"
-              className="flex items-center gap-2 bg-transparent text-sm font-medium px-3 py-2 lg:px-4 border-2 rounded-lg cursor-pointer transition-all duration-300 hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex items-center gap-2 bg-transparent text-sm font-medium px-3 py-2 lg:px-4 border-2 rounded-lg cursor-pointer transition-all duration-300 hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
               style={{
-                color: '#49557e',
-                borderColor: '#49557e'
+                color: '#f3f4f6',
+                borderColor: '#f3f4f6'
               }}
               aria-label="Sign In"
             >
@@ -317,24 +372,49 @@ const NavBar = () => {
 
         {/* Mobile Menu Icons */}
         <div className="flex md:hidden items-center gap-3 ml-auto">
+          {/* Mobile Mailbox Icon */}
+          <div 
+            className="cursor-pointer"
+            onClick={() => navigate('/order-confirmations')}
+          >
+            <Mail 
+              size={24}
+              className="text-gray-300 hover:text-red-400 transition-colors duration-300"
+            />
+          </div>
+
+          {/* Mobile Order Tracking Icon */}
+          <div 
+            className="cursor-pointer"
+            onClick={() => navigate('/order-tracking')}
+          >
+            <MapPin 
+              size={24}
+              className="text-gray-300 hover:text-red-400 transition-colors duration-300"
+            />
+          </div>
+
           {/* Mobile Cart Icon */}
           <div 
             className="relative cursor-pointer"
             onClick={() => navigate('/cart')}
           >
-            <img 
-              src={Cart}
-              alt="Cart" 
-              className="w-6 h-6"
+            <ShoppingCart 
+              size={24}
+              className="text-gray-300 hover:text-red-400 transition-colors duration-300"
             />
-            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full border-2 border-white bg-red-500"></span>
+            {itemCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-4 h-4 flex items-center justify-center text-xs font-bold text-white bg-red-500 rounded-full border-2 border-white px-1">
+                {itemCount > 99 ? '99+' : itemCount}
+              </span>
+            )}
           </div>
 
           {/* Mobile Hamburger Menu */}
           <button 
             onClick={toggleMobileMenu}
             className="p-2 rounded-lg transition-colors duration-200"
-            style={{ color: '#49557e' }}
+            style={{ color: '#f3f4f6' }}
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -351,10 +431,9 @@ const NavBar = () => {
 
       {/* Mobile Menu Slide Panel - Removed Search from mobile menu */}
       <div 
-        className={`fixed top-20 right-0 h-screen w-64 z-50 transform transition-transform duration-300 ease-in-out md:hidden ${
+        className={`fixed top-20 right-0 h-screen w-64 z-50 transform transition-transform duration-300 ease-in-out md:hidden bg-gradient-to-b from-gray-800 to-gray-900 ${
           isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
-        style={{ backgroundColor: '#78D860' }}
       >
         <div className="flex flex-col p-6">
           {/* Mobile Menu Items */}
@@ -365,8 +444,8 @@ const NavBar = () => {
                 onClick={() => handleMenuClick(item)}
                 className={`cursor-pointer capitalize font-semibold text-lg transition-all duration-300 ${
                   menu === item 
-                    ? 'text-blue-800 border-l-4 border-blue-800 pl-4' 
-                    : 'text-gray-700 hover:text-blue-500 pl-4'
+                    ? 'text-red-400 border-l-4 border-red-400 pl-4' 
+                    : 'text-gray-200 hover:text-red-400 pl-4'
                 }`}
               >
                 {item === 'table reservation' ? 'Table Reservation' : 
@@ -379,13 +458,13 @@ const NavBar = () => {
 
           {/* Mobile Authentication Section */}
           {authState.isAuthenticated && authState.user ? (
-            <div className="border-t border-white border-opacity-30 pt-6 mt-6">
-              <div className="bg-white bg-opacity-20 backdrop-blur-sm px-4 py-4 border border-white border-opacity-30 rounded-xl mb-4">
+            <div className="border-t border-gray-600 pt-6 mt-6">
+              <div className="bg-red-600 bg-opacity-90 backdrop-blur-sm px-4 py-4 border border-red-400 border-opacity-50 rounded-xl mb-4">
                 <div className="flex items-center gap-3 mb-3">
-                  <User size={24} className="text-blue-600" />
+                  <User size={24} className="text-white" />
                   <div>
-                    <p className="font-semibold text-gray-800">{authState.user.username || authState.user.name || 'User'}</p>
-                    <p className="text-sm text-gray-600">{authState.user.email}</p>
+                    <p className="font-semibold text-white">{authState.user.username || authState.user.name || 'User'}</p>
+                    <p className="text-sm text-red-100">{authState.user.email}</p>
                   </div>
                 </div>
                 
@@ -395,7 +474,7 @@ const NavBar = () => {
                       navigate('/profile');
                       setIsMobileMenuOpen(false);
                     }}
-                    className="w-full flex items-center gap-3 bg-white bg-opacity-30 font-medium px-4 py-3 border border-white border-opacity-50 rounded-lg cursor-pointer transition-all duration-300 mb-3 text-gray-700"
+                    className="w-full flex items-center gap-3 bg-white bg-opacity-20 font-medium px-4 py-3 border border-white border-opacity-50 rounded-lg cursor-pointer transition-all duration-300 mb-3 text-white"
                   >
                     <User size={20} />
                     My Profile
@@ -414,10 +493,10 @@ const NavBar = () => {
           ) : (
             <button 
               onClick={handleSignInClick}
-              className="flex items-center gap-3 bg-transparent font-medium px-4 py-3 border-2 rounded-lg cursor-pointer transition-all duration-300 mx-4 hover:bg-blue-600 hover:text-white"
+              className="flex items-center gap-3 bg-transparent font-medium px-4 py-3 border-2 rounded-lg cursor-pointer transition-all duration-300 mx-4 hover:bg-red-600 hover:text-white"
               style={{
-                color: '#49557e',
-                borderColor: '#49557e'
+                color: '#f3f4f6',
+                borderColor: '#f3f4f6'
               }}
             >
               <User size={20} />

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Search, Clock } from 'lucide-react';
+import { Star, Search, Clock, QrCode, X } from 'lucide-react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import NavBar from '../components/NavBar';
+import { useCart } from '../context/CartContext';
+import footer from '../components/footer'
 
 // Import all images from MenuItems folder and create mapping
 import chickenRamen from '../assets/MenuItems/chickenRamen.jpg';
@@ -101,21 +104,81 @@ const Menu = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [allMenuItems, setAllMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [addingToCart, setAddingToCart] = useState(null);
+  const { addToCart } = useCart();
+  
+  // QR Code table selection
+  const [searchParams] = useSearchParams();
+  const [showTableModal, setShowTableModal] = useState(false);
+  const [selectedTable, setSelectedTable] = useState('');
+  const [isQROrder, setIsQROrder] = useState(false);
+  
+  // Check if this is a QR code access
+  useEffect(() => {
+    try {
+      const qrParam = searchParams.get('qr');
+      const tableParam = searchParams.get('table');
+      
+      console.log('QR params:', { qrParam, tableParam });
+      
+      if (qrParam === 'true' || tableParam) {
+        setIsQROrder(true);
+        if (tableParam && tableParam.trim()) {
+          const cleanTableParam = tableParam.trim();
+          console.log('Setting QR table from URL:', cleanTableParam);
+          setSelectedTable(cleanTableParam);
+          // Store table number in localStorage for the entire session
+          localStorage.setItem('qrTableNumber', cleanTableParam);
+        } else {
+          setShowTableModal(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error processing QR parameters:', error);
+      // Reset QR state if there's an error
+      setIsQROrder(false);
+      setSelectedTable(null);
+      localStorage.removeItem('qrTableNumber');
+    }
+  }, [searchParams]);
 
   // Fetch menu items from database
   useEffect(() => {
     const fetchMenuItems = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5000/api/menu');
+        console.log('Fetching menu items...');
+        const response = await fetch('http://10.11.5.232:5000/api/menu');
         if (response.ok) {
           const data = await response.json();
-          setAllMenuItems(data);
+          console.log('Menu items loaded:', data.length, data); // Debug log
+          
+          // Validate that we received an array
+          if (!Array.isArray(data)) {
+            console.error('Menu data is not an array:', data);
+            setAllMenuItems([]);
+            return;
+          }
+          
+          // Validate each menu item has required fields
+          const validatedData = data.filter(item => {
+            const isValid = item._id && item.name && item.price && item.category;
+            if (!isValid) {
+              console.warn('Invalid menu item found:', item);
+            }
+            return isValid;
+          });
+          
+          console.log('Valid menu items:', validatedData.length);
+          setAllMenuItems(validatedData);
         } else {
-          console.error('Failed to fetch menu items');
+          console.error('Failed to fetch menu items, status:', response.status);
+          setAllMenuItems([]);
         }
       } catch (error) {
         console.error('Error fetching menu items:', error);
+        setAllMenuItems([]);
+        alert('Failed to load menu items. Please refresh the page.');
       } finally {
         setLoading(false);
       }
@@ -126,7 +189,22 @@ const Menu = () => {
 
   // Helper function to get image from mapping
   const getItemImage = (imageName) => {
-    return imageMap[imageName] || ramenDefault;
+    try {
+      // Check if imageName is valid
+      if (!imageName || typeof imageName !== 'string') {
+        console.warn('Invalid image name:', imageName);
+        return ramenDefault;
+      }
+      
+      // Clean the image name (remove any file path separators)
+      const cleanImageName = imageName.replace(/[\\\/]/g, '').split('/').pop().split('\\').pop();
+      
+      const image = imageMap[cleanImageName] || imageMap[imageName];
+      return image || ramenDefault;
+    } catch (error) {
+      console.error('Error getting item image:', error, 'for image:', imageName);
+      return ramenDefault;
+    }
   };
 
   const categories = ['All', 'Ramen', 'Rice', 'Soup', 'Drinks', 'More'];
@@ -137,6 +215,90 @@ const Menu = () => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+
+  // Handle add to cart
+  const handleAddToCart = async (item) => {
+    try {
+      console.log('Adding item to cart:', item);
+      setAddingToCart(item._id);
+      
+      // Validate item data
+      if (!item._id || !item.name || !item.price) {
+        throw new Error('Invalid item data');
+      }
+      
+      // Parse price more safely
+      let priceValue;
+      if (typeof item.price === 'string') {
+        priceValue = parseInt(item.price.replace(/[^0-9]/g, '')) || 0;
+      } else if (typeof item.price === 'number') {
+        priceValue = item.price;
+      } else {
+        priceValue = 0;
+      }
+      
+      // Get image safely
+      let itemImage;
+      try {
+        itemImage = getItemImage(item.image);
+      } catch (imgError) {
+        console.warn('Error getting item image:', imgError);
+        itemImage = ramenDefault; // fallback to default image
+      }
+      
+      const cartItem = {
+        id: item._id,
+        name: item.name,
+        description: item.description || 'Delicious and freshly prepared',
+        price: priceValue,
+        image: itemImage,
+        category: item.category,
+        rating: item.rating
+      };
+      
+      console.log('Cart item being added:', cartItem);
+      
+      // Add a small delay to show loading state on mobile
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      if (typeof addToCart !== 'function') {
+        throw new Error('Cart context not available');
+      }
+      
+      addToCart(cartItem);
+      
+      // Brief success feedback
+      setTimeout(() => {
+        setAddingToCart(null);
+      }, 700);
+      
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      setAddingToCart(null);
+      // Show user-friendly error message
+      alert('Error adding item to cart. Please try again.');
+    }
+  };
+
+  // Handle table selection for QR orders
+  const handleTableSelection = (tableNumber) => {
+    try {
+      console.log('Setting QR table number:', tableNumber);
+      setSelectedTable(tableNumber);
+      localStorage.setItem('qrTableNumber', tableNumber);
+      setShowTableModal(false);
+    } catch (error) {
+      console.error('Error setting QR table number:', error);
+      alert('Error setting table number. Please try again.');
+    }
+  };
+
+  const closeTableModal = () => {
+    setShowTableModal(false);
+    // If they close without selecting, redirect to regular menu
+    setIsQROrder(false);
+    localStorage.removeItem('qrTableNumber');
+  };
 
   // Function to render star rating
   const renderStars = (rating) => {
@@ -184,46 +346,58 @@ const Menu = () => {
     <div className="min-h-screen bg-gray-50">
       <NavBar />
       
+      {/* QR Order Badge */}
+      {isQROrder && selectedTable && (
+        <div className="fixed top-20 left-4 z-40 bg-red-600 text-white px-4 py-2 rounded-full shadow-lg">
+          <div className="flex items-center gap-2">
+            <QrCode className="w-4 h-4" />
+            <span className="text-sm font-semibold">Table {selectedTable}</span>
+          </div>
+        </div>
+      )}
+      
       {/* Header with Search Bar */}
       <div className="bg-white shadow-sm sticky top-20 z-10 pt-6 pb-4">
         <div className="max-w-7xl mx-auto px-6">
-          {/* Search Bar - Upper Right */}
-          <div className="flex justify-end mb-6">
-            <div className="relative w-full max-w-md">
+          {/* Search Bar */}
+          <div className="flex justify-center mb-4 md:mb-6">
+            <div className="relative w-full max-w-sm md:max-w-md">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
+                <Search className="h-4 w-4 md:h-5 md:w-5 text-gray-400" />
               </div>
               <input
                 type="text"
-                placeholder="Search menu items..."
+                placeholder="Search menu..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-full leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-[#46923c] focus:border-transparent text-sm"
+                className="block w-full pl-10 pr-3 py-2 md:py-3 border border-gray-300 rounded-full leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
               />
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm('')}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 >
-                  <span className="h-5 w-5 text-gray-400 hover:text-gray-600 cursor-pointer">×</span>
+                  <span className="h-4 w-4 md:h-5 md:w-5 text-gray-400 hover:text-gray-600 cursor-pointer">×</span>
                 </button>
               )}
             </div>
           </div>
 
           {/* Category Filter Buttons */}
-          <div className="flex flex-wrap justify-center gap-3">
+          <div className="flex flex-wrap justify-center gap-2 md:gap-3">
             {categories.map((category) => (
               <button
                 key={category}
                 onClick={() => setActiveCategory(category)}
-                className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
+                className={`px-3 py-2 md:px-6 md:py-3 rounded-full font-semibold text-xs md:text-sm transition-all duration-300 ${
                   activeCategory === category
-                    ? 'bg-[#46923c] text-white shadow-lg transform scale-105'
-                    : 'text-gray-600 bg-gray-100 hover:bg-[#8bca84] hover:text-white'
+                    ? 'bg-red-600 text-white shadow-lg transform scale-105'
+                    : 'text-gray-600 bg-gray-100 hover:bg-red-500 hover:text-white'
                 }`}
               >
-                {category} {category !== 'All' && `(${allMenuItems.filter(item => item.category === category).length})`}
+                <span className="hidden sm:inline">{category}</span>
+                <span className="sm:hidden">{category === 'All' ? 'All' : category.slice(0, 6)}</span>
+                {category !== 'All' && <span className="hidden md:inline"> ({allMenuItems.filter(item => item.category === category).length})</span>}
               </button>
             ))}
           </div>
@@ -232,7 +406,7 @@ const Menu = () => {
           {searchTerm && (
             <div className="mt-4 text-center">
               <p className="text-gray-600">
-                Found <span className="font-semibold text-[#46923c]">{filteredItems.length}</span> items for "{searchTerm}"
+                Found <span className="font-semibold text-red-600">{filteredItems.length}</span> items for "{searchTerm}"
               </p>
             </div>
           )}
@@ -260,9 +434,9 @@ const Menu = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-6">
             {filteredItems.map((item) => (
-              <div key={item._id} className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+              <div key={item._id} className="bg-white rounded-xl md:rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
                 
                 {/* Image with Heart Icon */}
                 <div className="relative aspect-square overflow-hidden">
@@ -272,65 +446,86 @@ const Menu = () => {
                     className="w-full h-full object-cover"
                   />
                   {/* Heart Icon - Top Right */}
-                  <button className="absolute top-3 right-3 w-8 h-8 bg-white bg-opacity-80 rounded-full flex items-center justify-center hover:bg-opacity-100 transition-all duration-200">
-                    <svg className="w-4 h-4 text-gray-600 hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <button className="absolute top-2 right-2 md:top-3 md:right-3 w-6 h-6 md:w-8 md:h-8 bg-white bg-opacity-80 rounded-full flex items-center justify-center hover:bg-opacity-100 transition-all duration-200">
+                    <svg className="w-3 h-3 md:w-4 md:h-4 text-gray-600 hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                     </svg>
                   </button>
                 </div>
 
                 {/* Card Content */}
-                <div className="p-4">
+                <div className="p-2 md:p-4">
                   
                   {/* Item Name */}
-                  <h4 className="font-bold text-lg text-gray-900 mb-2 leading-tight">
+                  <h4 className="font-bold text-sm md:text-lg text-gray-900 mb-1 md:mb-2 leading-tight line-clamp-2">
                     {item.name}
                   </h4>
                   
                   {/* Description */}
-                  <p className="text-sm text-gray-600 mb-3 leading-relaxed">
+                  <p className="text-xs md:text-sm text-gray-600 mb-2 md:mb-3 leading-relaxed line-clamp-2 hidden sm:block">
                     {item.description || 'Delicious and freshly prepared'}
                   </p>
                   
                   {/* Rating and Time Row - Only for food items */}
                   {(item.category === 'Ramen' || item.category === 'Rice' || item.category === 'Soup') && (
-                    <div className="flex items-center gap-4 mb-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 md:gap-4 mb-2 md:mb-4 text-xs md:text-sm text-gray-600">
                       {/* Rating */}
                       <div className="flex items-center gap-1">
                         {renderStars(item.rating || 4.5)}
-                        <span className="ml-1 font-medium text-gray-900">{item.rating || 4.5}</span>
+                        <span className="ml-1 font-medium text-gray-900 hidden sm:inline">{item.rating || 4.5}</span>
                       </div>
                       
                       {/* Cooking Time */}
                       <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4 text-gray-500" />
-                        <span>15-20 min</span>
+                        <Clock className="w-3 h-3 md:w-4 md:h-4 text-gray-500" />
+                        <span className="hidden sm:inline">15-20 min</span>
+                        <span className="sm:hidden">15min</span>
                       </div>
                     </div>
                   )}
 
                   {/* For non-food items, add some spacing */}
                   {!(item.category === 'Ramen' || item.category === 'Rice' || item.category === 'Soup') && (
-                    <div className="mb-4"></div>
+                    <div className="mb-2 md:mb-4"></div>
                   )}
                   
                   {/* Price and Add to Cart Row */}
                   <div className="flex items-center justify-between">
-                    <div className="text-xl font-bold" style={{ color: '#46923c' }}>
+                    <div className="text-sm md:text-xl font-bold" style={{ color: '#dc2626' }}>
                       {item.price}
                     </div>
                     
                     <button 
-                      className="px-6 py-2 text-white font-semibold rounded-full transition-colors duration-300"
-                      style={{ backgroundColor: '#46923c' }}
+                      onClick={() => handleAddToCart(item)}
+                      disabled={addingToCart === item._id}
+                      className={`px-3 py-1 md:px-6 md:py-2 text-white font-semibold rounded-full transition-all duration-300 text-xs md:text-sm min-w-[60px] md:min-w-[120px] ${
+                        addingToCart === item._id ? 'opacity-75 cursor-not-allowed' : ''
+                      }`}
+                      style={{ 
+                        backgroundColor: addingToCart === item._id ? '#dc2626' : '#dc2626'
+                      }}
                       onMouseEnter={(e) => {
-                        e.target.style.backgroundColor = '#5BC142';
+                        if (addingToCart !== item._id) {
+                          e.target.style.backgroundColor = '#b91c1c';
+                        }
                       }}
                       onMouseLeave={(e) => {
-                        e.target.style.backgroundColor = '#46923c';
+                        if (addingToCart !== item._id) {
+                          e.target.style.backgroundColor = '#dc2626';
+                        }
                       }}
                     >
-                      Add to Cart
+                      {addingToCart === item._id ? (
+                        <div className="flex items-center justify-center">
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Added!
+                        </div>
+                      ) : (
+                        'Add to Cart'
+                      )}
                     </button>
                   </div>
                 </div>
@@ -339,6 +534,77 @@ const Menu = () => {
           </div>
         )}
       </div>
+      
+      {/* Table Selection Modal for QR Orders */}
+      {showTableModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <QrCode className="w-8 h-8 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Mian Taste!</h2>
+              <p className="text-gray-600">Please confirm your table number to get started</p>
+            </div>
+            
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3">Select Your Table</label>
+              <div className="grid grid-cols-4 gap-3">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((tableNum) => (
+                  <button
+                    key={tableNum}
+                    onClick={() => handleTableSelection(tableNum.toString())}
+                    className="h-12 rounded-lg font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors duration-200 transform hover:scale-105"
+                  >
+                    {tableNum}
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Or enter table number</label>
+              <input
+                type="text"
+                placeholder="Enter table number"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && e.target.value.trim()) {
+                    handleTableSelection(e.target.value.trim());
+                  }
+                }}
+              />
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={closeTableModal}
+                className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const input = document.querySelector('input[placeholder="Enter table number"]');
+                  if (input.value.trim()) {
+                    handleTableSelection(input.value.trim());
+                  }
+                }}
+                className="flex-1 px-4 py-3 bg-[#46923c] text-white rounded-lg hover:bg-[#5BC142] transition-colors"
+              >
+                Confirm
+              </button>
+            </div>
+            
+            <button
+              onClick={closeTableModal}
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

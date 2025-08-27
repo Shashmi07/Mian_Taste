@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { CartProvider } from './context/CartContext';
 
 // Import existing pages
 import Homepage from './pages/Homepage'; // Changed from Home to Homepage
@@ -77,9 +78,10 @@ function App() {
   }
 
   return (
-    <Router>
-        <ScrollToTop />
-      <div className="App">
+    <CartProvider>
+      <Router>
+          <ScrollToTop />
+        <div className="App">
         <Routes>
           {/* Main pages - Updated to use Homepage */}
           <Route path="/" element={<Homepage />} />
@@ -174,8 +176,9 @@ function App() {
           
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </div>
-    </Router>
+        </div>
+      </Router>
+    </CartProvider>
   );
 }
 

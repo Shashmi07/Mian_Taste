@@ -38,10 +38,10 @@ export default function Login({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
       <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-lg">
         <div className="text-center mb-8">
-          <div className="bg-orange-500 p-3 rounded-full w-16 h-16 mx-auto mb-4">
+          <div className="p-3 rounded-full w-16 h-16 mx-auto mb-4 bg-red-600">
             <ChefHat className="text-white w-10 h-10" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
@@ -65,7 +65,8 @@ export default function Login({ onLogin }) {
               type="email"
               value={credentials.email}
               onChange={(e) => setCredentials({...credentials, email: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
+              style={{ '--tw-ring-color': '#dc2626' }}
               required
             />
           </div>
@@ -78,7 +79,8 @@ export default function Login({ onLogin }) {
               type="password"
               value={credentials.password}
               onChange={(e) => setCredentials({...credentials, password: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
+              style={{ '--tw-ring-color': '#dc2626' }}
               required
             />
           </div>
@@ -86,7 +88,14 @@ export default function Login({ onLogin }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white p-3 rounded-lg font-medium transition duration-200"
+            className="w-full text-white p-3 rounded-lg font-medium transition duration-200 disabled:opacity-50"
+            style={{ backgroundColor: loading ? '#9ca3af' : '#dc2626' }}
+            onMouseEnter={(e) => {
+              if (!loading) e.target.style.backgroundColor = '#b91c1c';
+            }}
+            onMouseLeave={(e) => {
+              if (!loading) e.target.style.backgroundColor = '#dc2626';
+            }}
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
