@@ -27,22 +27,8 @@ export default function PaymentGateway() {
       try {
         const order = JSON.parse(savedOrder);
         setOrderData(order);
-        
-        // If it's a table reservation, auto-fill customer info from database and set card payment
-        if (order.type === 'table-reservation') {
-          const customerUser = localStorage.getItem('customerUser');
-          if (customerUser) {
-            const userData = JSON.parse(customerUser);
-            setCustomerInfo({
-              name: userData.username || '',
-              email: userData.email || '',
-              phone: userData.phoneNumber || ''
-            });
-          }
-          // Auto-select card payment for table reservations
-          setPaymentMethod('card');
-        } else if (order.customerName) {
-          // Pre-fill customer name if available for other orders
+        // Pre-fill customer name if available
+        if (order.customerName) {
           setCustomerInfo(prev => ({ ...prev, name: order.customerName }));
         }
       } catch (error) {
@@ -89,16 +75,6 @@ export default function PaymentGateway() {
   };
 
   const handlePayment = async () => {
-    // Check if it's a reservation order and user needs to login
-    if (orderData?.type === 'table-reservation' || orderData?.type === 'reservation') {
-      const customerToken = localStorage.getItem('customerToken');
-      if (!customerToken) {
-        alert('Please login first to proceed with table reservation payment.');
-        navigate('/login');
-        return;
-      }
-    }
-    
     if (!paymentMethod) {
       alert('Please select a payment method');
       return;
@@ -115,90 +91,28 @@ export default function PaymentGateway() {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Handle reservation payment
-      if (orderData?.type === 'table-reservation' || orderData?.type === 'reservation') {
-        // For table-reservation type, check if it has food orders
-        if (orderData?.type === 'table-reservation') {
-          // If it has food orders, create reservation with food data
-          if (orderData?.reservationDetails?.hasFood) {
-            console.log('Processing table + food reservation...');
-            const customerUser = localStorage.getItem('customerUser');
-            
-            if (!customerUser) {
-              throw new Error('Customer not logged in');
-            }
-            
-            const userData = JSON.parse(customerUser);
-            console.log('Customer data:', userData);
-            
-            // Validate customer data
-            if (!userData.username || !userData.email || !userData.phoneNumber) {
-              throw new Error('Incomplete customer profile. Please update your profile with name, email, and phone number.');
-            }
-            
-            const reservationData = {
-              customerName: userData.username,
-              customerEmail: userData.email,
-              customerPhone: userData.phoneNumber,
-              reservationDate: orderData.reservationDetails.date,
-              timeSlot: orderData.reservationDetails.timeSlot,
-              selectedTables: orderData.reservationDetails.tables,
-              specialRequests: '',
-              // Food order data
-              hasFood: true,
-              foodItems: orderData.reservationDetails.foodItems.map(item => ({
-                name: item.name,
-                quantity: item.quantity,
-                price: item.price
-              })),
-              foodTotal: orderData.reservationDetails.foodTotal,
-              tableTotal: orderData.reservationDetails.tableAmount,
-              grandTotal: orderData.reservationDetails.grandTotal
-            };
-
-            console.log('Sending reservation data:', reservationData);
-            
-            const response = await createReservation(reservationData);
-            console.log('Reservation response:', response);
-            
-            if (response.success) {
-              alert(`💳 Payment Successful!\n\n✅ Your table reservation with food orders has been confirmed!\n\n🙏 Thank you for your payment!\n\n📍 Please arrive at the restaurant on time for your reservation.\n\n📞 Contact us if you have any questions.`);
-            } else {
-              console.error('Reservation creation failed:', response);
-              throw new Error(response.message || 'Failed to create reservation');
-            }
-          } else {
-            // Table-only reservation (already created)
-            console.log('Processing table-only reservation...');
-            alert(`💳 Payment Successful!\n\n✅ Your table reservation has been confirmed!\n\n🙏 Thank you for your payment!\n\n📍 Please arrive at the restaurant on time for your reservation.\n\n📞 Contact us if you have any questions.`);
-          }
-          
-          // Clear cart for table reservations (if it has food items)
-          clearCart();
+      if (orderData?.type === 'reservation') {
+        const reservationData = orderData.reservationData;
+        
+        // Create the reservation after successful payment
+        const response = await createReservation(reservationData);
+        
+        if (response.success) {
+          const tableNumbers = reservationData.selectedTables.sort((a, b) => a - b).join(', ');
+          const tableCostInfo = `\nTable Reservation: ${reservationData.selectedTables.length} table(s) × Rs.${reservationData.tableCost.pricePerTable} = Rs.${reservationData.tableCost.totalTableCost}`;
+          const orderInfo = reservationData.preOrder && reservationData.preOrder.items.length > 0
+            ? `\nPre-Order: ${reservationData.preOrder.items.length} items = Rs.${reservationData.preOrder.totalAmount}` 
+            : '\nPre-Order: No items selected';
+          const totalInfo = `\nTOTAL PAID: Rs.${orderTotal}`;
+          alert(`🎉 Reservation Confirmed & Payment Successful!${tableCostInfo}${orderInfo}${totalInfo}\n\n📋 Details:\nReservation ID: ${response.reservation.reservationId}\nTables: ${tableNumbers}\nDate: ${reservationData.reservationDate}\nTime: ${reservationData.timeSlot}\n\n💡 Please save your reservation ID for future reference.`);
           
           // Clean up reservation data
-          localStorage.removeItem('currentOrder');
-          localStorage.removeItem('reservationContext'); // Also clean up reservation context
+          localStorage.removeItem('pendingReservation');
           
           // Navigate to home
           navigate('/');
         } else {
-          // Handle old reservation format
-          const reservationData = orderData.reservationData;
-          
-          // Create the reservation after successful payment
-          const response = await createReservation(reservationData);
-          
-          if (response.success) {
-            alert(`💳 Payment Successful!\n\n🙏 Thank you for your payment!\n\n⏳ Your table reservation is being processed and you should receive a confirmation message soon.\n\n📧 We will notify you once your reservation is confirmed by our admin team.\n\n📱 Keep an eye on your notifications for updates.`);
-            
-            // Clean up reservation data
-            localStorage.removeItem('pendingReservation');
-            
-            // Navigate to home
-            navigate('/');
-          } else {
-            throw new Error(response.message || 'Failed to submit reservation');
-          }
+          throw new Error(response.message || 'Failed to create reservation');
         }
       } else {
         // Handle regular order payment
@@ -225,28 +139,7 @@ export default function PaymentGateway() {
       
     } catch (error) {
       console.error('Payment processing error:', error);
-      
-      // Clear cart and reservation context on failure to avoid confusion
-      if (orderData?.type === 'table-reservation' && orderData?.reservationDetails?.hasFood) {
-        clearCart();
-        localStorage.removeItem('reservationContext');
-      }
-      
-      // Show more specific error messages
-      let errorMessage = 'Payment failed. Please try again.';
-      if (error.message.includes('not logged in')) {
-        errorMessage = 'Please login first to complete your reservation.';
-      } else if (error.message.includes('no longer available')) {
-        errorMessage = `⚠️ Table Unavailable!\n\n${error.message}\n\nYour cart has been cleared. Please start over with available tables.`;
-      } else if (error.message.includes('already reserved')) {
-        errorMessage = `⚠️ Table Conflict!\n\n${error.message}\n\nYour cart has been cleared. Please select different tables or time slots.`;
-      } else if (error.message.includes('reservation')) {
-        errorMessage = `Payment processed but reservation failed: ${error.message}`;
-      } else if (error.message.includes('network') || error.message.includes('fetch')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
-      }
-      
-      alert(errorMessage);
+      alert('Payment failed. Please try again.');
     } finally {
       setIsProcessing(false);
     }
@@ -259,28 +152,18 @@ export default function PaymentGateway() {
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center mb-8">
             <button 
-              onClick={() => {
-                // If backing out from table reservation with food, clear cart and reservation context
-                if (orderData?.type === 'table-reservation' && orderData?.reservationDetails?.hasFood) {
-                  clearCart();
-                  localStorage.removeItem('reservationContext');
-                  localStorage.removeItem('currentOrder');
-                  navigate('/table-reservation');
-                } else {
-                  navigate((orderData?.type === 'table-reservation' || orderData?.type === 'reservation') ? '/table-reservation' : '/cart');
-                }
-              }}
+              onClick={() => navigate(orderData?.type === 'reservation' ? '/table-reservation' : '/cart')}
               className="flex items-left text-gray-700 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft size={20} className="mr-2" />
-              {(orderData?.type === 'table-reservation' || orderData?.type === 'reservation') ? 'Back to Reservation' : 'Back to Cart'}
+              {orderData?.type === 'reservation' ? 'Back to Reservation' : 'Back to Cart'}
             </button>
           </div>
 
           <div className="bg-white rounded-2xl shadow-lg p-8">
             <h1 className="text-3xl font-bold text-gray-800 mb-2 text-center">Payment</h1>
             <p className="text-gray-600 text-center mb-8">
-              {(orderData?.type === 'table-reservation' || orderData?.type === 'reservation') ? 'Complete your reservation payment' : 'Complete your order payment'}
+              {orderData?.type === 'reservation' ? 'Complete your reservation payment' : 'Complete your order payment'}
             </p>
 
             {/* Order Total */}
@@ -292,7 +175,7 @@ export default function PaymentGateway() {
             {/* Payment Method Selection */}
             <div className="mb-8">
               <h3 className="text-xl font-semibold text-gray-800 mb-4">Select Payment Method</h3>
-              {(orderData?.type === 'table-reservation' || orderData?.type === 'reservation') ? (
+              {orderData?.type === 'reservation' ? (
                 // Only card payment for reservations
                 <div className="flex justify-center">
                   <button
@@ -343,12 +226,7 @@ export default function PaymentGateway() {
 
             {/* Customer Information */}
             <div className="mb-8">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">
-                Customer Information
-                {(orderData?.type === 'table-reservation' || orderData?.type === 'reservation') && 
-                  <span className="text-sm font-normal text-gray-500 ml-2">(From your account)</span>
-                }
-              </h3>
+              <h3 className="text-xl font-semibold text-gray-800 mb-4">Customer Information</h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -360,12 +238,7 @@ export default function PaymentGateway() {
                     value={customerInfo.name}
                     onChange={handleInputChange}
                     placeholder="Enter your full name"
-                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors ${
-                      (orderData?.type === 'table-reservation' || orderData?.type === 'reservation') 
-                        ? 'bg-gray-50 cursor-not-allowed' 
-                        : ''
-                    }`}
-                    readOnly={orderData?.type === 'table-reservation' || orderData?.type === 'reservation'}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
                     required
                   />
                 </div>
@@ -380,12 +253,7 @@ export default function PaymentGateway() {
                     value={customerInfo.email}
                     onChange={handleInputChange}
                     placeholder="Enter your email address"
-                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors ${
-                      (orderData?.type === 'table-reservation' || orderData?.type === 'reservation') 
-                        ? 'bg-gray-50 cursor-not-allowed' 
-                        : ''
-                    }`}
-                    readOnly={orderData?.type === 'table-reservation' || orderData?.type === 'reservation'}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
                     required
                   />
                 </div>
@@ -400,12 +268,7 @@ export default function PaymentGateway() {
                     value={customerInfo.phone}
                     onChange={handleInputChange}
                     placeholder="Enter your phone number"
-                    className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors ${
-                      (orderData?.type === 'table-reservation' || orderData?.type === 'reservation') 
-                        ? 'bg-gray-50 cursor-not-allowed' 
-                        : ''
-                    }`}
-                    readOnly={orderData?.type === 'table-reservation' || orderData?.type === 'reservation'}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
                     required
                   />
                 </div>
@@ -473,7 +336,7 @@ export default function PaymentGateway() {
                 </div>
                 <h4 className="text-lg font-semibold text-yellow-800 mb-2">Cash Payment</h4>
                 <p className="text-yellow-700 mb-4">
-                  You can pay cash at the front table when you arrive at the restaurant.
+                  You can pay cash at the front table 
                 </p>
                 <div className="bg-yellow-100 rounded-lg p-4">
                   <p className="text-sm text-yellow-800 font-medium">
@@ -483,7 +346,7 @@ export default function PaymentGateway() {
               </div>
             )}
 
-
+            
             {/* Security Notice */}
             <div className="flex items-center justify-center mb-6 text-gray-600">
               <Lock size={16} className="mr-2" />
@@ -509,6 +372,7 @@ export default function PaymentGateway() {
                 <>
                   {paymentMethod === 'card' && `Pay Rs.${orderTotal} with Card`}
                   {paymentMethod === 'cash' && 'Confirm Cash Payment'}
+                  {paymentMethod === 'paypal' && `Pay Rs.${orderTotal} with PayPal`}
                   {!paymentMethod && `Complete Payment - Rs.${orderTotal}`}
                 </>
               )}
