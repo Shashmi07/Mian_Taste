@@ -15,7 +15,9 @@ export const createReservation = async (reservationData) => {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorData = await response.json().catch(() => ({}));
+      console.error('API Error Response:', errorData);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorData.message || 'Unknown error'}`);
     }
 
     const data = await response.json();

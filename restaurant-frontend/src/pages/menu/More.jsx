@@ -1,6 +1,6 @@
-import React from 'react'
-import NavBar from '../../components/NavBar' // Fixed: components (lowercase)
-import MenuCategary from '../../components/MenuCategary' // Fixed: components (lowercase)
+import React from 'react';
+import NavBar from '../../components/NavBar'; // Fixed: components (lowercase)
+import MenuCategory from '../../components/MenuCategory'; // Fixed: components (lowercase)
 
 import wooden from '../../assets/MenuItems/wooden.jpg'
 import bamboo from '../../assets/MenuItems/bamboo.jpg'
@@ -15,7 +15,7 @@ const More = () => {
   return (
     <div>
     <NavBar/>
-    <MenuCategary/>
+    <MenuCategory/>
 
     <div className="grid grid-cols-5 gap-6 ml-0 mt-4">
           {MoreItems

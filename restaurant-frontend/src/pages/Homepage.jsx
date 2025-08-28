@@ -1,311 +1,261 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { ShoppingCart, Menu, X, Utensils } from 'lucide-react';
 import NavBar from '../components/NavBar';
-import Footer from '../components/footer';
 
-// Import food images
-import heroImage from '../assets/home.jpg';
-import chineseImage from '../assets/Chineese.jpg';
-import ramenImage from '../assets/RamenNoodles.jpg';
-import chickenRamen from '../assets/MenuItems/chickenRamen.jpg';
-import beefRamen from '../assets/MenuItems/beefRamen.jpg';
-import seafoodRamen from '../assets/MenuItems/SeafoodRamen.jpg';
+// Import images from assets
+import noodles1 from '../assets/noodles1.jpg';
+import noodles2 from '../assets/noodles2.jpg';
+import noodles4 from '../assets/noodles4.jpg';
+import Rice from '../assets/Rice.jpg';
 
-const Homepage = () => {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const navigate = useNavigate();
-
-  const heroSlides = [
-    {
-      id: 1,
-      title: "Welcome to Mian Taste",
-      subtitle: "Authentic Korean-Japanese Fusion",
-      image: heroImage
-    },
-    {
-      id: 2,
-      title: "Fresh Ramen Daily",
-      subtitle: "Made with Premium Ingredients",
-      image: chickenRamen
-    },
-    {
-      id: 3,
-      title: "Signature Dishes",
-      subtitle: "Traditional Recipes, Modern Taste",
-      image: beefRamen
-    },
-    {
-      id: 4,
-      title: "Seafood Specialties",
-      subtitle: "Ocean Fresh Flavors",
-      image: seafoodRamen
-    },
-    {
-      id: 5,
-      title: "Asian Fusion",
-      subtitle: "Where East Meets Flavor",
-      image: chineseImage
-    }
-  ];
-
-  // Auto-play slideshow
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-    }, 4000);
-    return () => clearInterval(timer);
-  }, [heroSlides.length]);
+export default function HomePage() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white">
       <NavBar />
-      
-      <main className="flex-1">
-        {/* Food Slideshow Header */}
-        <section className="relative h-screen overflow-hidden">
-          {heroSlides.map((slide, index) => (
-            <div
-              key={slide.id}
-              className={`absolute inset-0 transition-opacity duration-1000 ${
-                index === currentSlide ? 'opacity-100' : 'opacity-0'
-              }`}
-            >
-              {/* Background Image */}
-              <div className="absolute inset-0">
-                <img 
-                  src={slide.image} 
-                  alt={slide.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-40"></div>
-              </div>
-
-              {/* Content Overlay */}
-              <div className="relative z-10 h-full flex items-center justify-center">
-                <div className="text-center text-white max-w-4xl mx-auto px-6">
-                  <h1 className="text-5xl lg:text-7xl font-bold mb-6 leading-tight">
-                    {slide.title}
-                  </h1>
-                  <p className="text-2xl lg:text-3xl mb-8 opacity-90">
-                    {slide.subtitle}
-                  </p>
-                  
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <button
-                      onClick={() => navigate('/menu')}
-                      className="group bg-[#46923c] text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-[#5BC142] transition-colors duration-300 flex items-center justify-center"
-                    >
-                      View Our Menu
-                      <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </button>
-                    
-                    <button
-                      onClick={() => navigate('/table-reservation')}
-                      className="bg-white bg-opacity-20 backdrop-blur-sm border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-gray-900 transition-all duration-300"
-                    >
-                      Reserve Table
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {/* Navigation Dots */}
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-3 z-20">
-            {heroSlides.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  index === currentSlide ? 'bg-white scale-125' : 'bg-white bg-opacity-50'
-                }`}
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* Quick Actions Section */}
-        <section className="py-20 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                How Would You Like to Order?
-              </h2>
-              <p className="text-xl text-gray-600">
-                Choose your preferred dining experience
+      {/* Hero Section */}
+      <main className="relative overflow-hidden">
+        <div className="px-4 py-12 mx-auto max-w-7xl sm:px-6 lg:px-8 lg:py-5">
+          <div className="grid items-center gap-12 lg:grid-cols-2">
+            
+            {/* Content - Left Column */}
+            <div className="order-1 text-center lg:text-left">
+              <h1 className="mb-6 text-4xl font-bold leading-tight text-gray-900 sm:text-5xl lg:text-6xl">
+                Your Go-To Spot<br />
+                For <span className="text-orange-500">Great Food</span> And<br />
+                <span className="text-orange-500">Good Times</span>
+              </h1>
+              
+              <p className="max-w-lg mx-auto mb-8 text-lg text-gray-600 sm:text-xl lg:mx-0">
+                Join Us for Delicious Meals and Memorable Moments!
               </p>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 text-center">
-                <div className="text-6xl mb-6">🍽️</div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">Dine In</h3>
-                <p className="text-gray-600 mb-8">Experience our cozy atmosphere</p>
-                <button
-                  onClick={() => navigate('/table-reservation')}
-                  className="w-full bg-[#46923c] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#5BC142] transition-colors duration-300"
-                >
-                  Reserve Table
-                </button>
-              </div>
-
-              <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 text-center">
-                <div className="text-6xl mb-6">⚡</div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">Pre-Order</h3>
-                <p className="text-gray-600 mb-8">Skip the wait, order ahead</p>
-                <button
-                  onClick={() => navigate('/preorder')}
-                  className="w-full bg-[#46923c] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#5BC142] transition-colors duration-300"
-                >
-                  Order Now
-                </button>
-              </div>
-
-              <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 text-center">
-                <div className="text-6xl mb-6">📱</div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">QR Menu</h3>
-                <p className="text-gray-600 mb-8">Scan & order from your table</p>
-                <button
-                  onClick={() => navigate('/menu')}
-                  className="w-full bg-[#46923c] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#5BC142] transition-colors duration-300"
-                >
-                  Browse Menu
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Why Choose Us Section */}
-        <section className="py-20 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">Why Choose Mian Taste?</h2>
-              <p className="text-xl text-gray-600">Experience the difference that makes us special</p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="text-center group">
-                <div className="w-20 h-20 bg-[#46923c] rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-[#5BC142] transition-colors duration-300">
-                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">Fresh Ingredients</h3>
-                <p className="text-gray-600 leading-relaxed">We source the finest ingredients daily to ensure every dish meets our high standards of quality and freshness.</p>
-              </div>
               
-              <div className="text-center group">
-                <div className="w-20 h-20 bg-[#46923c] rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-[#5BC142] transition-colors duration-300">
-                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">Made with Love</h3>
-                <p className="text-gray-600 leading-relaxed">Every dish is crafted with passion by our experienced chefs who take pride in delivering authentic flavors.</p>
-              </div>
-              
-              <div className="text-center group">
-                <div className="w-20 h-20 bg-[#46923c] rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-[#5BC142] transition-colors duration-300">
-                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">Family Atmosphere</h3>
-                <p className="text-gray-600 leading-relaxed">Our warm and welcoming environment makes every guest feel like part of our extended family.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Customer Reviews Section */}
-        <section className="py-20 bg-white">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">What Our Customers Say</h2>
-              <p className="text-xl text-gray-600">Don't just take our word for it</p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="bg-gray-50 rounded-xl p-8 border border-gray-100">
-                <div className="flex items-center mb-4">
-                  <div className="flex space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <svg key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                  </div>
-                </div>
-                <p className="text-gray-700 mb-4 italic">"Amazing authentic flavors! The ramen here reminds me of my trip to Japan. Best Korean-Japanese fusion in Kottawa!"</p>
-                <div className="font-semibold text-gray-900">Sarah M.</div>
-                <div className="text-sm text-gray-500">Regular Customer</div>
-              </div>
-              
-              <div className="bg-gray-50 rounded-xl p-8 border border-gray-100">
-                <div className="flex items-center mb-4">
-                  <div className="flex space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <svg key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                  </div>
-                </div>
-                <p className="text-gray-700 mb-4 italic">"Perfect family restaurant! Kids love the atmosphere and we love the authentic taste. Great service too!"</p>
-                <div className="font-semibold text-gray-900">Rajesh P.</div>
-                <div className="text-sm text-gray-500">Family Diner</div>
-              </div>
-              
-              <div className="bg-gray-50 rounded-xl p-8 border border-gray-100">
-                <div className="flex items-center mb-4">
-                  <div className="flex space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <svg key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                  </div>
-                </div>
-                <p className="text-gray-700 mb-4 italic">"Fresh ingredients, amazing flavors, and reasonable prices. This is our go-to place for Asian cuisine!"</p>
-                <div className="font-semibold text-gray-900">Priya L.</div>
-                <div className="text-sm text-gray-500">Food Enthusiast</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Call to Action Section */}
-        <section className="py-20 bg-[#46923c]">
-          <div className="max-w-4xl mx-auto px-6 text-center">
-            <h2 className="text-4xl font-bold text-white mb-6">Ready to Experience Mian Taste?</h2>
-            <p className="text-xl text-white text-opacity-90 mb-8 leading-relaxed">
-              Join thousands of satisfied customers who have made Mian Taste their favorite dining destination
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={() => navigate('/table-reservation')}
-                className="bg-white text-[#46923c] px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors duration-300"
-              >
-                Reserve Your Table
-              </button>
-              <button
-                onClick={() => navigate('/preorder')}
-                className="bg-white bg-opacity-20 border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-[#46923c] transition-all duration-300"
-              >
-                Order for Pickup
+              <button className="inline-flex items-center px-8 py-4 space-x-2 text-lg font-semibold text-white transition-all duration-300 transform bg-orange-500 rounded-full shadow-lg hover:bg-orange-600 hover:shadow-xl hover:-translate-y-1">
+                <span>Order Now</span>
+                <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
               </button>
             </div>
-          </div>
-        </section>
 
-        <Footer />
+            {/* Image Collage - Right Column */}
+            <div className="order-2 lg:flex lg:justify-center">
+              <div className="w-full max-w-lg">
+                {/* Outer container with background, border, and shadow */}
+                <div className="p-5 border-gray-300 shadow-xl border-3 bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl">
+                  {/* Inner grid layout */}
+                  <div className="grid grid-cols-2 gap-4">
+                    
+                    {/* Top-left: noodles2 (taller, aspect ratio ~3:4) */}
+                    <div className="relative row-span-2">
+                      <div className="relative overflow-hidden rounded-xl">
+                        <img 
+                          src={noodles2} 
+                          alt="Authentic Japanese ramen bowl with rich tonkotsu broth, tender chashu pork, and fresh scallions"
+                          className="object-cover w-full transition-transform duration-200 shadow-md h-80 hover:scale-105"
+                          width="240"
+                          height="320"
+                          loading="eager"
+                        />
+                        {/* Subtle decorative overlay */}
+                        <div className="absolute inset-0 opacity-6 bg-gradient-to-br from-orange-200 to-transparent"></div>
+                      </div>
+                    </div>
+                    
+                    {/* Top-right: noodles3 (shorter, aspect ratio ~4:5) */}
+                    <div className="relative">
+                      <div className="relative overflow-hidden rounded-xl">
+                        <img 
+                          src={noodles1} 
+                          alt="Traditional miso ramen with corn, bamboo shoots, and perfectly seasoned broth"
+                          className="object-cover w-full transition-transform duration-200 shadow-md h-36 hover:scale-105 sm:h-40"
+                          width="240"
+                          height="192"
+                          loading="lazy"
+                        />
+                        {/* Subtle decorative overlay */}
+                        <div className="absolute inset-0 opacity-7 bg-gradient-to-br from-amber-200 to-transparent"></div>
+                      </div>
+                    </div>
+                    
+                    {/* Bottom-right (will be pushed to next row, spanning full width visually) */}
+                    <div className="relative">
+                      <div className="relative overflow-hidden rounded-xl">
+                        <img 
+                          src={noodles4} 
+                          alt="noodle"
+                          className="object-cover w-full h-32 transition-transform duration-200 shadow-md hover:scale-105 sm:h-36"
+                          width="240"
+                          height="144"
+                          loading="lazy"
+                        />
+                        {/* Subtle decorative overlay */}
+                        <div className="absolute inset-0 opacity-6 bg-gradient-to-br from-red-200 to-transparent"></div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Bottom spanning image: noodles4 full width */}
+                  <div className="relative mt-4">
+                    <div className="relative overflow-hidden rounded-xl">
+                      <img 
+                        src={Rice} 
+                        alt="Premium ramen selection showcasing our signature broths and artisanal toppings"
+                        className="object-cover w-full transition-transform duration-200 shadow-md h-28 hover:scale-105 sm:h-32"
+                        width="480"
+                        height="128"
+                        loading="lazy"
+                        style={{ aspectRatio: '5/2' }}
+                      />
+                      {/* Subtle decorative overlay */}
+                      <div className="absolute inset-0 opacity-8 bg-gradient-to-r from-purple-200 to-transparent"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
+
+      {/* Cross-Selling Offers Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+          <div className="mb-12 text-center">
+            <h2 className="mb-4 text-3xl font-bold text-gray-900 sm:text-4xl">
+              Special <span className="text-orange-500">Offers</span> Just for You!
+            </h2>
+            <p className="max-w-2xl mx-auto text-lg text-gray-600">
+              Don't miss out on these amazing deals and combo offers
+            </p>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {/* Offer 1 - Ultimate Ramen Deal */}
+            <div className="overflow-hidden transition-shadow duration-300 bg-white shadow-lg rounded-2xl hover:shadow-xl group">
+              <div className="relative p-6 text-white bg-gradient-to-br from-orange-400 to-red-500">
+                <div className="absolute px-3 py-1 text-sm font-bold text-white bg-red-600 rounded-full top-4 right-4">
+                  SAVE 30%
+                </div>
+                <div className="mb-2 text-4xl">🍜🥢</div>
+                <h3 className="mb-2 text-xl font-bold">Ultimate Ramen Combo</h3>
+                <p className="text-orange-100">Authentic Japanese ramen experience</p>
+              </div>
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-2xl font-bold text-gray-900">$16.99</span>
+                  <span className="text-gray-500 line-through">$24.99</span>
+                </div>
+                <p className="mb-4 text-gray-600">Choice of Tonkotsu, Miso, or Shoyu ramen + gyoza + fresh juice</p>
+                <button className="w-full py-3 font-semibold text-white transition-colors duration-300 transform bg-orange-500 hover:bg-orange-600 rounded-xl group-hover:scale-105">
+                  Order Ramen Deal
+                </button>
+              </div>
+            </div>
+
+            {/* Offer 2 - Fresh Juice Trio */}
+            <div className="overflow-hidden transition-shadow duration-300 bg-white shadow-lg rounded-2xl hover:shadow-xl group">
+              <div className="relative p-6 text-white bg-gradient-to-br from-green-400 to-lime-500">
+                <div className="absolute px-3 py-1 text-sm font-bold text-green-900 bg-yellow-500 rounded-full top-4 right-4">
+                  FRESH DAILY
+                </div>
+                <div className="mb-2 text-4xl">🥤🍊🥭</div>
+                <h3 className="mb-2 text-xl font-bold">Triple Juice Special</h3>
+                <p className="text-green-100">Freshly squeezed goodness</p>
+              </div>
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-2xl font-bold text-gray-900">$12.99</span>
+                  <span className="text-gray-500 line-through">$18.99</span>
+                </div>
+                <p className="mb-4 text-gray-600">Orange + Mango + Green Apple juice (16oz each) - Perfect for sharing!</p>
+                <button className="w-full py-3 font-semibold text-white transition-colors duration-300 transform bg-green-500 hover:green-600 rounded-xl group-hover:scale-105">
+                  Order Juice Pack
+                </button>
+              </div>
+            </div>
+
+            {/* Offer 3 - Rice Bowl Feast */}
+            <div className="overflow-hidden transition-shadow duration-300 bg-white shadow-lg rounded-2xl hover:shadow-xl group md:col-span-2 lg:col-span-1">
+              <div className="relative p-6 text-white bg-gradient-to-br from-amber-400 to-orange-500">
+                <div className="absolute px-3 py-1 text-sm font-bold text-white bg-red-500 rounded-full top-4 right-4">
+                  BEST VALUE
+                </div>
+                <div className="mb-2 text-4xl">🍚🥩🥬</div>
+                <h3 className="mb-2 text-xl font-bold">Rice Bowl Feast</h3>
+                <p className="text-amber-100">Complete meal satisfaction</p>
+              </div>
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-2xl font-bold text-gray-900">$14.99</span>
+                  <span className="text-gray-500 line-through">$21.99</span>
+                </div>
+                <p className="mb-4 text-gray-600">Teriyaki chicken rice bowl + miso soup + side salad + green tea</p>
+                <button className="w-full py-3 font-semibold text-white transition-colors duration-300 transform bg-amber-500 hover:bg-amber-600 rounded-xl group-hover:scale-105">
+                  Order Rice Bowl
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Ramen + Juice + Rice Combo */}
+          <div className="mt-8">
+            <div className="overflow-hidden transition-shadow duration-300 bg-white shadow-lg rounded-2xl hover:shadow-xl">
+              <div className="p-6 text-center text-white bg-gradient-to-r from-purple-500 to-pink-500">
+                <div className="mb-3 text-5xl">🍜🥤🍚</div>
+                <h3 className="mb-2 text-2xl font-bold">Grand Minato Triple Threat</h3>
+                <p className="text-purple-100">The ultimate combination - Ramen + Juice + Rice!</p>
+              </div>
+              <div className="p-6">
+                <div className="grid items-center gap-6 md:grid-cols-3">
+                  <div className="text-center">
+                    <h4 className="mb-2 font-semibold text-gray-900">What You Get:</h4>
+                    <ul className="space-y-1 text-sm text-gray-600">
+                      <li>• Premium ramen of choice</li>
+                      <li>• Fresh fruit juice (20oz)</li>
+                      <li>• Chicken teriyaki rice bowl</li>
+                      <li>• Miso soup & salad</li>
+                    </ul>
+                  </div>
+                  <div className="text-center">
+                    <div className="mb-4">
+                      <span className="text-3xl font-bold text-gray-900">$26.99</span>
+                      <span className="block text-lg text-gray-500 line-through">$38.99</span>
+                    </div>
+                    <div className="px-3 py-1 text-sm font-semibold text-green-800 bg-green-100 rounded-full">
+                      Save $12.00!
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <button className="w-full py-4 text-lg font-bold text-white transition-all duration-300 transform shadow-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-xl hover:scale-105">
+                      Order Triple Threat
+                    </button>
+                    <p className="mt-2 text-xs text-gray-500">Perfect for 1-2 people</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Additional promotional banner */}
+          <div className="relative p-8 mt-12 overflow-hidden text-center text-white bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl">
+            <div className="relative z-10">
+              <h3 className="mb-4 text-2xl font-bold sm:text-3xl">🎉 Weekend Flash Sale! 🎉</h3>
+              <p className="mb-6 text-lg opacity-90">Order 2 or more items and get FREE delivery + 10% off your entire order!</p>
+              <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+                <button className="px-8 py-3 font-bold text-orange-500 transition-colors bg-white rounded-full hover:bg-gray-100">
+                  Order Now & Save
+                </button>
+                <span className="text-sm opacity-80">*Valid until Sunday midnight</span>
+              </div>
+            </div>
+            {/* Background decoration */}
+            <div className="absolute top-0 right-0 w-32 h-32 translate-x-16 -translate-y-16 bg-white rounded-full opacity-10"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 -translate-x-12 translate-y-12 bg-white rounded-full opacity-10"></div>
+          </div>
+        </div>
+      </section>
     </div>
   );
-};
-
-export default Homepage;
+}

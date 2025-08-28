@@ -3,7 +3,7 @@ import { Menu, Calendar, Clock, ShoppingBag, Truck, UtensilsCrossed, ChevronDown
 import NavBar from '../components/NavBar';
 import { Link } from 'react-router-dom';
 import { menuAPI } from '../services/api';
-import Footer from '../components/footer';
+import Footer from '../components/Footer';
 
 function PreOrder() {
   const [selectedOrderType, setSelectedOrderType] = useState('dine-in');

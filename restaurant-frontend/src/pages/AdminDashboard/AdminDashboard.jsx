@@ -20,7 +20,7 @@ import OrderManagement from './OrderManagement';
 import UserManagement from './UserManagement';
 import TableReservation from './TableReservation';
 import InventoryManagement from './InventoryManagement';
-import Settings from './Settings';
+
 import QRGenerator from './QRGenerator';
 
 const AdminDashboard = ({ user, onLogout }) => {
@@ -35,7 +35,7 @@ const AdminDashboard = ({ user, onLogout }) => {
     { id: 'reservations', name: 'Table Reservations', icon: Calendar },
     { id: 'inventory', name: 'Inventory', icon: Package },
     { id: 'qr-generator', name: 'QR Code Generator', icon: QrCode },
-    { id: 'settings', name: 'Settings', icon: SettingsIcon },
+ 
   ];
 
   const renderContent = () => {
@@ -54,8 +54,7 @@ const AdminDashboard = ({ user, onLogout }) => {
         return <InventoryManagement />;
       case 'qr-generator':
         return <QRGenerator />;
-      case 'settings':
-        return <Settings />;
+     
       default:
         return <Dashboard />;
     }

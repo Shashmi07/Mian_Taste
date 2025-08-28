@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
+import { NotificationProvider } from './context/NotificationContext';
 
 // Import existing pages
 import Homepage from './pages/Homepage'; // Changed from Home to Homepage
@@ -78,8 +79,9 @@ function App() {
   }
 
   return (
-    <CartProvider>
-      <Router>
+    <NotificationProvider>
+      <CartProvider>
+        <Router>
           <ScrollToTop />
         <div className="App">
         <Routes>
@@ -177,8 +179,9 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </div>
-      </Router>
-    </CartProvider>
+        </Router>
+      </CartProvider>
+    </NotificationProvider>
   );
 }
 

@@ -5,50 +5,7 @@ const OrderManagement = () => {
   const [selectedFilter, setSelectedFilter] = useState('all');
   
   const [orders] = useState([
-    {
-      id: 'ORD-001',
-      customerName: 'Raj Patel',
-      customerPhone: '+91 98765 43210',
-      items: [
-        { name: 'Tonkotsu Ramen', quantity: 1, price: 1500 },
-        { name: 'Gyoza', quantity: 1, price: 650 }
-      ],
-      total: 2150,
-      type: 'dine-in',
-      status: 'preparing',
-      orderTime: '10:30 AM',
-      estimatedTime: '15 mins',
-      tableNumber: 12
-    },
-    {
-      id: 'ORD-002',
-      customerName: 'Priya Sharma',
-      customerPhone: '+91 87654 32109',
-      items: [
-        { name: 'Chicken Teriyaki', quantity: 2, price: 1200 },
-        { name: 'Miso Soup', quantity: 2, price: 350 }
-      ],
-      total: 3100,
-      type: 'takeaway',
-      status: 'ready',
-      orderTime: '10:25 AM',
-      estimatedTime: 'Ready'
-    },
-    {
-      id: 'ORD-003',
-      customerName: 'Arjun Singh',
-      customerPhone: '+91 76543 21098',
-      items: [
-        { name: 'Sushi Platter', quantity: 1, price: 2200 },
-        { name: 'Green Tea', quantity: 2, price: 200 }
-      ],
-      total: 2600,
-      type: 'delivery',
-      status: 'pending',
-      orderTime: '10:20 AM',
-      estimatedTime: '30 mins',
-      address: '123 MG Road, Bangalore'
-    }
+    
   ]);
 
   const statusFilters = [

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Search, Clock, QrCode, X } from 'lucide-react';
+import { Star, Search, Clock, QrCode, X, Calendar } from 'lucide-react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import { useCart } from '../context/CartContext';
-import footer from '../components/footer'
 
 // Import all images from MenuItems folder and create mapping
 import chickenRamen from '../assets/MenuItems/chickenRamen.jpg';
@@ -113,6 +112,10 @@ const Menu = () => {
   const [selectedTable, setSelectedTable] = useState('');
   const [isQROrder, setIsQROrder] = useState(false);
   
+  // Reservation context
+  const [reservationContext, setReservationContext] = useState(null);
+  const [isReservationOrder, setIsReservationOrder] = useState(false);
+  
   // Check if this is a QR code access
   useEffect(() => {
     try {
@@ -141,6 +144,22 @@ const Menu = () => {
       localStorage.removeItem('qrTableNumber');
     }
   }, [searchParams]);
+  
+  // Check for reservation context
+  useEffect(() => {
+    const storedReservationContext = localStorage.getItem('reservationContext');
+    if (storedReservationContext) {
+      try {
+        const context = JSON.parse(storedReservationContext);
+        setReservationContext(context);
+        setIsReservationOrder(true);
+        console.log('Reservation context found:', context);
+      } catch (error) {
+        console.error('Error parsing reservation context:', error);
+        localStorage.removeItem('reservationContext');
+      }
+    }
+  }, []);
 
   // Fetch menu items from database
   useEffect(() => {
@@ -356,6 +375,39 @@ const Menu = () => {
         </div>
       )}
       
+      {/* Reservation Order Badge */}
+      {isReservationOrder && reservationContext && (
+        <div className="bg-blue-50 border-b border-blue-200 px-4 py-3">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-600 text-white p-2 rounded-full">
+                  <Calendar className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-blue-900">
+                    Adding food to your table reservation
+                  </p>
+                  <p className="text-xs text-blue-700">
+                    {reservationContext.customerName} • Tables {reservationContext.tableDetails.tables.join(', ')} • {reservationContext.tableDetails.date} {reservationContext.tableDetails.timeSlot}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('reservationContext');
+                  setReservationContext(null);
+                  setIsReservationOrder(false);
+                }}
+                className="text-blue-600 hover:text-blue-800 p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Header with Search Bar */}
       <div className="bg-white shadow-sm sticky top-20 z-10 pt-6 pb-4">
         <div className="max-w-7xl mx-auto px-6">
@@ -434,97 +486,97 @@ const Menu = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 md:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6">
             {filteredItems.map((item) => (
-              <div key={item._id} className="bg-white rounded-xl md:rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+              <div key={item._id} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-[280px] md:h-[380px] group border border-gray-100 hover:border-red-200">
                 
                 {/* Image with Heart Icon */}
-                <div className="relative aspect-square overflow-hidden">
+                <div className="relative h-36 md:h-56 overflow-hidden bg-gray-100">
                   <img 
                     src={getItemImage(item.image)} 
                     alt={item.name} 
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  
                   {/* Heart Icon - Top Right */}
-                  <button className="absolute top-2 right-2 md:top-3 md:right-3 w-6 h-6 md:w-8 md:h-8 bg-white bg-opacity-80 rounded-full flex items-center justify-center hover:bg-opacity-100 transition-all duration-200">
-                    <svg className="w-3 h-3 md:w-4 md:h-4 text-gray-600 hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <button className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white hover:scale-110 transition-all duration-200 shadow-lg">
+                    <svg className="w-4 h-4 text-gray-600 hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                     </svg>
                   </button>
+                  
+                  {/* Category Badge */}
+                  <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold shadow-lg">
+                    {item.category}
+                  </div>
                 </div>
 
                 {/* Card Content */}
-                <div className="p-2 md:p-4">
+                <div className="p-4 flex flex-col flex-grow">
                   
-                  {/* Item Name */}
-                  <h4 className="font-bold text-sm md:text-lg text-gray-900 mb-1 md:mb-2 leading-tight line-clamp-2">
-                    {item.name}
-                  </h4>
-                  
-                  {/* Description */}
-                  <p className="text-xs md:text-sm text-gray-600 mb-2 md:mb-3 leading-relaxed line-clamp-2 hidden sm:block">
-                    {item.description || 'Delicious and freshly prepared'}
-                  </p>
-                  
-                  {/* Rating and Time Row - Only for food items */}
-                  {(item.category === 'Ramen' || item.category === 'Rice' || item.category === 'Soup') && (
-                    <div className="flex items-center gap-2 md:gap-4 mb-2 md:mb-4 text-xs md:text-sm text-gray-600">
-                      {/* Rating */}
-                      <div className="flex items-center gap-1">
-                        {renderStars(item.rating || 4.5)}
-                        <span className="ml-1 font-medium text-gray-900 hidden sm:inline">{item.rating || 4.5}</span>
+                  {/* Top Content */}
+                  <div className="flex-grow">
+                    {/* Item Name */}
+                    <h4 className="font-bold text-sm md:text-lg text-gray-900 mb-1 md:mb-2 leading-tight line-clamp-2">
+                      {item.name}
+                    </h4>
+                    
+                    {/* Description */}
+                    <p className="text-xs md:text-sm text-gray-600 mb-2 md:mb-3 leading-relaxed line-clamp-2">
+                      {item.description || 'Delicious and freshly prepared'}
+                    </p>
+                    
+                    {/* Rating and Time Row - Only for food items */}
+                    {(item.category === 'Ramen' || item.category === 'Rice' || item.category === 'Soup') && (
+                      <div className="flex items-center justify-between mb-2 md:mb-3 text-xs md:text-sm">
+                        {/* Rating */}
+                        <div className="flex items-center gap-1">
+                          {renderStars(item.rating || 4.5)}
+                          <span className="ml-1 font-medium text-gray-900 hidden md:inline">{item.rating || 4.5}</span>
+                        </div>
+                        
+                        {/* Cooking Time */}
+                        <div className="flex items-center gap-1 text-gray-600">
+                          <Clock className="w-3 h-3 md:w-4 md:h-4 text-red-500" />
+                          <span className="hidden md:inline">15-20 min</span>
+                          <span className="md:hidden">15min</span>
+                        </div>
                       </div>
-                      
-                      {/* Cooking Time */}
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 md:w-4 md:h-4 text-gray-500" />
-                        <span className="hidden sm:inline">15-20 min</span>
-                        <span className="sm:hidden">15min</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* For non-food items, add some spacing */}
-                  {!(item.category === 'Ramen' || item.category === 'Rice' || item.category === 'Soup') && (
-                    <div className="mb-2 md:mb-4"></div>
-                  )}
+                    )}
+                  </div>
                   
-                  {/* Price and Add to Cart Row */}
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm md:text-xl font-bold" style={{ color: '#dc2626' }}>
-                      {item.price}
+                  {/* Bottom Content - Price and Add to Cart Row */}
+                  <div className="flex items-center justify-between pt-2 md:pt-3 border-t border-gray-100">
+                    <div className="flex flex-col">
+                      <span className="text-lg md:text-xl font-bold text-red-600">{item.price}</span>
                     </div>
                     
                     <button 
                       onClick={() => handleAddToCart(item)}
                       disabled={addingToCart === item._id}
-                      className={`px-3 py-1 md:px-6 md:py-2 text-white font-semibold rounded-full transition-all duration-300 text-xs md:text-sm min-w-[60px] md:min-w-[120px] ${
-                        addingToCart === item._id ? 'opacity-75 cursor-not-allowed' : ''
+                      className={`px-3 py-2 md:px-4 md:py-2.5 text-white font-semibold rounded-xl transition-all duration-300 text-xs md:text-sm min-w-[70px] md:min-w-[80px] flex items-center justify-center gap-1 md:gap-2 shadow-md hover:shadow-lg ${
+                        addingToCart === item._id 
+                          ? 'bg-green-500 cursor-not-allowed' 
+                          : 'bg-red-600 hover:bg-red-700 active:scale-95'
                       }`}
-                      style={{ 
-                        backgroundColor: addingToCart === item._id ? '#dc2626' : '#dc2626'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (addingToCart !== item._id) {
-                          e.target.style.backgroundColor = '#b91c1c';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (addingToCart !== item._id) {
-                          e.target.style.backgroundColor = '#dc2626';
-                        }
-                      }}
                     >
                       {addingToCart === item._id ? (
-                        <div className="flex items-center justify-center">
-                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <>
+                          <svg className="w-3 h-3 md:w-4 md:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
-                          Added!
-                        </div>
+                          <span className="hidden sm:inline">Added</span>
+                          <span className="sm:hidden">✓</span>
+                        </>
                       ) : (
-                        'Add to Cart'
+                        <>
+                          <svg className="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                          <span>Add</span>
+                        </>
                       )}
                     </button>
                   </div>

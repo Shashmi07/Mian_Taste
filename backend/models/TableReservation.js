@@ -29,21 +29,46 @@ const tableReservationSchema = new mongoose.Schema({
     type: Number,
     required: true
   }],
-  numberOfGuests: {
-    type: Number,
-    required: true,
-    min: 1,
-    max: 20
-  },
   specialRequests: {
     type: String,
     trim: true,
     maxlength: 500
   },
+  // Food order details (optional)
+  hasFood: {
+    type: Boolean,
+    default: false
+  },
+  foodItems: [{
+    name: {
+      type: String,
+      required: function() { return this.hasFood; }
+    },
+    quantity: {
+      type: Number,
+      required: function() { return this.hasFood; }
+    },
+    price: {
+      type: Number,
+      required: function() { return this.hasFood; }
+    }
+  }],
+  foodTotal: {
+    type: Number,
+    default: 0
+  },
+  tableTotal: {
+    type: Number,
+    required: true
+  },
+  grandTotal: {
+    type: Number,
+    required: true
+  },
   status: {
     type: String,
-    enum: ['pending', 'confirmed', 'cancelled', 'completed'],
-    default: 'pending'
+    enum: ['confirmed', 'completed'],
+    default: 'confirmed'
   },
   reservationId: {
     type: String,

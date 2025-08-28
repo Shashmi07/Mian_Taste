@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, Clock, Users, Phone, Mail, Search, Filter, CheckCircle, XCircle, Eye, RotateCcw } from 'lucide-react';
+import { Calendar as CalendarIcon, Search, Filter, CheckCircle, Eye, RotateCcw, XCircle } from 'lucide-react';
 
 const TableReservation = () => {
   const [reservations, setReservations] = useState([]);
@@ -49,15 +49,15 @@ const TableReservation = () => {
     }
   };
 
-  // Update reservation status
-  const updateReservationStatus = async (reservationId, newStatus) => {
+  // Update reservation status (only to completed)
+  const markAsCompleted = async (reservationId) => {
     try {
       const response = await fetch(`${API_URL}/table-reservations/${reservationId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ status: 'completed' }),
       });
       
       const data = await response.json();
@@ -80,12 +80,8 @@ const TableReservation = () => {
   // Get status styling
   const getStatusColor = (status) => {
     switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'confirmed':
         return 'bg-green-100 text-green-800 border-green-200';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800 border-red-200';
       case 'completed':
         return 'bg-blue-100 text-blue-800 border-blue-200';
       default:
@@ -116,9 +112,9 @@ const TableReservation = () => {
     fetchReservations();
   }, [selectedDate, selectedStatus]);
 
-  const handleStatusUpdate = async (reservationId, newStatus) => {
-    if (window.confirm(`Are you sure you want to ${newStatus} this reservation?`)) {
-      await updateReservationStatus(reservationId, newStatus);
+  const handleMarkAsCompleted = async (reservationId) => {
+    if (window.confirm('Mark this reservation as completed?')) {
+      await markAsCompleted(reservationId);
     }
   };
 
@@ -179,7 +175,6 @@ const TableReservation = () => {
               className="form-select w-full"
             >
               <option value="all">All Reservations</option>
-              <option value="pending">Pending</option>
               <option value="confirmed">Confirmed</option>
               <option value="completed">Completed</option>
             </select>
@@ -215,25 +210,28 @@ const TableReservation = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full table-auto">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Reservation Details
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Reservation ID
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Customer Info
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Customer
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Date & Time
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tables & Guests
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tables
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Amount
+                  </th>
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -241,90 +239,78 @@ const TableReservation = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredReservations.map((reservation) => (
                   <tr key={reservation._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3">
                       <div className="text-sm">
                         <div className="font-medium text-gray-900">
-                          ID: {reservation.reservationId}
+                          {reservation.reservationId}
                         </div>
-                        <div className="text-gray-500">
-                          Created: {new Date(reservation.createdAt).toLocaleDateString()}
+                        <div className="text-xs text-gray-500">
+                          {new Date(reservation.createdAt).toLocaleDateString()}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3">
                       <div className="text-sm">
-                        <div className="font-medium text-gray-900 flex items-center">
-                          <Users className="w-4 h-4 mr-1" />
+                        <div className="font-medium text-gray-900">
                           {reservation.customerName}
                         </div>
-                        <div className="text-gray-500 flex items-center">
-                          <Mail className="w-4 h-4 mr-1" />
+                        <div className="text-xs text-gray-500 truncate" style={{maxWidth: '120px'}}>
                           {reservation.customerEmail}
                         </div>
-                        <div className="text-gray-500 flex items-center">
-                          <Phone className="w-4 h-4 mr-1" />
+                        <div className="text-xs text-gray-500">
                           {reservation.customerPhone}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3">
                       <div className="text-sm">
-                        <div className="font-medium text-gray-900 flex items-center">
-                          <CalendarIcon className="w-4 h-4 mr-1" />
+                        <div className="font-medium text-gray-900">
                           {formatDate(reservation.reservationDate)}
                         </div>
-                        <div className="text-gray-500 flex items-center">
-                          <Clock className="w-4 h-4 mr-1" />
+                        <div className="text-xs text-gray-500">
                           {reservation.timeSlot}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3">
                       <div className="text-sm">
                         <div className="font-medium text-gray-900">
-                          Tables: {reservation.selectedTables.sort().join(', ')}
+                          {reservation.selectedTables.sort().join(', ')}
                         </div>
-                        <div className="text-gray-500">
-                          {reservation.numberOfGuests} guests
+                        <div className="text-xs text-gray-500">
+                          {reservation.hasFood ? (
+                            <span className="text-orange-600">
+                              +{reservation.foodItems?.length || 0} items
+                            </span>
+                          ) : (
+                            <span>Table only</span>
+                          )}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColor(reservation.status)}`}>
+                    <td className="px-3 py-3">
+                      <div className="text-sm font-medium text-gray-900">
+                        Rs.{reservation.grandTotal || reservation.tableTotal || 0}
+                      </div>
+                    </td>
+                    <td className="px-3 py-3">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(reservation.status)}`}>
                         {reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
+                    <td className="px-3 py-3">
+                      <div className="flex space-x-1">
                         <button
                           onClick={() => handleViewDetails(reservation)}
-                          className="text-blue-600 hover:text-blue-800"
+                          className="text-blue-600 hover:text-blue-800 p-1"
                           title="View Details"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        {reservation.status === 'pending' && (
-                          <>
-                            <button
-                              onClick={() => handleStatusUpdate(reservation.reservationId, 'confirmed')}
-                              className="text-green-600 hover:text-green-800"
-                              title="Confirm Reservation"
-                            >
-                              <CheckCircle className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleStatusUpdate(reservation.reservationId, 'cancelled')}
-                              className="text-red-600 hover:text-red-800"
-                              title="Cancel Reservation"
-                            >
-                              <XCircle className="w-4 h-4" />
-                            </button>
-                          </>
-                        )}
                         {reservation.status === 'confirmed' && (
                           <button
-                            onClick={() => handleStatusUpdate(reservation.reservationId, 'completed')}
-                            className="text-blue-600 hover:text-blue-800"
+                            onClick={() => handleMarkAsCompleted(reservation.reservationId)}
+                            className="text-green-600 hover:text-green-800 p-1"
                             title="Mark as Completed"
                           >
                             <CheckCircle className="w-4 h-4" />
@@ -342,8 +328,8 @@ const TableReservation = () => {
 
       {/* Reservation Details Modal */}
       {showDetailsModal && selectedReservation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999] overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto my-8">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-gray-800">Reservation Details</h3>
               <button
@@ -354,10 +340,17 @@ const TableReservation = () => {
               </button>
             </div>
             
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Reservation ID</label>
                 <p className="text-sm text-gray-900">{selectedReservation.reservationId}</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Status</label>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedReservation.status)}`}>
+                  {selectedReservation.status.charAt(0).toUpperCase() + selectedReservation.status.slice(1)}
+                </span>
               </div>
               
               <div>
@@ -366,20 +359,25 @@ const TableReservation = () => {
               </div>
               
               <div>
+                <label className="block text-sm font-medium text-gray-700">Phone</label>
+                <p className="text-sm text-gray-900">{selectedReservation.customerPhone}</p>
+              </div>
+              
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700">Email</label>
                 <p className="text-sm text-gray-900">{selectedReservation.customerEmail}</p>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700">Phone</label>
-                <p className="text-sm text-gray-900">{selectedReservation.customerPhone}</p>
+                <label className="block text-sm font-medium text-gray-700">Date</label>
+                <p className="text-sm text-gray-900">
+                  {formatDate(selectedReservation.reservationDate)}
+                </p>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700">Date & Time</label>
-                <p className="text-sm text-gray-900">
-                  {formatDate(selectedReservation.reservationDate)} at {selectedReservation.timeSlot}
-                </p>
+                <label className="block text-sm font-medium text-gray-700">Time Slot</label>
+                <p className="text-sm text-gray-900">{selectedReservation.timeSlot}</p>
               </div>
               
               <div>
@@ -390,29 +388,74 @@ const TableReservation = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700">Number of Guests</label>
-                <p className="text-sm text-gray-900">{selectedReservation.numberOfGuests}</p>
-              </div>
-              
-              {selectedReservation.specialRequests && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Special Requests</label>
-                  <p className="text-sm text-gray-900">{selectedReservation.specialRequests}</p>
-                </div>
-              )}
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Status</label>
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColor(selectedReservation.status)}`}>
-                  {selectedReservation.status.charAt(0).toUpperCase() + selectedReservation.status.slice(1)}
-                </span>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Created</label>
+                <label className="block text-sm font-medium text-gray-700">Created On</label>
                 <p className="text-sm text-gray-900">
                   {new Date(selectedReservation.createdAt).toLocaleString()}
                 </p>
+              </div>
+              
+              {/* Special Requests */}
+              {selectedReservation.specialRequests && (
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700">Special Requests</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">{selectedReservation.specialRequests}</p>
+                </div>
+              )}
+
+              {/* Food Orders Section */}
+              {selectedReservation.hasFood && selectedReservation.foodItems && selectedReservation.foodItems.length > 0 ? (
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Food Orders</label>
+                  <div className="bg-orange-50 rounded-lg p-4">
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {selectedReservation.foodItems.map((item, index) => (
+                        <div key={index} className="flex justify-between items-center">
+                          <span className="text-sm text-gray-900">{item.name}</span>
+                          <div className="text-sm text-gray-600">
+                            {item.quantity}x Rs.{item.price} = Rs.{item.quantity * item.price}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="border-t border-orange-200 mt-3 pt-3">
+                      <div className="flex justify-between font-medium">
+                        <span>Food Total:</span>
+                        <span>Rs.{selectedReservation.foodTotal}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="md:col-span-2">
+                  <div className="bg-gray-50 rounded-lg p-3 text-center">
+                    <p className="text-sm text-gray-500">Table reservation only (no food orders)</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Payment Summary */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Payment Summary</label>
+                <div className="bg-green-50 rounded-lg p-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Table Reservation ({selectedReservation.selectedTables?.length} tables):</span>
+                      <span>Rs.{selectedReservation.tableTotal || 0}</span>
+                    </div>
+                    {selectedReservation.hasFood && (
+                      <div className="flex justify-between text-sm">
+                        <span>Food Orders:</span>
+                        <span>Rs.{selectedReservation.foodTotal || 0}</span>
+                      </div>
+                    )}
+                    <div className="border-t border-green-200 pt-2">
+                      <div className="flex justify-between font-bold text-lg">
+                        <span>Grand Total:</span>
+                        <span className="text-green-600">Rs.{selectedReservation.grandTotal || selectedReservation.tableTotal || 0}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             
