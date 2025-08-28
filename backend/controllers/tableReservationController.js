@@ -22,8 +22,13 @@ const createReservation = async (req, res) => {
       reservationDate,
       timeSlot,
       selectedTables,
-      numberOfGuests,
-      specialRequests
+      specialRequests,
+      // Food order data (optional)
+      hasFood,
+      foodItems,
+      foodTotal,
+      tableTotal,
+      grandTotal
     } = req.body;
 
     console.log('Extracted data:', {
@@ -33,8 +38,12 @@ const createReservation = async (req, res) => {
       reservationDate,
       timeSlot,
       selectedTables,
-      numberOfGuests,
-      specialRequests
+      specialRequests,
+      hasFood,
+      foodItems,
+      foodTotal,
+      tableTotal,
+      grandTotal
     });
 
     // Validate required fields
@@ -42,7 +51,23 @@ const createReservation = async (req, res) => {
       console.log('Validation failed - missing required fields');
       return res.status(400).json({
         success: false,
-        message: 'All required fields must be provided'
+        message: 'Required fields: customerName, customerEmail, customerPhone, reservationDate, timeSlot, selectedTables'
+      });
+    }
+
+    // Validate totals are provided
+    if (tableTotal === undefined || grandTotal === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: 'tableTotal and grandTotal are required'
+      });
+    }
+
+    // If hasFood is true, validate food data
+    if (hasFood && (!foodItems || !Array.isArray(foodItems) || foodItems.length === 0)) {
+      return res.status(400).json({
+        success: false,
+        message: 'foodItems are required when hasFood is true'
       });
     }
 
@@ -53,7 +78,7 @@ const createReservation = async (req, res) => {
       reservationDate: new Date(reservationDate),
       timeSlot,
       selectedTables: { $in: selectedTables },
-      status: { $in: ['pending', 'confirmed'] }
+      status: 'confirmed'
     });
 
     console.log('Existing reservation check result:', existingReservation);
@@ -79,8 +104,13 @@ const createReservation = async (req, res) => {
       reservationDate: new Date(reservationDate),
       timeSlot,
       selectedTables,
-      numberOfGuests: numberOfGuests || selectedTables.length * 4,
-      specialRequests: specialRequests || ''
+      specialRequests: specialRequests || '',
+      // Food order data
+      hasFood: hasFood || false,
+      foodItems: hasFood ? foodItems : [],
+      foodTotal: hasFood ? (foodTotal || 0) : 0,
+      tableTotal: tableTotal,
+      grandTotal: grandTotal
     });
 
     console.log('Reservation object created:', reservation);
@@ -138,7 +168,7 @@ const checkAvailability = async (req, res) => {
     const reservations = await TableReservation.find({
       reservationDate: new Date(date),
       timeSlot,
-      status: { $in: ['pending', 'confirmed'] }
+      status: 'confirmed'
     }).select('selectedTables');
 
     console.log('Found reservations:', reservations);
@@ -252,7 +282,7 @@ const updateReservationStatus = async (req, res) => {
     const { reservationId } = req.params;
     const { status } = req.body;
 
-    const validStatuses = ['pending', 'confirmed', 'cancelled', 'completed'];
+    const validStatuses = ['confirmed', 'completed'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,

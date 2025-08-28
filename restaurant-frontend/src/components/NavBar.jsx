@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Menu, X, LogOut, Mail, MapPin, ShoppingCart } from 'lucide-react';
+import { User, Menu, X, LogOut, MapPin, ShoppingCart } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import logo from "../assets/logo.jpeg";
@@ -256,17 +256,6 @@ const NavBar = () => {
 
         {/* Desktop Right Side Icons - Removed Search Icon */}
         <div className="hidden md:flex items-center gap-4 lg:gap-6">
-          {/* Mailbox Icon */}
-          <div 
-            className="relative cursor-pointer"
-            onClick={() => navigate('/order-confirmations')}
-          >
-            <Mail 
-              size={28}
-              className="text-gray-300 hover:text-red-400 transition-colors duration-300"
-            />
-          </div>
-
           {/* Order Tracking Icon */}
           <div 
             className="relative cursor-pointer"
@@ -292,6 +281,7 @@ const NavBar = () => {
               </span>
             )}
           </div>
+
 
           {/* Authentication Section */}
           {authState.isAuthenticated && authState.user ? (
@@ -372,17 +362,6 @@ const NavBar = () => {
 
         {/* Mobile Menu Icons */}
         <div className="flex md:hidden items-center gap-3 ml-auto">
-          {/* Mobile Mailbox Icon */}
-          <div 
-            className="cursor-pointer"
-            onClick={() => navigate('/order-confirmations')}
-          >
-            <Mail 
-              size={24}
-              className="text-gray-300 hover:text-red-400 transition-colors duration-300"
-            />
-          </div>
-
           {/* Mobile Order Tracking Icon */}
           <div 
             className="cursor-pointer"

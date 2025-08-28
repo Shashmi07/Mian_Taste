@@ -1,7 +1,7 @@
-import React from 'react'
+import React from 'react';
 import { Link } from 'react-router-dom';
 
-const MenuCategary = () => {
+const MenuCategory = () => {
   return (
     <div>
         {/* Main Content */}
@@ -17,7 +17,7 @@ const MenuCategary = () => {
           <Link to="/menu/more" className="w-[200px] px-6 py-2 bg-[#46923c] text-white rounded-full font-semibold hover:bg-[#8bca84] transition flex items-center justify-center">More</Link>
         </div>
     </div>
-  )
-}
+  );
+};
 
-export default MenuCategary
+export default MenuCategory;

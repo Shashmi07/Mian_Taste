@@ -1,5 +1,5 @@
-import React from 'react'
-import MenuCategary from '../../components/MenuCategary' // Fixed: components (lowercase)
+import React from 'react';
+import MenuCategory from '../../components/MenuCategory'; // Fixed: components (lowercase)
 import NavBar from '../../components/NavBar'; // Fixed: components (lowercase)
 
 import coke from '../../assets/MenuItems/cocacola.jpg'
@@ -18,7 +18,7 @@ const Drink = () => {
   return (
     <div>
         <NavBar/>
-        <MenuCategary/>
+        <MenuCategory/>
 
         {/* Menu Items */}
         <div className="grid grid-cols-5 gap-6 ml-0 mt-4">

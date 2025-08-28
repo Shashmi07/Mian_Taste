@@ -150,41 +150,41 @@ const LiveTracking = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-gradient-to-r from-red-900 to-red-700 text-white shadow-lg">
-        <div className="max-w-4xl mx-auto px-6 py-4">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <button
                 onClick={() => navigate('/')}
-                className="p-2 text-red-100 hover:text-white hover:bg-red-800 hover:bg-opacity-30 rounded-lg"
+                className="p-2 text-red-100 hover:text-white hover:bg-red-800 hover:bg-opacity-30 rounded-lg touch-manipulation"
               >
                 <ArrowLeft size={20} />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-white">🍽️ Mian Taste</h1>
-                <p className="text-red-100">Live Order Tracking</p>
+                <h1 className="text-lg sm:text-2xl font-bold text-white">🍽️ Mian Taste</h1>
+                <p className="text-red-100 text-sm sm:text-base">Live Order Tracking</p>
               </div>
             </div>
             {order && (
               <button
                 onClick={refreshOrder}
                 disabled={loading}
-                className="flex items-center space-x-2 px-4 py-2 text-red-100 hover:text-white hover:bg-red-800 hover:bg-opacity-30 rounded-lg disabled:opacity-50"
+                className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 text-red-100 hover:text-white hover:bg-red-800 hover:bg-opacity-30 rounded-lg disabled:opacity-50 touch-manipulation"
               >
                 <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-                <span>Refresh</span>
+                <span className="hidden sm:inline">Refresh</span>
               </button>
             )}
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
         {/* Search Form */}
         {!order && (
-          <div className="bg-white rounded-lg shadow-sm p-8 border border-gray-200">
+          <div className="bg-white rounded-lg shadow-sm p-4 sm:p-8 border border-gray-200">
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Track Your Order</h2>
-              <p className="text-gray-600">Enter your Order ID to see real-time updates</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Track Your Order</h2>
+              <p className="text-gray-600 text-sm sm:text-base">Enter your Order ID to see real-time updates</p>
             </div>
 
             <form onSubmit={searchOrder} className="max-w-md mx-auto">
@@ -194,7 +194,7 @@ const LiveTracking = () => {
                 </div>
               )}
 
-              <div className="flex space-x-3">
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                   <input
@@ -202,21 +202,21 @@ const LiveTracking = () => {
                     value={orderId}
                     onChange={(e) => setOrderId(e.target.value.toUpperCase())}
                     placeholder="Enter Order ID (e.g., ORD001)"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                  className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-colors touch-manipulation min-h-[48px]"
                 >
                   {loading ? 'Searching...' : 'Track Order'}
                 </button>
               </div>
             </form>
 
-            <div className="mt-6 text-center text-sm text-gray-500">
+            <div className="mt-6 text-center text-xs sm:text-sm text-gray-500 space-y-1">
               <p>💡 Your Order ID is provided when you place an order</p>
               <p>Format: ORD001, ORD002, etc.</p>
             </div>
@@ -227,15 +227,15 @@ const LiveTracking = () => {
         {order && (
           <div className="space-y-6">
             {/* Live Status Banner */}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="flex items-center justify-between">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                 <div className="flex items-center">
                   <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse mr-3"></div>
-                  <p className="text-green-700 font-medium">Live tracking active - Updates automatically</p>
+                  <p className="text-green-700 font-medium text-sm sm:text-base">Live tracking active - Updates automatically</p>
                 </div>
                 <button
                   onClick={resetSearch}
-                  className="text-green-600 hover:text-green-800 text-sm"
+                  className="text-green-600 hover:text-green-800 text-sm touch-manipulation self-start sm:self-auto"
                 >
                   Track Different Order
                 </button>
@@ -245,31 +245,31 @@ const LiveTracking = () => {
             {/* Order Card */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
               {/* Order Header */}
-              <div className="bg-gradient-to-r from-red-900 to-red-700 p-6 text-white">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-2xl font-bold">Order {order.orderId}</h3>
-                    <p className="text-red-100">{order.table} • {order.customerName}</p>
-                    <p className="text-red-100 text-sm">{new Date(order.createdAt).toLocaleString()}</p>
+              <div className="bg-gradient-to-r from-red-900 to-red-700 p-4 sm:p-6 text-white">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0">
+                  <div className="flex-1">
+                    <h3 className="text-xl sm:text-2xl font-bold">Order {order.orderId}</h3>
+                    <p className="text-red-100 text-sm sm:text-base">{order.table} • {order.customerName}</p>
+                    <p className="text-red-100 text-xs sm:text-sm">{new Date(order.createdAt).toLocaleString()}</p>
                   </div>
-                  <div className="text-right">
-                    <div className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(order.status, order.cookingStatus)}`}>
+                  <div className="flex flex-col sm:text-right space-y-2">
+                    <div className={`px-3 py-1 rounded-full text-xs sm:text-sm font-medium border ${getStatusColor(order.status, order.cookingStatus)} inline-block`}>
                       {getStatusText(order.status, order.cookingStatus)}
                     </div>
-                    <p className="text-red-100 text-sm mt-2">Total: Rs.{order.totalAmount}</p>
+                    <p className="text-red-100 text-sm font-semibold">Total: Rs.{order.totalAmount}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 {/* Progress Timeline */}
-                <div className="relative mb-6">
+                <div className="relative mb-4 sm:mb-6">
                   {/* Background line */}
-                  <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+                  <div className="absolute left-4 sm:left-8 top-0 bottom-0 w-0.5 bg-gray-200"></div>
                   
                   {/* Progress line with flowing animation */}
                   <div 
-                    className="absolute left-8 top-0 w-1 bg-gradient-to-b from-red-400 to-red-600 transition-all duration-1000 overflow-hidden rounded-full"
+                    className="absolute left-4 sm:left-8 top-0 w-1 bg-gradient-to-b from-red-400 to-red-600 transition-all duration-1000 overflow-hidden rounded-full"
                     style={{ height: `${Math.min((getStatusStep(order.status, order.cookingStatus) / 4) * 100, 100)}%` }}
                   >
                     {/* Flowing animation - only show if order is in progress */}
@@ -336,7 +336,7 @@ const LiveTracking = () => {
                     `
                   }} />
 
-                  <div className="space-y-8">
+                  <div className="space-y-6 sm:space-y-8">
                     {[
                       { 
                         icon: CheckCircle, 
@@ -383,26 +383,26 @@ const LiveTracking = () => {
                           }`}>
                             <Icon size={16} />
                           </div>
-                          <div className="ml-4 flex-1">
-                            <div className="flex items-center space-x-3">
-                              <h4 className={`font-semibold ${isCurrent ? 'text-red-600' : isActive ? 'text-gray-900' : 'text-gray-400'}`}>
+                          <div className="ml-3 sm:ml-4 flex-1">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 space-y-1 sm:space-y-0">
+                              <h4 className={`font-semibold text-sm sm:text-base ${isCurrent ? 'text-red-600' : isActive ? 'text-gray-900' : 'text-gray-400'}`}>
                                 {step.title}
                               </h4>
                               {isCurrent && order.status !== 'delivered' && (
                                 <span className="flex items-center">
-                                  <span className="text-sm bg-red-100 text-red-600 px-2 py-1 rounded-full flex items-center">
-                                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse mr-2"></div>
+                                  <span className="text-xs sm:text-sm bg-red-100 text-red-600 px-2 py-1 rounded-full flex items-center">
+                                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse mr-1 sm:mr-2"></div>
                                     Current
                                   </span>
                                 </span>
                               )}
                             </div>
-                            <p className={`text-sm mt-1 ${isActive ? 'text-gray-600' : 'text-gray-400'}`}>
+                            <p className={`text-xs sm:text-sm mt-1 ${isActive ? 'text-gray-600' : 'text-gray-400'}`}>
                               {step.desc}
                             </p>
                             {isCurrent && order.cookingStatus && order.cookingStatus !== 'not started' && (
-                              <p className="text-sm text-red-600 font-medium mt-2 flex items-center">
-                                <Timer size={14} className="mr-1" />
+                              <p className="text-xs sm:text-sm text-red-600 font-medium mt-2 flex items-center">
+                                <Timer size={12} className="mr-1" />
                                 Kitchen Status: {order.cookingStatus.charAt(0).toUpperCase() + order.cookingStatus.slice(1)}
                               </p>
                             )}
@@ -414,32 +414,32 @@ const LiveTracking = () => {
                 </div>
 
                 {/* Order Items */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h5 className="font-medium text-gray-900 mb-3">Order Details</h5>
+                <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                  <h5 className="font-medium text-gray-900 mb-3 text-sm sm:text-base">Order Details</h5>
                   <div className="space-y-2">
                     {order.items.map((item, index) => (
-                      <div key={index} className="flex justify-between items-center">
-                        <span className="text-gray-700">{item.quantity}x {item.name}</span>
-                        <span className="font-medium text-gray-900">Rs.{item.price}</span> {/* Changed from ₹{item.price} */}
+                      <div key={index} className="flex justify-between items-center text-sm sm:text-base">
+                        <span className="text-gray-700 flex-1 pr-2">{item.quantity}x {item.name}</span>
+                        <span className="font-medium text-gray-900 whitespace-nowrap">Rs.{item.price}</span>
                       </div>
                     ))}
                   </div>
-                  <div className="border-t border-gray-200 mt-3 pt-3 flex justify-between items-center">
-                    <div>
-                      <span className="font-semibold text-lg">Total: Rs.{order.totalAmount}</span> {/* Changed from ₹{order.totalAmount} */}
-                      <p className="text-sm text-gray-500">Estimated: {order.estimatedTime}</p>
+                  <div className="border-t border-gray-200 mt-3 pt-3">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-1 sm:space-y-0">
+                      <span className="font-semibold text-base sm:text-lg">Total: Rs.{order.totalAmount}</span>
+                      <p className="text-xs sm:text-sm text-gray-500">Estimated: {order.estimatedTime}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Ready Notification */}
                 {order.status === 'ready' && (
-                  <div className="mt-4 bg-green-100 border border-green-300 rounded-lg p-4">
-                    <div className="flex items-center">
-                      <Package className="text-green-600 mr-3" size={24} />
+                  <div className="mt-4 bg-green-100 border border-green-300 rounded-lg p-3 sm:p-4">
+                    <div className="flex items-start">
+                      <Package className="text-green-600 mr-3 flex-shrink-0 mt-1" size={20} />
                       <div>
-                        <h4 className="font-semibold text-green-800">🎉 Your order is ready for service!</h4>
-                        <p className="text-green-700 text-sm">Our waiter will bring your delicious meal to your table shortly.</p>
+                        <h4 className="font-semibold text-green-800 text-sm sm:text-base">🎉 Your order is ready for service!</h4>
+                        <p className="text-green-700 text-xs sm:text-sm mt-1">Our waiter will bring your delicious meal to your table shortly.</p>
                       </div>
                     </div>
                   </div>
@@ -447,12 +447,12 @@ const LiveTracking = () => {
 
                 {/* Delivered Notification */}
                 {order.status === 'delivered' && (
-                  <div className="mt-4 bg-purple-100 border border-purple-300 rounded-lg p-4">
-                    <div className="flex items-center">
-                      <CheckCircle className="text-purple-600 mr-3" size={24} />
+                  <div className="mt-4 bg-purple-100 border border-purple-300 rounded-lg p-3 sm:p-4">
+                    <div className="flex items-start">
+                      <CheckCircle className="text-purple-600 mr-3 flex-shrink-0 mt-1" size={20} />
                       <div>
-                        <h4 className="font-semibold text-purple-800">✅ Order Completed!</h4>
-                        <p className="text-purple-700 text-sm">Thank you for dining with Mian Taste! We hope you enjoyed your meal.</p>
+                        <h4 className="font-semibold text-purple-800 text-sm sm:text-base">✅ Order Completed!</h4>
+                        <p className="text-purple-700 text-xs sm:text-sm mt-1">Thank you for dining with Mian Taste! We hope you enjoyed your meal.</p>
                       </div>
                     </div>
                   </div>

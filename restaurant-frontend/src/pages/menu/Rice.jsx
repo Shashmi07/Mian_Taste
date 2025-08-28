@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
-import NavBar from '../../components/NavBar' // Fixed: components (lowercase)
-import MenuCategary from '../../components/MenuCategary' // Fixed: components (lowercase)
+import React, { useState, useEffect } from 'react';
+import NavBar from '../../components/NavBar'; // Fixed: components (lowercase)
+import MenuCategory from '../../components/MenuCategory'; // Fixed: components (lowercase)
 
 // Image imports for mapping
 import chickenFriedRice from '../../assets/MenuItems/rice.png'
@@ -52,7 +52,7 @@ const Rice = () => {
     return (
       <div>
         <NavBar />
-        <MenuCategary />
+        <MenuCategory />
         <div className="flex justify-center items-center h-64">
           <div className="text-xl">Loading rice items...</div>
         </div>
@@ -64,7 +64,7 @@ const Rice = () => {
     return (
       <div>
         <NavBar />
-        <MenuCategary />
+        <MenuCategory />
         <div className="flex justify-center items-center h-64">
           <div className="text-xl text-red-500">Error: {error}</div>
         </div>
@@ -75,7 +75,7 @@ const Rice = () => {
   return (
     <div>
         <NavBar/>
-        <MenuCategary />
+        <MenuCategory />
 
          {/* Menu Items */}
         <div className="grid grid-cols-5 gap-6 ml-0 mt-4">
