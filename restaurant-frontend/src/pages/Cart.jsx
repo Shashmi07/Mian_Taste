@@ -28,9 +28,43 @@ const Cart = () => {
       setCustomerName('Table ' + qrTable + ' Guest');
     }
     
-    // Check for reservation context
+    // Check for pending table+food reservation
+    const pendingReservation = localStorage.getItem('pendingReservation');
+    if (pendingReservation) {
+      try {
+        const reservation = JSON.parse(pendingReservation);
+        // Proceed if it's a table+food reservation (even if preOrder is initially empty)
+        if (reservation.type === 'table-food' && reservation.data.preOrder !== undefined) {
+          const reservationData = reservation.data;
+          
+          // Transform reservation data to reservation context format for compatibility
+          const context = {
+            reservationId: reservation.reservationId || 'TEMP-' + Date.now(),
+            customerName: reservationData.customerName,
+            tableDetails: {
+              tables: reservationData.selectedTables,
+              date: reservationData.reservationDate,
+              timeSlot: reservationData.timeSlot
+            },
+            tableAmount: reservationData.tableCost.totalTableCost
+          };
+          
+          setReservationContext(context);
+          setIsReservationOrder(true);
+          setIsTableOrder(true);
+          setTableNumber(reservationData.selectedTables.join(', '));
+          setCustomerName(reservationData.customerName);
+          console.log('Cart: Table+Food reservation found:', context);
+        }
+      } catch (error) {
+        console.error('Cart: Error parsing pending reservation:', error);
+        localStorage.removeItem('pendingReservation');
+      }
+    }
+    
+    // Also check for legacy reservation context
     const storedReservationContext = localStorage.getItem('reservationContext');
-    if (storedReservationContext) {
+    if (storedReservationContext && !pendingReservation) {
       try {
         const context = JSON.parse(storedReservationContext);
         setReservationContext(context);
@@ -38,7 +72,7 @@ const Cart = () => {
         setIsTableOrder(true);
         setTableNumber(context.tableDetails.tables.join(', '));
         setCustomerName(context.customerName);
-        console.log('Cart: Reservation context found:', context);
+        console.log('Cart: Legacy reservation context found:', context);
       } catch (error) {
         console.error('Cart: Error parsing reservation context:', error);
         localStorage.removeItem('reservationContext');
@@ -123,7 +157,7 @@ const Cart = () => {
       };
 
       console.log('Creating order with data:', orderData);
-      console.log('API URL being used:', 'http://10.11.5.232:5000/api/orders/public');
+      console.log('API URL being used:', 'http://localhost:5000/api/orders/public');
 
       // Create order
       const response = await ordersAPI.createOrder(orderData);
@@ -146,8 +180,8 @@ const Cart = () => {
         
         // If it's a reservation order, add reservation-specific data
         if (isReservationOrder && reservationContext) {
-          orderForPayment.type = 'table-reservation';
-          orderForPayment.orderType = 'Table Reservation';
+          orderForPayment.type = 'table-food';
+          orderForPayment.orderType = 'Table + Food Reservation';
           orderForPayment.reservationDetails = {
             reservationId: reservationContext.reservationId,
             tables: reservationContext.tableDetails.tables,
@@ -185,8 +219,8 @@ const Cart = () => {
         
         // If it's a reservation order, add reservation-specific data
         if (isReservationOrder && reservationContext) {
-          orderForPayment.type = 'table-reservation';
-          orderForPayment.orderType = 'Table Reservation';
+          orderForPayment.type = 'table-food';
+          orderForPayment.orderType = 'Table + Food Reservation';
           orderForPayment.reservationDetails = {
             reservationId: reservationContext.reservationId,
             tables: reservationContext.tableDetails.tables,
@@ -443,19 +477,19 @@ const Cart = () => {
                   </label>
                   
                   {isReservationOrder ? (
-                    // Reservation order - show only table reservation option
+                    // Reservation order - show only table+food reservation option
                     <div className="space-y-2">
                       <label className="flex items-center opacity-75">
                         <input 
                           type="radio" 
                           name="orderType" 
-                          value="table-reservation"
+                          value="table-food"
                           checked={true}
                           disabled={true}
                           className="mr-3"
                           style={{ accentColor: '#dc2626' }}
                         />
-                        <span>Table Reservation</span>
+                        <span>Table + Food Reservation</span>
                         <span className="ml-2 text-blue-600">✓</span>
                       </label>
                     </div>

@@ -167,7 +167,7 @@ const Menu = () => {
       try {
         setLoading(true);
         console.log('Fetching menu items...');
-        const response = await fetch('http://10.11.5.232:5000/api/menu');
+        const response = await fetch('http://localhost:5000/api/menu');
         if (response.ok) {
           const data = await response.json();
           console.log('Menu items loaded:', data.length, data); // Debug log
