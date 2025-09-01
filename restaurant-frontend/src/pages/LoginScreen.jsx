@@ -27,6 +27,23 @@ const LoginScreen = ({ onLogin }) => {
       localStorage.setItem('customerToken', response.data.data.token);
       localStorage.setItem('customerUser', JSON.stringify(response.data.data.user));
       
+      // Fetch complete customer profile from database
+      try {
+        const profileResponse = await customerAPI.getProfile();
+        if (profileResponse.data && profileResponse.data.success) {
+          // Update localStorage with complete profile data
+          const completeUserData = {
+            ...response.data.data.user,
+            ...profileResponse.data.data.user
+          };
+          localStorage.setItem('customerUser', JSON.stringify(completeUserData));
+          console.log('✅ Customer profile fetched and updated:', completeUserData);
+        }
+      } catch (profileError) {
+        console.warn('Could not fetch customer profile, using login data:', profileError);
+        // Continue with basic login data if profile fetch fails
+      }
+      
       // Dispatch custom event to notify NavBar and other components
       window.dispatchEvent(new CustomEvent('authChange'));
       
@@ -34,7 +51,13 @@ const LoginScreen = ({ onLogin }) => {
         onLogin(response.data);
       }
       
-      navigate('/'); // Redirect to homepage
+      // Check if user should return to a specific page after login
+      const returnAfterLogin = localStorage.getItem('returnAfterLogin');
+      if (returnAfterLogin) {
+        navigate(returnAfterLogin);
+      } else {
+        navigate('/'); // Default redirect to homepage
+      }
     } catch (error) {
       console.error('Login failed:', error);
       if (error.response) {

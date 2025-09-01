@@ -177,6 +177,14 @@ const NavBar = () => {
       default:
         navigate('/'); // Default to Homepage
     }
+    
+    // Scroll to top after navigation with a small delay
+    setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }, 100);
   };
 
   const handleSignInClick = (e) => {
@@ -226,7 +234,7 @@ const NavBar = () => {
             src={logo}
             alt="logo" 
             className="w-12 h-12 md:w-15 md:h-15 rounded-full cursor-pointer"
-            onClick={() => handleMenuClick('home')} // Will navigate to Homepage
+            onClick={() => handleMenuClick('home')} // Will navigate to Homepage and scroll to top
           />
         </div>
 
@@ -259,7 +267,10 @@ const NavBar = () => {
           {/* Order Tracking Icon */}
           <div 
             className="relative cursor-pointer"
-            onClick={() => navigate('/track-order')}
+            onClick={() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              navigate('/track-order');
+            }}
           >
             <MapPin 
               size={28}
@@ -269,7 +280,10 @@ const NavBar = () => {
 
           <div 
             className="relative cursor-pointer"
-            onClick={() => navigate('/cart')}
+            onClick={() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              navigate('/cart');
+            }}
           >
             <ShoppingCart 
               size={28}
@@ -319,6 +333,7 @@ const NavBar = () => {
                     <div className="p-2">
                       <button 
                         onClick={() => {
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
                           navigate('/profile');
                           setShowProfileMenu(false);
                         }}
@@ -376,7 +391,10 @@ const NavBar = () => {
           {/* Mobile Cart Icon */}
           <div 
             className="relative cursor-pointer"
-            onClick={() => navigate('/cart')}
+            onClick={() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              navigate('/cart');
+            }}
           >
             <ShoppingCart 
               size={24}
@@ -450,6 +468,7 @@ const NavBar = () => {
                 {authState.type === 'customer' && (
                   <button 
                     onClick={() => {
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
                       navigate('/profile');
                       setIsMobileMenuOpen(false);
                     }}

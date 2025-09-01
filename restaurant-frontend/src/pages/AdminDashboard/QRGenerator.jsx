@@ -3,7 +3,7 @@ import { QrCode, Download, Printer, Copy, Check } from 'lucide-react';
 
 const QRGenerator = () => {
   const [tableNumbers, setTableNumbers] = useState('1,2,3,4,5,6,7,8');
-  const [baseUrl, setBaseUrl] = useState(' http://10.11.5.232:3000/menu?qr=true&table=');
+  const [baseUrl, setBaseUrl] = useState('http://localhost:3000/menu?qr=true&table=');
   const [copied, setCopied] = useState(null);
   
   const generateTableNumbers = () => {
