@@ -89,8 +89,22 @@ export default function ChefDashboard({ user, onLogout }) {
         onLogout();
         return;
       }
-      const response = await ordersAPI.getOrders();
-      setOrders(response.data.orders || []);
+      
+      // Load only QR orders
+      const qrOrdersResponse = await fetch('http://localhost:5000/api/qr-orders', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }).then(res => res.json());
+      
+      const qrOrders = qrOrdersResponse.success ? qrOrdersResponse.orders : [];
+      
+      // Sort orders by creation date (newest first)
+      const sortedOrders = qrOrders.sort((a, b) => 
+        new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      
+      setOrders(sortedOrders);
     } catch (error) {
       console.error('Error loading orders:', error);
       if (error.response?.status === 401) {
@@ -127,13 +141,24 @@ export default function ChefDashboard({ user, onLogout }) {
 
   const handleAcceptOrder = async (orderId) => {
     try {
-      console.log('Accepting order:', orderId);
-      const response = await ordersAPI.acceptOrder(orderId);
-      console.log('Accept response:', response.data);
+      console.log('Accepting QR order:', orderId);
       
-      if (response.data.success) {
+      // Accept QR order
+      const response = await fetch(`http://localhost:5000/api/qr-orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ status: 'accepted' })
+      });
+      const data = await response.json();
+      
+      console.log('Accept response:', data);
+      
+      if (data.success) {
         setOrders(prev => prev.map(order => 
-          order._id === orderId ? response.data.order : order
+          order._id === orderId ? data.order : order
         ));
         
         // Automatically switch to active orders tab for seamless workflow
@@ -144,24 +169,34 @@ export default function ChefDashboard({ user, onLogout }) {
           console.log('Order accepted successfully. Switched to Active Orders tab.');
         }, 100);
       } else {
-        alert('Failed to accept order: ' + response.data.message);
+        alert('Failed to accept order: ' + data.message);
       }
     } catch (error) {
       console.error('Error accepting order:', error);
-      alert('Failed to accept order: ' + (error.response?.data?.message || error.message));
+      alert('Failed to accept order: ' + error.message);
     }
   };
 
   const handleUpdateOrderStatus = async (orderId, status) => {
     try {
-      console.log('Updating order status:', orderId, status);
-      const response = await ordersAPI.updateOrderStatus(orderId, { status });
-      console.log('Status response:', response.data);
+      console.log('Updating QR order status:', orderId, status);
       
-      if (response.data.success) {
-        // Fix: Missing parenthesis in map function
+      // Update QR order status
+      const response = await fetch(`http://localhost:5000/api/qr-orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ status })
+      });
+      const data = await response.json();
+      
+      console.log('Status response:', data);
+      
+      if (data.success) {
         setOrders(prev => prev.map(order => 
-          order._id === orderId ? response.data.order : order
+          order._id === orderId ? data.order : order
         ));
         
         // Automatically switch to appropriate tab for seamless workflow
@@ -173,30 +208,41 @@ export default function ChefDashboard({ user, onLogout }) {
           console.log('Order marked as delivered. Switched to Completed Orders tab.');
         }
       } else {
-        alert('Failed to update status: ' + response.data.message);
+        alert('Failed to update status: ' + data.message);
       }
     } catch (error) {
       console.error('Error updating order status:', error);
-      alert('Failed to update order status: ' + (error.response?.data?.message || error.message));
+      alert('Failed to update order status: ' + error.message);
     }
   };
 
   const handleUpdateCookingStatus = async (orderId, cookingStatus) => {
     try {
-      console.log('Updating cooking status:', orderId, cookingStatus);
-      const response = await ordersAPI.updateOrderStatus(orderId, { cookingStatus });
-      console.log('Cooking status response:', response.data);
+      console.log('Updating QR order cooking status:', orderId, cookingStatus);
       
-      if (response.data.success) {
+      // Update QR order cooking status
+      const response = await fetch(`http://localhost:5000/api/qr-orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ cookingStatus })
+      });
+      const data = await response.json();
+      
+      console.log('Cooking status response:', data);
+      
+      if (data.success) {
         setOrders(prev => prev.map(order => 
-          order._id === orderId ? response.data.order : order
+          order._id === orderId ? data.order : order
         ));
       } else {
-        alert('Failed to update cooking status: ' + response.data.message);
+        alert('Failed to update cooking status: ' + data.message);
       }
     } catch (error) {
       console.error('Error updating cooking status:', error);
-      alert('Failed to update cooking status: ' + (error.response?.data?.message || error.message));
+      alert('Failed to update cooking status: ' + error.message);
     }
   };
 

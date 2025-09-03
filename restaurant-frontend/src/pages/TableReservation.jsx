@@ -566,20 +566,6 @@ export default function TableReservation() {
               </div>
             )}
 
-            {/* Debug: Clear Storage Button (temporary) */}
-            <div className="flex justify-center mb-4">
-              <button
-                onClick={() => {
-                  localStorage.clear();
-                  clearCart();
-                  alert('🧹 All storage cleared! Refresh the page.');
-                  window.location.reload();
-                }}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700"
-              >
-                🗑️ Clear All Storage (Debug)
-              </button>
-            </div>
 
             {/* Proceed Button */}
             <div className="flex justify-center">

@@ -9,49 +9,128 @@ const LiveTracking = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isTracking, setIsTracking] = useState(false);
+  const [socketConnected, setSocketConnected] = useState(false);
+
+  // Auto-load tracking order ID if available
+  useEffect(() => {
+    const trackingOrderId = sessionStorage.getItem('trackingOrderId');
+    if (trackingOrderId) {
+      setOrderId(trackingOrderId);
+      // Auto-search for the order
+      setTimeout(() => {
+        trackOrder(trackingOrderId);
+      }, 500);
+      // Clear the session storage after use
+      sessionStorage.removeItem('trackingOrderId');
+    }
+  }, []);
+
+  const trackOrder = (orderIdToTrack) => {
+    const e = { preventDefault: () => {} };
+    searchOrder(e, orderIdToTrack);
+  };
   const navigate = useNavigate();
+
+  // Handle mobile app lifecycle for socket connection
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && order && isTracking) {
+        console.log('📱 App became visible - ensuring socket connection');
+        if (!socketService.connected) {
+          socketService.connect();
+        }
+      }
+    };
+
+    const handleOnline = () => {
+      console.log('📱 Device back online - reconnecting socket');
+      if (order && isTracking && !socketService.connected) {
+        socketService.connect();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('online', handleOnline);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('online', handleOnline);
+    };
+  }, [order, isTracking]);
 
   useEffect(() => {
     if (order && isTracking) {
+      console.log('🔌 Setting up real-time tracking for order:', order.orderId);
+      
       // Connect to socket for real-time updates
       socketService.connect();
-      if (socketService.socket) {
-        // Join order-specific room for updates
-        socketService.socket.emit('join-order-tracking', order._id);
-        
-        // Listen for order status updates
-        socketService.socket.on('order-updated', (updatedOrder) => {
-          console.log('Real-time order update received:', updatedOrder);
-          if (updatedOrder._id === order._id) {
-            setOrder(updatedOrder);
-          }
-        });
+      
+      // Wait for connection before setting up listeners
+      const setupTracking = () => {
+        if (socketService.socket && socketService.connected) {
+          console.log('📡 Socket connected, joining order tracking room');
+          setSocketConnected(true);
+          
+          // Join order-specific room for updates
+          socketService.socket.emit('join-order-tracking', order._id);
+          
+          // Use the new socket service methods for QR orders
+          socketService.onQrOrderUpdate((updatedOrder) => {
+            console.log('📱 Real-time QR order update received:', updatedOrder);
+            console.log('📱 Current order ID:', order._id);
+            console.log('📱 Updated order ID:', updatedOrder._id);
+            if (updatedOrder._id === order._id) {
+              console.log('✅ Order IDs match - updating order state');
+              setOrder(updatedOrder);
+            } else {
+              console.log('❌ Order IDs do not match');
+            }
+          });
 
-        socketService.socket.on('order-status-changed', (data) => {
-          console.log('Order status changed:', data);
-          if (data.orderId === order._id) {
-            setOrder(prev => ({
-              ...prev,
-              status: data.status,
-              cookingStatus: data.cookingStatus
-            }));
-          }
-        });
+          socketService.onQrOrderStatusChange((data) => {
+            console.log('📱 QR Order status changed:', data);
+            console.log('📱 Current order ID:', order._id);
+            console.log('📱 Status change order ID:', data.orderId);
+            if (data.orderId === order._id) {
+              console.log('✅ Status change for current order - updating');
+              setOrder(prev => ({
+                ...prev,
+                status: data.status,
+                cookingStatus: data.cookingStatus
+              }));
+            } else {
+              console.log('❌ Status change for different order');
+            }
+          });
+        } else {
+          console.log('⏳ Waiting for socket connection...');
+          setSocketConnected(false);
+          // Retry connection after a short delay
+          setTimeout(setupTracking, 1000);
+        }
+      };
+
+      if (socketService.connected) {
+        setupTracking();
+      } else {
+        socketService.socket?.on('connect', setupTracking);
       }
 
       return () => {
+        console.log('🧹 Cleaning up socket listeners');
         if (socketService.socket) {
           socketService.socket.emit('leave-order-tracking', order._id);
-          socketService.socket.off('order-updated');
-          socketService.socket.off('order-status-changed');
+          socketService.socket.off('qr-order-updated');
+          socketService.socket.off('qr-order-status-changed');
         }
       };
     }
   }, [order, isTracking]);
 
-  const searchOrder = async (e) => {
+  const searchOrder = async (e, customOrderId = null) => {
     e.preventDefault();
-    if (!orderId.trim()) {
+    const searchOrderId = customOrderId || orderId;
+    if (!searchOrderId.trim()) {
       setError('Please enter an Order ID');
       return;
     }
@@ -60,8 +139,12 @@ const LiveTracking = () => {
     setError('');
     
     try {
-      // Search for order by orderId (ORD001, ORD002, etc.)
-      const response = await fetch(`http://localhost:5000/api/orders/track/${orderId}`, {
+      // Search for QR order by orderId (QR001234, etc.)
+      const baseUrl = window.location.hostname === 'localhost' 
+        ? 'http://localhost:5000'
+        : `http://${window.location.hostname}:5000`;
+        
+      const response = await fetch(`${baseUrl}/api/qr-orders/track/${searchOrderId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -94,7 +177,11 @@ const LiveTracking = () => {
     
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/orders/track/${order.orderId}`);
+      const baseUrl = window.location.hostname === 'localhost' 
+        ? 'http://localhost:5000'
+        : `http://${window.location.hostname}:5000`;
+        
+      const response = await fetch(`${baseUrl}/api/qr-orders/track/${order.orderId}`);
       const data = await response.json();
       
       if (data.success) {
@@ -201,7 +288,7 @@ const LiveTracking = () => {
                     type="text"
                     value={orderId}
                     onChange={(e) => setOrderId(e.target.value.toUpperCase())}
-                    placeholder="Enter Order ID (e.g., ORD001)"
+                    placeholder="Enter Order ID (e.g., QR001234)"
                     className="w-full pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
@@ -218,7 +305,7 @@ const LiveTracking = () => {
 
             <div className="mt-6 text-center text-xs sm:text-sm text-gray-500 space-y-1">
               <p>💡 Your Order ID is provided when you place an order</p>
-              <p>Format: ORD001, ORD002, etc.</p>
+              <p>Format: QR001234, QR001235, etc.</p>
             </div>
           </div>
         )}
@@ -227,11 +314,13 @@ const LiveTracking = () => {
         {order && (
           <div className="space-y-6">
             {/* Live Status Banner */}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+            <div className={`border rounded-lg p-3 sm:p-4 ${socketConnected ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                 <div className="flex items-center">
-                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse mr-3"></div>
-                  <p className="text-green-700 font-medium text-sm sm:text-base">Live tracking active - Updates automatically</p>
+                  <div className={`w-3 h-3 rounded-full mr-3 ${socketConnected ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`}></div>
+                  <p className={`font-medium text-sm sm:text-base ${socketConnected ? 'text-green-700' : 'text-yellow-700'}`}>
+                    {socketConnected ? 'Live tracking active - Updates automatically' : 'Connecting to live tracking...'}
+                  </p>
                 </div>
                 <button
                   onClick={resetSearch}

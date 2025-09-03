@@ -1,12 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock, CheckCircle, AlertCircle, User, Phone, MapPin } from 'lucide-react';
 
 const OrderManagement = () => {
   const [selectedFilter, setSelectedFilter] = useState('all');
   
-  const [orders] = useState([
-    
-  ]);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch orders from API
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:5000/api/orders');
+      const data = await response.json();
+      if (data.success) {
+        setOrders(data.orders);
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const statusFilters = [
     { id: 'all', name: 'All Orders', count: orders.length },
@@ -46,8 +65,23 @@ const OrderManagement = () => {
       case 'dine-in': return 'bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800';
       case 'takeaway': return 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800';
       case 'delivery': return 'bg-gradient-to-r from-green-100 to-green-200 text-green-800';
+      case 'qr-order': return 'bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800';
       default: return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800';
     }
+  };
+
+  const getOrderTypeDisplayName = (type) => {
+    switch (type) {
+      case 'dine-in': return 'Dine In';
+      case 'takeaway': return 'Takeaway';
+      case 'delivery': return 'Delivery';
+      case 'qr-order': return 'QR Order';
+      default: return type;
+    }
+  };
+
+  const isScheduledOrder = (order) => {
+    return order.scheduledDate && order.scheduledTime;
   };
 
   return (
@@ -84,22 +118,32 @@ const OrderManagement = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {filteredOrders.map(order => (
-          <div key={order.id} className="bg-white rounded-xl shadow-sm border border-green-100 overflow-hidden">
+      {loading ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">Loading orders...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredOrders.map(order => (
+            <div key={order._id || order.id} className="bg-white rounded-xl shadow-sm border border-green-100 overflow-hidden">
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800">{order.id}</h3>
+                  <h3 className="text-lg font-semibold text-gray-800">{order.orderId || order.id}</h3>
                   <p className="text-sm text-gray-500">{order.orderTime}</p>
+                  {isScheduledOrder(order) && (
+                    <p className="text-sm text-blue-600 font-medium">
+                      📅 Scheduled: {new Date(order.scheduledDate).toLocaleDateString()} at {order.scheduledTime}
+                    </p>
+                  )}
                 </div>
                 <div className="flex flex-col space-y-2">
                   <span className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                     {getStatusIcon(order.status)}
                     <span className="capitalize">{order.status}</span>
                   </span>
-                  <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(order.type)}`}>
-                    {order.type.replace('-', ' ')}
+                  <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(order.orderType || order.type)}`}>
+                    {getOrderTypeDisplayName(order.orderType || order.type)}
                   </span>
                 </div>
               </div>
@@ -109,17 +153,21 @@ const OrderManagement = () => {
                   <User className="w-4 h-4 text-gray-500" />
                   <span className="text-gray-800 font-medium">{order.customerName}</span>
                 </div>
-                <div className="flex items-center space-x-2 mb-2">
-                  <Phone className="w-4 h-4 text-gray-500" />
-                  <span className="text-gray-600 text-sm">{order.customerPhone}</span>
-                </div>
-                {order.tableNumber && (
-                  <div className="text-sm text-gray-600">Table #{order.tableNumber}</div>
+                {order.customerPhone && (
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Phone className="w-4 h-4 text-gray-500" />
+                    <span className="text-gray-600 text-sm">{order.customerPhone}</span>
+                  </div>
                 )}
-                {order.address && (
+                {order.table && order.table !== 'TAKEAWAY-ORDER' && order.table !== 'DELIVERY-ORDER' && (
+                  <div className="text-sm text-gray-600">
+                    {order.table.startsWith('Table') ? order.table : `Table ${order.table}`}
+                  </div>
+                )}
+                {order.deliveryAddress && (
                   <div className="flex items-start space-x-2">
                     <MapPin className="w-4 h-4 text-gray-500 mt-0.5" />
-                    <span className="text-gray-600 text-sm">{order.address}</span>
+                    <span className="text-gray-600 text-sm">{order.deliveryAddress}</span>
                   </div>
                 )}
               </div>
@@ -137,7 +185,7 @@ const OrderManagement = () => {
               </div>
 
               <div className="flex justify-between items-center mb-4">
-                <span className="text-lg font-bold text-green-600">Total: ₹{order.total}</span>
+                <span className="text-lg font-bold text-green-600">Total: ₹{order.totalAmount || order.total}</span>
                 {order.estimatedTime && (
                   <div className="flex items-center space-x-1 text-sm text-gray-600">
                     <Clock className="w-4 h-4" />
@@ -166,9 +214,10 @@ const OrderManagement = () => {
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
 
-      {filteredOrders.length === 0 && (
+      {!loading && filteredOrders.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">No orders found</p>
           <p className="text-gray-400">Orders will appear here as they come in</p>

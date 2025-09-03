@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Menu, X, LogOut, MapPin, ShoppingCart } from 'lucide-react';
+import { User, Menu, X, LogOut, MapPin, ShoppingCart, Package2 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import logo from "../assets/logo.jpeg";
@@ -153,38 +153,79 @@ const NavBar = () => {
     navigate('/');
   };
 
-  const handleMenuClick = (item) => {
-    setMenu(item);
-    setIsMobileMenuOpen(false); // Close mobile menu when item is clicked
+  const scrollToTop = () => {
+    console.log('🔝 Scrolling to top...');
     
-    // Navigation logic - Updated to use Homepage
-    switch(item) {
-      case 'home':
-        navigate('/'); // This will load Homepage.jsx
-        break;
-      case 'menu':
-        navigate('/menu');
-        break;
-      case 'about':
-        navigate('/about');
-        break;
-      case 'preorder':
-        navigate('/preorder');
-        break;
-      case 'table reservation':
-        navigate('/table-reservation');
-        break;
-      default:
-        navigate('/'); // Default to Homepage
-    }
+    // Multiple methods to ensure smooth scroll to top works
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
     
-    // Scroll to top after navigation with a small delay
+    // Backup methods
+    document.documentElement.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+    
+    document.body.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+    
+    // Final fallback with delay
     setTimeout(() => {
       window.scrollTo({
         top: 0,
         behavior: 'smooth'
       });
     }, 100);
+  };
+
+  const handleMenuClick = (item) => {
+    setMenu(item);
+    setIsMobileMenuOpen(false); // Close mobile menu when item is clicked
+    
+    // Get current path to check if we're navigating to the same page
+    const currentPath = location.pathname;
+    let targetPath = '/';
+    
+    // Determine target path
+    switch(item) {
+      case 'home':
+        targetPath = '/';
+        break;
+      case 'menu':
+        targetPath = '/menu';
+        break;
+      case 'about':
+        targetPath = '/about';
+        break;
+      case 'preorder':
+        targetPath = '/preorder';
+        break;
+      case 'table reservation':
+        targetPath = '/table-reservation';
+        break;
+      default:
+        targetPath = '/';
+    }
+    
+    // If same page, just scroll to top
+    if (currentPath === targetPath) {
+      scrollToTop();
+    } else {
+      // Don't automatically clean up preorder context from navbar navigation
+      // Let specific actions handle cleanup instead
+      
+      // Different page: navigate first, then scroll
+      navigate(targetPath);
+      
+      // Scroll after navigation with delay
+      setTimeout(() => {
+        scrollToTop();
+      }, 200);
+    }
   };
 
   const handleSignInClick = (e) => {
@@ -268,11 +309,11 @@ const NavBar = () => {
           <div 
             className="relative cursor-pointer"
             onClick={() => {
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-              navigate('/track-order');
+              scrollToTop();
+              navigate('/live-tracking');
             }}
           >
-            <MapPin 
+            <Package2 
               size={28}
               className="text-gray-300 hover:text-red-400 transition-colors duration-300"
             />
@@ -281,7 +322,7 @@ const NavBar = () => {
           <div 
             className="relative cursor-pointer"
             onClick={() => {
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              scrollToTop();
               navigate('/cart');
             }}
           >
@@ -333,7 +374,7 @@ const NavBar = () => {
                     <div className="p-2">
                       <button 
                         onClick={() => {
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                          scrollToTop();
                           navigate('/profile');
                           setShowProfileMenu(false);
                         }}
@@ -380,9 +421,9 @@ const NavBar = () => {
           {/* Mobile Order Tracking Icon */}
           <div 
             className="cursor-pointer"
-            onClick={() => navigate('/order-tracking')}
+            onClick={() => navigate('/track-order')}
           >
-            <MapPin 
+            <Package2 
               size={24}
               className="text-gray-300 hover:text-red-400 transition-colors duration-300"
             />
@@ -392,7 +433,7 @@ const NavBar = () => {
           <div 
             className="relative cursor-pointer"
             onClick={() => {
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              scrollToTop();
               navigate('/cart');
             }}
           >
