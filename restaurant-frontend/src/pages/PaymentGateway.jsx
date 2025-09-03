@@ -83,6 +83,7 @@ export default function PaymentGateway() {
             }
             
             setCustomerInfo(customerData);
+            // Set payment method - card for all order types
             setPaymentMethod('card');
             return; // Exit early, don't process pendingReservation
           }
@@ -197,6 +198,9 @@ export default function PaymentGateway() {
           console.log('🔍 PaymentGateway: Final customer data being set to state for order:', customerData);
           setCustomerInfo(customerData);
           console.log('🔍 PaymentGateway: setCustomerInfo called for order with:', customerData);
+          
+          // Set payment method based on order type - card for all types
+          setPaymentMethod('card');
         } catch (error) {
           console.error('Error loading order data:', error);
           // Redirect to cart if no valid order data
@@ -228,9 +232,18 @@ export default function PaymentGateway() {
       alert('Please select a payment method');
       return;
     }
-    if (!customerInfo.name || !customerInfo.email || !customerInfo.phone) {
-      alert('Please fill in all customer information');
-      return;
+    // For QR orders, only name is required
+    if (orderData?.type === 'qr-order') {
+      if (!customerInfo.name) {
+        alert('Please enter your name');
+        return;
+      }
+    } else {
+      // For other orders, all fields required
+      if (!customerInfo.name || !customerInfo.email || !customerInfo.phone) {
+        alert('Please fill in all customer information');
+        return;
+      }
     }
     
     // Prevent multiple simultaneous payment processing
@@ -483,6 +496,88 @@ export default function PaymentGateway() {
         } else {
           throw new Error(response.message || 'Failed to create reservation');
         }
+      } else if (orderData?.type === 'preorder') {
+        // Handle preorder payment - show confirmation and redirect to home
+        console.log('🎉 Processing preorder payment');
+        
+        // Create confirmation message for preorder
+        const orderTypeDisplay = orderData.preorderDetails?.orderType?.replace('-', ' ') || 'preorder';
+        const scheduledDate = orderData.preorderDetails?.scheduledDate ? 
+          new Date(orderData.preorderDetails.scheduledDate).toLocaleDateString() : 'N/A';
+        const scheduledTime = orderData.preorderDetails?.scheduledTime || 'N/A';
+        
+        const confirmationMessage = `🎉 Pre-Order Confirmed & Payment Successful!\n\n` +
+          `📋 Order Details:\n` +
+          `Order ID: ${orderData.orderId}\n` +
+          `Type: ${orderTypeDisplay.charAt(0).toUpperCase() + orderTypeDisplay.slice(1)}\n` +
+          `Scheduled: ${scheduledDate} at ${scheduledTime}\n` +
+          `Total Paid: Rs.${orderTotal}\n\n` +
+          `✅ Your order has been confirmed and scheduled.\n` +
+          `You will receive email confirmation shortly.\n\n` +
+          `💡 Please arrive at the scheduled time for pickup/dining.`;
+        
+        alert(confirmationMessage);
+        
+        // Clean up ALL order and cart data
+        localStorage.removeItem('currentOrder');
+        localStorage.removeItem('pendingReservation');
+        localStorage.removeItem('reservationContext');
+        localStorage.removeItem('preorderContext');
+        localStorage.removeItem('orderData');
+        localStorage.removeItem('cartItems');
+        localStorage.removeItem('reservationState');
+        localStorage.removeItem('returnAfterLogin');
+        clearCart(); // Clear cart context after successful preorder
+        
+        console.log('🧹 Cleared all preorder and cart data after successful payment');
+        
+        // Navigate to home (preorders don't have tracking)
+        navigate('/');
+      } else if (orderData?.type === 'qr-order') {
+        // Handle QR order payment - show confirmation and redirect to home
+        console.log('🎉 Processing QR order payment');
+        
+        // Create tracking URL
+        const currentUrl = window.location.origin;
+        const trackingUrl = `${currentUrl}/live-tracking`;
+        
+        // Create confirmation message for QR order
+        const confirmationMessage = `🎉 QR Order Confirmed & Payment Successful!\n\n` +
+          `📋 Order Details:\n` +
+          `Order ID: ${orderData.orderId}\n` +
+          `Table: ${orderData.table}\n` +
+          `Total Paid: Rs.${orderTotal}\n\n` +
+          `✅ Your order has been sent to the kitchen.\n` +
+          `🔍 Track your order live at: ${trackingUrl}\n` +
+          `📱 Use Order ID: ${orderData.orderId}\n\n` +
+          `Please wait at your table - we'll bring your food shortly!\n\n` +
+          `🍽️ Enjoy your meal at Mian Taste!`;
+        
+        // Show confirmation with option to track
+        const trackNow = window.confirm(confirmationMessage + '\n\nClick OK to track your order now, or Cancel to stay here.');
+        
+        if (trackNow) {
+          // Store the order ID for easy access
+          sessionStorage.setItem('trackingOrderId', orderData.orderId);
+          navigate('/live-tracking');
+          return;
+        }
+        
+        // Clean up ALL order and cart data
+        localStorage.removeItem('currentOrder');
+        localStorage.removeItem('pendingReservation');
+        localStorage.removeItem('reservationContext');
+        localStorage.removeItem('qrTableNumber');
+        localStorage.removeItem('orderData');
+        localStorage.removeItem('cartItems');
+        localStorage.removeItem('reservationState');
+        localStorage.removeItem('returnAfterLogin');
+        clearCart(); // Clear cart context after successful QR order
+        
+        console.log('🧹 Cleared all QR order and cart data after successful payment');
+        
+        // Navigate to home (QR orders don't have tracking - customers wait at table)
+        navigate('/');
       } else {
         // Handle regular food order payment
         // Clean up ALL reservation and cart data to prevent conflicts
@@ -567,6 +662,22 @@ export default function PaymentGateway() {
                     <span className="text-sm text-gray-500">Required for all table reservations</span>
                   </button>
                 </div>
+              ) : orderData?.type === 'preorder' ? (
+                // Only card payment for preorders - guarantee they'll show up
+                <div className="flex justify-center">
+                  <button
+                    onClick={() => setPaymentMethod('card')}
+                    className={`p-6 rounded-lg border-2 transition-all hover:shadow-md ${
+                      paymentMethod === 'card' 
+                        ? 'border-red-500 bg-red-50 shadow-md' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <CreditCard size={32} className="mx-auto mb-3 text-gray-600" />
+                    <span className="block font-semibold text-gray-800">Credit/Debit Card</span>
+                    <span className="text-sm text-gray-500">Required for all pre-orders to guarantee pickup</span>
+                  </button>
+                </div>
               ) : (
                 // All payment methods for regular orders
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -606,48 +717,62 @@ export default function PaymentGateway() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Full Name *
+                    {orderData?.type === 'qr-order' ? 'Your Name *' : 'Full Name *'}
                   </label>
                   <input
                     type="text"
                     name="name"
                     value={customerInfo.name}
                     onChange={handleInputChange}
-                    placeholder="Enter your full name"
+                    placeholder={orderData?.type === 'qr-order' ? 'First name or nickname' : 'Enter your full name'}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
                     required
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={customerInfo.email}
-                    onChange={handleInputChange}
-                    placeholder="Enter your email address"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
-                    required
-                  />
-                </div>
+                {/* Only show email and phone for non-QR orders */}
+                {orderData?.type !== 'qr-order' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email Address *
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={customerInfo.email}
+                        onChange={handleInputChange}
+                        placeholder="Enter your email address"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+                        required
+                      />
+                    </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Number *
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={customerInfo.phone}
-                    onChange={handleInputChange}
-                    placeholder="Enter your phone number"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
-                    required
-                  />
-                </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Phone Number *
+                      </label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={customerInfo.phone}
+                        onChange={handleInputChange}
+                        placeholder="Enter your phone number"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+                        required
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Show info message for QR orders */}
+                {orderData?.type === 'qr-order' && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-sm text-blue-700">
+                      ✅ <strong>Quick QR Order:</strong> Only your name is required for dine-in orders.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

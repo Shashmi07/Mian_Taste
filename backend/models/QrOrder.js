@@ -1,39 +1,14 @@
 const mongoose = require('mongoose');
 
-const orderSchema = new mongoose.Schema({
+const qrOrderSchema = new mongoose.Schema({
   orderId: {
     type: String,
     unique: true
-    // Remove required: true since it's auto-generated
+    // Auto-generated
   },
   table: {
     type: String,
-    required: function() {
-      return this.orderType === 'dine-in';
-    }
-  },
-  orderType: {
-    type: String,
-    enum: ['dine-in', 'takeaway', 'delivery'],
-    default: 'dine-in'
-  },
-  scheduledDate: {
-    type: Date
-  },
-  scheduledTime: {
-    type: String
-  },
-  customerPhone: {
-    type: String
-  },
-  customerEmail: {
-    type: String
-  },
-  deliveryAddress: {
-    type: String,
-    required: function() {
-      return this.orderType === 'delivery';
-    }
+    required: true
   },
   customerName: {
     type: String,
@@ -100,12 +75,12 @@ const orderSchema = new mongoose.Schema({
 });
 
 // Generate order ID before saving
-orderSchema.pre('save', async function(next) {
+qrOrderSchema.pre('save', async function(next) {
   if (this.isNew && !this.orderId) {
-    const count = await mongoose.model('Order').countDocuments();
-    this.orderId = `ORD${(count + 1).toString().padStart(3, '0')}`;
+    const count = await mongoose.model('QrOrder').countDocuments();
+    this.orderId = `QR${(count + 1).toString().padStart(3, '0')}`;
   }
   next();
 });
 
-module.exports = mongoose.model('Order', orderSchema);
+module.exports = mongoose.model('QrOrder', qrOrderSchema);

@@ -35,7 +35,7 @@ app.use((req, res, next) => {
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:3001"],
+    origin: ["http://localhost:3000", "http://localhost:3001", "http://10.11.5.232:3000"],
     methods: ["GET", "POST"]
   }
 });
@@ -55,6 +55,8 @@ const menuRoutes = require('./routes/menuRoutes'); // Menu management routes
 const userManagementRoutes = require('./routes/userManagement'); // User management routes
 const adminAuthRoutes = require('./routes/adminAuth'); // Admin authentication routes
 const adminInventoryRoutes = require('./routes/adminInventory'); // Admin inventory routes (read-only)
+const qrOrderRoutes = require('./routes/qrOrders'); // QR order routes
+const preOrderRoutes = require('./routes/preOrders'); // PreOrder routes
 
 app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
@@ -65,6 +67,8 @@ app.use('/api/menu', menuRoutes); // Menu items API
 app.use('/api/user-management', userManagementRoutes); // User management API
 app.use('/api/admin-auth', adminAuthRoutes); // Admin authentication API
 app.use('/api/admin-inventory', adminInventoryRoutes); // Admin inventory API (read-only)
+app.use('/api/qr-orders', qrOrderRoutes); // QR order API
+app.use('/api/pre-orders', preOrderRoutes); // PreOrder API
 
 // Socket handlers
 try {

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, Calendar, Clock, ShoppingBag, Truck, UtensilsCrossed, ChevronDown, Star, Plus, Minus } from 'lucide-react';
 import NavBar from '../components/NavBar';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { menuAPI } from '../services/api';
 import Footer from '../components/Footer';
 
 function PreOrder() {
+  const navigate = useNavigate();
   const [selectedOrderType, setSelectedOrderType] = useState('dine-in');
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
@@ -13,6 +14,56 @@ function PreOrder() {
   const [cartItems, setCartItems] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [customerInfo, setCustomerInfo] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: ''
+  });
+  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [processing, setProcessing] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Helper function to check authentication and redirect if needed
+  const requireAuth = () => {
+    if (!isAuthenticated) {
+      alert('Please login to place pre-orders');
+      navigate('/login');
+      return false;
+    }
+    return true;
+  };
+
+  // Helper function to save preorder context
+  const savePreorderContext = () => {
+    if (!requireAuth()) return false;
+    
+    const preorderData = {
+      orderType: selectedOrderType,
+      scheduledDate: selectedDate,
+      scheduledTime: selectedTime,
+      deliveryAddress: selectedOrderType === 'delivery' ? customerInfo.address : null
+    };
+    localStorage.setItem('preorderContext', JSON.stringify(preorderData));
+    console.log('PreOrder: Context saved:', preorderData);
+    return true;
+  };
+
+  // Check authentication status
+  useEffect(() => {
+    const customerToken = localStorage.getItem('customerToken');
+    const customerUser = localStorage.getItem('customerUser');
+    setIsAuthenticated(customerToken && customerUser);
+  }, []);
+
+  // Save context whenever user navigates away from preorder page
+  useEffect(() => {
+    // Save context when values change and are valid
+    if (selectedOrderType && (selectedOrderType !== 'dine-in' || (selectedDate && selectedTime))) {
+      savePreorderContext();
+    }
+  }, [selectedOrderType, selectedDate, selectedTime, customerInfo.address]);
 
   // Fetch menu items from API
   useEffect(() => {
@@ -93,6 +144,75 @@ function PreOrder() {
     return cartItems.reduce((total, item) => total + item.quantity, 0);
   };
 
+  const processPayment = async () => {
+    try {
+      setProcessing(true);
+
+      // Validate customer info
+      if (!customerInfo.name || !customerInfo.phone) {
+        alert('Please fill in your name and phone number');
+        return;
+      }
+
+      if (selectedOrderType === 'delivery' && !customerInfo.address) {
+        alert('Please provide delivery address');
+        return;
+      }
+
+      // Prepare order data
+      const orderData = {
+        orderType: selectedOrderType,
+        scheduledDate: selectedDate,
+        scheduledTime: selectedTime,
+        customerName: customerInfo.name,
+        customerPhone: customerInfo.phone,
+        customerEmail: customerInfo.email,
+        deliveryAddress: selectedOrderType === 'delivery' ? customerInfo.address : '',
+        table: selectedOrderType === 'dine-in' ? 'Table 1' : '', // For now, auto-assign table
+        items: cartItems.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        totalAmount: parseFloat(getTotalPrice()),
+        notes: `Payment Method: ${paymentMethod}`
+      };
+
+      console.log('Submitting preorder:', orderData);
+
+      // Submit to backend
+      const response = await fetch('http://localhost:5000/api/pre-orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      const result = await response.json();
+      console.log('Preorder response:', result);
+
+      if (result.success) {
+        alert(`✅ Pre-order placed successfully!\nOrder ID: ${result.order.orderId}\nScheduled for: ${new Date(selectedDate).toLocaleDateString()} at ${selectedTime}`);
+        
+        // Reset form
+        setCartItems([]);
+        setCustomerInfo({ name: '', email: '', phone: '', address: '' });
+        setSelectedDate('');
+        setSelectedTime('');
+        setShowPayment(false);
+      } else {
+        throw new Error(result.message || 'Failed to place order');
+      }
+
+    } catch (error) {
+      console.error('Payment processing error:', error);
+      alert('❌ Failed to place order: ' + error.message);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navigation */}
@@ -106,6 +226,18 @@ function PreOrder() {
           <p className="text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed">
             Skip the wait and enjoy authentic Chinese cuisine on your schedule
           </p>
+          {!isAuthenticated && (
+            <div className="mt-6 p-4 bg-red-600 bg-opacity-90 rounded-lg inline-block">
+              <p className="text-lg font-semibold">⚠️ Login Required</p>
+              <p className="text-sm">You must be logged in to place pre-orders</p>
+              <button 
+                onClick={() => navigate('/login')}
+                className="mt-2 px-4 py-2 bg-white text-red-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+              >
+                Login Now
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -118,7 +250,11 @@ function PreOrder() {
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Choose Your Order Type</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button
-                  onClick={() => setSelectedOrderType('dine-in')}
+                  onClick={() => {
+                    if (requireAuth()) {
+                      setSelectedOrderType('dine-in');
+                    }
+                  }}
                   className={`p-6 rounded-lg border-2 transition-all duration-300 ${
                     selectedOrderType === 'dine-in'
                       ? 'border-red-600 bg-red-50 text-red-600'
@@ -127,11 +263,15 @@ function PreOrder() {
                 >
                   <UtensilsCrossed className="h-12 w-12 mx-auto mb-3" />
                   <h3 className="text-lg font-semibold mb-2">Dine In</h3>
-                  <p className="text-sm text-gray-600">Reserve your table and enjoy our restaurant atmosphere</p>
+                  <p className="text-sm text-gray-600">Reserve your order and enjoy at our restaurant</p>
                 </button>
 
                 <button
-                  onClick={() => setSelectedOrderType('takeaway')}
+                  onClick={() => {
+                    if (requireAuth()) {
+                      setSelectedOrderType('takeaway');
+                    }
+                  }}
                   className={`p-6 rounded-lg border-2 transition-all duration-300 ${
                     selectedOrderType === 'takeaway'
                       ? 'border-red-600 bg-red-50 text-red-600'
@@ -144,7 +284,11 @@ function PreOrder() {
                 </button>
 
                 <button
-                  onClick={() => setSelectedOrderType('delivery')}
+                  onClick={() => {
+                    if (requireAuth()) {
+                      setSelectedOrderType('delivery');
+                    }
+                  }}
                   className={`p-6 rounded-lg border-2 transition-all duration-300 ${
                     selectedOrderType === 'delivery'
                       ? 'border-red-600 bg-red-50 text-red-600'
@@ -199,15 +343,10 @@ function PreOrder() {
 
             {/* Menu Section */}
             <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Our Menu</h2>
-                <Link to="/menu">
-                  <button className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors">
-                    View Full Menu
-                  </button>
-                </Link>
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Ready to Order?</h2>
               </div>
-              <p className="text-gray-600">Browse our full menu to add items to your pre-order.</p>
+              <p className="text-gray-600">Select your order type, date, and time above, then proceed to browse our menu and add items to your pre-order.</p>
             </div>
           </div>
 
@@ -280,16 +419,25 @@ function PreOrder() {
                 </div>
               )}
 
-              {/* Place Order Button */}
+              {/* Proceed to Menu Button */}
               <button
-                disabled={!selectedDate || !selectedTime || cartItems.length === 0}
-                className={`w-full mt-6 py-3 px-4 rounded-lg font-semibold transition-colors ${
-                  selectedDate && selectedTime && cartItems.length > 0
-                    ? 'bg-red-600 text-white hover:bg-red-700'
+                disabled={!selectedDate || !selectedTime}
+                onClick={() => {
+                  if (!selectedDate || !selectedTime) {
+                    alert('Please select date and time before proceeding to menu');
+                    return;
+                  }
+                  if (savePreorderContext()) {
+                    navigate('/menu');
+                  }
+                }}
+                className={`w-full mt-6 py-3 px-4 rounded-lg font-semibold transition-all ${
+                  selectedDate && selectedTime
+                    ? 'bg-red-600 text-white hover:bg-red-700 animate-pulse'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
-                Place Pre-Order
+                Proceed to Menu
               </button>
 
               <p className="text-xs text-gray-500 mt-3 text-center">
@@ -299,6 +447,151 @@ function PreOrder() {
           </div>
         </div>
       </div>
+
+      {/* Payment Modal */}
+      {showPayment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-900">Customer Information</h2>
+                <button
+                  onClick={() => setShowPayment(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Customer Information Form */}
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={customerInfo.name}
+                    onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    placeholder="Enter your full name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number *
+                  </label>
+                  <input
+                    type="tel"
+                    value={customerInfo.phone}
+                    onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    placeholder="Enter your phone number"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={customerInfo.email}
+                    onChange={(e) => setCustomerInfo({...customerInfo, email: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    placeholder="Enter your email"
+                  />
+                </div>
+
+                {selectedOrderType === 'delivery' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Delivery Address *
+                    </label>
+                    <textarea
+                      value={customerInfo.address}
+                      onChange={(e) => setCustomerInfo({...customerInfo, address: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      rows="3"
+                      placeholder="Enter your full delivery address"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Payment Method */}
+              <div className="mb-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-3">Payment Method</h3>
+                <div className="space-y-2">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="card"
+                      checked={paymentMethod === 'card'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="mr-3"
+                    />
+                    <span>Credit/Debit Card</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="cash"
+                      checked={paymentMethod === 'cash'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="mr-3"
+                    />
+                    <span>Cash on {selectedOrderType === 'delivery' ? 'Delivery' : 'Pickup'}</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="upi"
+                      checked={paymentMethod === 'upi'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="mr-3"
+                    />
+                    <span>UPI</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Order Summary */}
+              <div className="border-t pt-4 mb-6">
+                <div className="flex justify-between items-center text-lg font-bold">
+                  <span>Total Amount:</span>
+                  <span className="text-red-600">${getTotalPrice()}</span>
+                </div>
+                <div className="text-sm text-gray-600 mt-1">
+                  {getTotalItems()} items • {selectedOrderType.replace('-', ' ')} • {selectedDate} at {selectedTime}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowPayment(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+                  disabled={processing}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={processPayment}
+                  disabled={processing || !customerInfo.name || !customerInfo.phone}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  {processing ? 'Processing...' : 'Place Order'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <Footer />

@@ -3,15 +3,31 @@ import { QrCode, Download, Printer, Copy, Check } from 'lucide-react';
 
 const QRGenerator = () => {
   const [tableNumbers, setTableNumbers] = useState('1,2,3,4,5,6,7,8');
-  const [baseUrl, setBaseUrl] = useState('http://localhost:3000/menu?qr=true&table=');
+  const [selectedUrlType, setSelectedUrlType] = useState('localhost');
+  const [customIP, setCustomIP] = useState('192.168.1.100');
   const [copied, setCopied] = useState(null);
+  
+  const getBaseUrl = () => {
+    switch(selectedUrlType) {
+      case 'localhost':
+        return 'http://localhost:3000/menu?qr=true&table=';
+      case 'ip':
+        return `http://10.11.5.232:3000/menu?qr=true&table=`;
+      case 'custom':
+        return customBaseUrl;
+      default:
+        return 'http://localhost:3000/menu?qr=true&table=';
+    }
+  };
+  
+  const [customBaseUrl, setCustomBaseUrl] = useState('');
   
   const generateTableNumbers = () => {
     return tableNumbers.split(',').map(num => num.trim()).filter(num => num);
   };
 
   const generateQRUrl = (tableNumber) => {
-    return `${baseUrl}${tableNumber}`;
+    return `${getBaseUrl()}${tableNumber}`;
   };
 
   const copyToClipboard = (text, tableNumber) => {
@@ -80,7 +96,7 @@ const QRGenerator = () => {
       <div className="bg-white rounded-xl shadow-sm border p-6 mb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Configuration</h3>
         
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Table Numbers (comma-separated)
@@ -96,16 +112,72 @@ const QRGenerator = () => {
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Base URL
+              URL Type
+            </label>
+            <select
+              value={selectedUrlType}
+              onChange={(e) => setSelectedUrlType(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#46923c] focus:border-transparent"
+            >
+              <option value="localhost">Localhost (Desktop only)</option>
+              <option value="ip">Local IP (Mobile + Desktop)</option>
+              <option value="custom">Custom URL</option>
+            </select>
+          </div>
+        </div>
+        
+        {/* URL Configuration based on selection */}
+        {selectedUrlType === 'ip' && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Your Computer's IP Address
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={customIP}
+                onChange={(e) => setCustomIP(e.target.value)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#46923c] focus:border-transparent"
+                placeholder="192.168.1.100"
+              />
+              <button
+                onClick={() => {
+                  alert('To find your IP:\n1. Open Command Prompt\n2. Type: ipconfig\n3. Look for IPv4 Address under your network adapter');
+                }}
+                className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
+              >
+                Find IP
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              ℹ️ Make sure your phone and computer are on the same WiFi network
+            </p>
+          </div>
+        )}
+        
+        {selectedUrlType === 'custom' && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Custom Base URL
             </label>
             <input
               type="text"
-              value={baseUrl}
-              onChange={(e) => setBaseUrl(e.target.value)}
+              value={customBaseUrl}
+              onChange={(e) => setCustomBaseUrl(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#46923c] focus:border-transparent"
-              placeholder="http://localhost:3000/menu?qr=true&table="
+              placeholder="https://your-domain.com/menu?qr=true&table="
             />
           </div>
+        )}
+        
+        {/* Current URL Preview */}
+        <div className="bg-gray-50 p-3 rounded-lg">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Current Base URL:
+          </label>
+          <code className="text-sm text-gray-800 bg-white px-2 py-1 rounded border">
+            {getBaseUrl()}
+          </code>
         </div>
 
         <div className="mt-4 flex gap-3">

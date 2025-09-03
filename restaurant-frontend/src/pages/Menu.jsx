@@ -167,7 +167,11 @@ const Menu = () => {
       try {
         setLoading(true);
         console.log('Fetching menu items...');
-        const response = await fetch('http://localhost:5000/api/menu');
+        // Dynamic API URL based on current hostname
+        const apiUrl = window.location.hostname === 'localhost' 
+          ? 'http://localhost:5000/api/menu'
+          : `http://${window.location.hostname}:5000/api/menu`;
+        const response = await fetch(apiUrl);
         if (response.ok) {
           const data = await response.json();
           console.log('Menu items loaded:', data.length, data); // Debug log

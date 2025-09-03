@@ -1,6 +1,8 @@
 import io from 'socket.io-client';
 
-const SOCKET_URL = 'http://localhost:5000';
+const SOCKET_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:5000'
+  : `http://${window.location.hostname}:5000`;
 
 class SocketService {
   constructor() {
@@ -10,9 +12,15 @@ class SocketService {
 
   connect() {
     if (!this.socket) {
+      console.log('🔌 Connecting to socket server:', SOCKET_URL);
       this.socket = io(SOCKET_URL, {
         transports: ['websocket', 'polling'],
-        autoConnect: true
+        autoConnect: true,
+        forceNew: true,
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 5,
+        timeout: 5000
       });
 
       this.socket.on('connect', () => {
@@ -70,6 +78,25 @@ class SocketService {
   onOrderStatusChange(callback) {
     if (this.socket) {
       this.socket.on('order-status-changed', callback);
+    }
+  }
+
+  // QR Order methods
+  onQrOrderUpdate(callback) {
+    if (this.socket) {
+      this.socket.on('qr-order-updated', callback);
+    }
+  }
+
+  onQrOrderStatusChange(callback) {
+    if (this.socket) {
+      this.socket.on('qr-order-status-changed', callback);
+    }
+  }
+
+  onNewQrOrder(callback) {
+    if (this.socket) {
+      this.socket.on('new-qr-order', callback);
     }
   }
 

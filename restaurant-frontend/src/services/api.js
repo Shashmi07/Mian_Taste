@@ -1,9 +1,22 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+// Dynamic API base URL - works for both localhost and IP addresses
+const getAPIBaseURL = () => {
+  const hostname = window.location.hostname;
+  return hostname === 'localhost' 
+    ? 'http://localhost:5000/api'
+    : `http://${hostname}:5000/api`;
+};
+
+const API_BASE_URL = getAPIBaseURL();
 
 // Set up axios defaults
 axios.defaults.baseURL = API_BASE_URL;
+
+// Update axios base URL dynamically (in case hostname changes)
+export const updateAPIBaseURL = () => {
+  axios.defaults.baseURL = getAPIBaseURL();
+};
 
 // Chef authAPI export
 export const authAPI = {
@@ -57,6 +70,21 @@ export const ordersAPI = {
   
   // Track order (no auth required)
   trackOrder: (orderId) => axios.get(`/orders/track/${orderId}`)
+};
+
+export const preOrderAPI = {
+  // Create preorder (no auth required)
+  createPreOrder: (preOrderData) => axios.post('/pre-orders', preOrderData),
+  
+  // Get preorders (auth required - admin only)
+  getPreOrders: () => axios.get('/pre-orders', {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+  }),
+  
+  // Update preorder status (auth required - admin only)
+  updateStatus: (preOrderId, status) => axios.put(`/pre-orders/${preOrderId}/status`, { status }, {
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+  })
 };
 
 export const inventoryAPI = {
