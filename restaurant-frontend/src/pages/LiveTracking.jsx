@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, CheckCircle, ChefHat, Package, Timer, RefreshCw, Search, ArrowLeft } from 'lucide-react';
+import { Clock, CheckCircle, ChefHat, Package, Timer, RefreshCw, Search, ArrowLeft, Star, MessageSquare, Send, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 import socketService from '../services/socket';
 
 const LiveTracking = () => {
@@ -10,6 +11,12 @@ const LiveTracking = () => {
   const [error, setError] = useState('');
   const [isTracking, setIsTracking] = useState(false);
   const [socketConnected, setSocketConnected] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedback, setFeedback] = useState({});
+  const [overallComment, setOverallComment] = useState('');
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+  
+  const { clearCart } = useCart();
 
   // Auto-load tracking order ID if available
   useEffect(() => {
@@ -231,6 +238,103 @@ const LiveTracking = () => {
     if (status === 'ready') return 'text-green-600 bg-green-100 border-green-200';
     if (status === 'delivered') return 'text-purple-600 bg-purple-100 border-purple-200';
     return 'text-gray-600 bg-gray-100 border-gray-200';
+  };
+
+  const handleStarRating = (itemIndex, rating) => {
+    setFeedback(prev => ({
+      ...prev,
+      [itemIndex]: {
+        ...prev[itemIndex],
+        rating: rating
+      }
+    }));
+  };
+
+
+  const skipFeedback = () => {
+    setShowFeedback(false);
+    setFeedback({});
+    setOverallComment('');
+    
+    // Clear the cart since the order is complete (even if feedback is skipped)
+    clearCart();
+    
+    // Also clear any QR table info since order is complete
+    localStorage.removeItem('qrTableNumber');
+  };
+
+  const submitFeedback = async () => {
+    setSubmittingFeedback(true);
+    
+    try {
+      const baseUrl = window.location.hostname === 'localhost' 
+        ? 'http://localhost:5000'
+        : `http://${window.location.hostname}:5000`;
+
+      const feedbackData = {
+        orderId: order._id,
+        orderNumber: order.orderId,
+        itemFeedback: Object.keys(feedback).map(index => ({
+          itemIndex: parseInt(index),
+          itemName: order.items[index].name,
+          rating: feedback[index]?.rating || 0
+        })),
+        overallComment: overallComment,
+        customerName: order.customerName,
+        table: order.table,
+        createdAt: new Date().toISOString()
+      };
+
+      const response = await fetch(`${baseUrl}/api/feedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(feedbackData)
+      });
+
+      if (response.ok) {
+        alert('🎉 Thank you for your feedback! We appreciate your input to help us improve.');
+        setShowFeedback(false);
+        setFeedback({});
+        setOverallComment('');
+        
+        // Clear the cart since the order is complete and feedback is submitted
+        clearCart();
+        
+        // Also clear any QR table info since order is complete
+        localStorage.removeItem('qrTableNumber');
+      } else {
+        throw new Error('Failed to submit feedback');
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      alert('Sorry, we could not submit your feedback right now. Please try again later.');
+    } finally {
+      setSubmittingFeedback(false);
+    }
+  };
+
+  const StarRating = ({ rating, onRate, size = 20 }) => {
+    return (
+      <div className="flex space-x-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            onClick={() => onRate(star)}
+            className="focus:outline-none"
+          >
+            <Star 
+              size={size}
+              className={star <= rating 
+                ? 'text-yellow-400 fill-yellow-400' 
+                : 'text-gray-300 hover:text-yellow-200'
+              }
+            />
+          </button>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -539,13 +643,113 @@ const LiveTracking = () => {
                   <div className="mt-4 bg-purple-100 border border-purple-300 rounded-lg p-3 sm:p-4">
                     <div className="flex items-start">
                       <CheckCircle className="text-purple-600 mr-3 flex-shrink-0 mt-1" size={20} />
-                      <div>
+                      <div className="flex-1">
                         <h4 className="font-semibold text-purple-800 text-sm sm:text-base">✅ Order Completed!</h4>
                         <p className="text-purple-700 text-xs sm:text-sm mt-1">Thank you for dining with Mian Taste! We hope you enjoyed your meal.</p>
+                        
+                        {/* Feedback Button */}
+                        <div className="mt-3">
+                          <button
+                            onClick={() => setShowFeedback(true)}
+                            className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
+                          >
+                            <Star className="w-4 h-4" />
+                            <span>Rate Your Experience</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Feedback Modal */}
+        {showFeedback && order && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center rounded-t-xl">
+                <h3 className="text-xl font-bold text-gray-900">🌟 Rate Your Experience</h3>
+                <button 
+                  onClick={() => setShowFeedback(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="p-6 space-y-6">
+                <div className="text-center">
+                  <h4 className="text-lg font-semibold text-gray-800">Order {order.orderId}</h4>
+                  <p className="text-gray-600">Help us improve by rating each item</p>
+                </div>
+
+                {/* Rate Each Item */}
+                <div className="space-y-4">
+                  <h5 className="font-medium text-gray-800">Rate Each Item:</h5>
+                  {order.items.map((item, index) => (
+                    <div key={index} className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h6 className="font-medium text-gray-800">{item.name}</h6>
+                          <p className="text-sm text-gray-600">Qty: {item.quantity} × Rs. {item.price}</p>
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <StarRating 
+                            rating={feedback[index]?.rating || 0} 
+                            onRate={(rating) => handleStarRating(index, rating)} 
+                          />
+                          <span className="text-xs text-gray-500 mt-1">
+                            {feedback[index]?.rating ? `${feedback[index].rating}/5` : 'No rating'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Overall Comment */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Overall Experience (Optional):
+                  </label>
+                  <textarea
+                    value={overallComment}
+                    onChange={(e) => setOverallComment(e.target.value)}
+                    placeholder="Tell us about your overall dining experience..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm resize-none"
+                    rows={3}
+                  />
+                </div>
+
+                {/* Submit Buttons */}
+                <div className="flex space-x-4 pt-4">
+                  <button
+                    onClick={skipFeedback}
+                    className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Skip for Now
+                  </button>
+                  <button
+                    onClick={submitFeedback}
+                    disabled={submittingFeedback}
+                    className="flex-1 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
+                  >
+                    {submittingFeedback ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>Submitting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        <span>Submit Feedback</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

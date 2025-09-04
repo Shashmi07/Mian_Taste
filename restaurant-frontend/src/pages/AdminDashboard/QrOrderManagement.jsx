@@ -40,8 +40,6 @@ const QrOrderManagement = () => {
   const statusFilters = [
     { id: 'all', name: 'All Orders', count: orders.length },
     { id: 'pending', name: 'Pending', count: orders.filter(o => o.status === 'pending').length },
-    { id: 'accepted', name: 'Accepted', count: orders.filter(o => o.status === 'accepted').length },
-    { id: 'ready', name: 'Ready', count: orders.filter(o => o.status === 'ready').length },
     { id: 'delivered', name: 'Delivered', count: orders.filter(o => o.status === 'delivered').length }
   ];
 
