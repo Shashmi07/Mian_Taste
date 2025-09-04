@@ -310,7 +310,7 @@ const NavBar = () => {
             className="relative cursor-pointer"
             onClick={() => {
               scrollToTop();
-              navigate('/live-tracking');
+              navigate('/track-order');
             }}
           >
             <Package2 

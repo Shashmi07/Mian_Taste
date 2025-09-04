@@ -57,6 +57,7 @@ const adminAuthRoutes = require('./routes/adminAuth'); // Admin authentication r
 const adminInventoryRoutes = require('./routes/adminInventory'); // Admin inventory routes (read-only)
 const qrOrderRoutes = require('./routes/qrOrders'); // QR order routes
 const preOrderRoutes = require('./routes/preOrders'); // PreOrder routes
+const feedbackRoutes = require('./routes/feedback'); // Feedback routes
 
 app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
@@ -69,6 +70,7 @@ app.use('/api/admin-auth', adminAuthRoutes); // Admin authentication API
 app.use('/api/admin-inventory', adminInventoryRoutes); // Admin inventory API (read-only)
 app.use('/api/qr-orders', qrOrderRoutes); // QR order API
 app.use('/api/pre-orders', preOrderRoutes); // PreOrder API
+app.use('/api/feedback', feedbackRoutes); // Feedback API
 
 // Socket handlers
 try {

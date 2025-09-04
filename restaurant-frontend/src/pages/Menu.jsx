@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Star, Search, Clock, QrCode, X, Calendar } from 'lucide-react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import NavBar from '../components/NavBar';
+import Footer from '../components/Footer';
 import { useCart } from '../context/CartContext';
 
 // Import all images from MenuItems folder and create mapping
@@ -366,6 +367,7 @@ const Menu = () => {
   };
 
   return (
+    <>
     <div className="min-h-screen bg-gray-50">
       <NavBar />
       
@@ -552,18 +554,18 @@ const Menu = () => {
                   </div>
                   
                   {/* Bottom Content - Price and Add to Cart Row */}
-                  <div className="flex items-center justify-between pt-2 md:pt-3 border-t border-gray-100">
-                    <div className="flex flex-col">
-                      <span className="text-lg md:text-xl font-bold text-red-600">{item.price}</span>
+                  <div className="flex items-center justify-between pt-2 md:pt-3 border-t border-gray-100 gap-3">
+                    <div className="flex flex-col flex-shrink-0">
+                      <span className="text-base sm:text-lg md:text-xl font-bold text-red-600">{item.price}</span>
                     </div>
                     
                     <button 
                       onClick={() => handleAddToCart(item)}
                       disabled={addingToCart === item._id}
-                      className={`px-3 py-2 md:px-4 md:py-2.5 text-white font-semibold rounded-xl transition-all duration-300 text-xs md:text-sm min-w-[70px] md:min-w-[80px] flex items-center justify-center gap-1 md:gap-2 shadow-md hover:shadow-lg ${
+                      className={`px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-2.5 text-white font-semibold rounded-lg sm:rounded-xl transition-all duration-300 text-xs sm:text-sm flex items-center justify-center gap-1 md:gap-2 shadow-md hover:shadow-lg flex-shrink-0 ${
                         addingToCart === item._id 
-                          ? 'bg-green-500 cursor-not-allowed' 
-                          : 'bg-red-600 hover:bg-red-700 active:scale-95'
+                          ? 'bg-green-500 cursor-not-allowed min-w-[60px] sm:min-w-[70px]' 
+                          : 'bg-red-600 hover:bg-red-700 active:scale-95 min-w-[50px] sm:min-w-[60px]'
                       }`}
                     >
                       {addingToCart === item._id ? (
@@ -662,6 +664,9 @@ const Menu = () => {
         </div>
       )}
     </div>
+    
+    <Footer />
+    </>
   );
 };
 

@@ -10,7 +10,8 @@ import {
   X,
   MenuIcon,
   Settings as SettingsIcon,
-  QrCode
+  QrCode,
+  MessageSquare
 } from 'lucide-react';
 
 // Import dashboard components
@@ -22,6 +23,7 @@ import PreOrderManagement from './PreOrderManagement';
 import UserManagement from './UserManagement';
 import TableReservation from './TableReservation';
 import InventoryManagement from './InventoryManagement';
+import FeedbackManagement from './FeedbackManagement';
 
 import QRGenerator from './QRGenerator';
 
@@ -37,6 +39,7 @@ const AdminDashboard = ({ user, onLogout }) => {
     { id: 'users', name: 'User Management', icon: Users },
     { id: 'reservations', name: 'Table Reservations', icon: Calendar },
     { id: 'inventory', name: 'Inventory', icon: Package },
+    { id: 'feedback', name: 'Customer Feedback', icon: MessageSquare },
     { id: 'qr-generator', name: 'QR Code Generator', icon: QrCode },
  
   ];
@@ -57,6 +60,8 @@ const AdminDashboard = ({ user, onLogout }) => {
         return <TableReservation />;
       case 'inventory':
         return <InventoryManagement />;
+      case 'feedback':
+        return <FeedbackManagement />;
       case 'qr-generator':
         return <QRGenerator />;
      
@@ -83,7 +88,7 @@ const AdminDashboard = ({ user, onLogout }) => {
           </button>
         </div>
 
-        <nav className="mt-6">
+        <nav className="mt-6 pb-4">
           <div className="px-4 space-y-2">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -107,26 +112,6 @@ const AdminDashboard = ({ user, onLogout }) => {
                 </button>
               );
             })}
-          </div>
-
-          {/* User info and logout */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
-            <div className="flex items-center mb-3">
-              <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-medium">
-                {user?.username?.[0]?.toUpperCase() || 'A'}
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-700">{user?.username || 'Admin'}</p>
-                <p className="text-xs text-gray-500">Administrator</p>
-              </div>
-            </div>
-            <button
-              onClick={onLogout}
-              className="w-full flex items-center px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            >
-              <LogOut className="w-4 h-4 mr-3" />
-              Logout
-            </button>
           </div>
         </nav>
       </div>
@@ -156,9 +141,26 @@ const AdminDashboard = ({ user, onLogout }) => {
               </h2>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="text-sm text-red-100">
-                Welcome back, {user?.username || 'Admin'}!
+              {/* Admin info */}
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-medium border-2 border-red-400">
+                  {user?.username?.[0]?.toUpperCase() || 'A'}
+                </div>
+                <div className="hidden sm:block">
+                  <p className="text-sm font-medium text-white">{user?.username || 'Admin'}</p>
+                  <p className="text-xs text-red-200">Administrator</p>
+                </div>
               </div>
+              
+              {/* Logout button */}
+              <button
+                onClick={onLogout}
+                className="flex items-center px-3 py-2 text-red-100 hover:text-white hover:bg-red-700 rounded-lg transition-colors"
+                title="Logout"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                <span className="hidden sm:block">Logout</span>
+              </button>
             </div>
           </div>
         </header>
