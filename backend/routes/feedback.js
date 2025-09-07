@@ -4,14 +4,15 @@ const {
   submitFeedback,
   getAllFeedback,
   getFeedbackByOrder,
-  getFeedbackStats
+  getFeedbackStats,
+  getOrderForFeedback
 } = require('../controllers/feedbackController');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-// Validation middleware for feedback
-const feedbackValidation = [
+// Legacy validation middleware for QR feedback
+const legacyFeedbackValidation = [
   body('orderId').notEmpty().withMessage('Order ID is required'),
   body('orderNumber').notEmpty().withMessage('Order number is required'),
   body('customerName').notEmpty().withMessage('Customer name is required'),
@@ -21,12 +22,32 @@ const feedbackValidation = [
   body('itemFeedback.*.rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5')
 ];
 
-// Public route - submit feedback (no auth required)
-router.post('/', feedbackValidation, submitFeedback);
+// New validation middleware for universal feedback
+const universalFeedbackValidation = [
+  body('orderId').notEmpty().withMessage('Order ID is required'),
+  body('orderType').isIn(['qr', 'pre', 'reservation']).withMessage('Invalid order type'),
+  body('ratings.overall').isInt({ min: 1, max: 5 }).withMessage('Overall rating is required and must be between 1 and 5')
+];
+
+// Public routes - submit feedback (no auth required)
+router.post('/', (req, res, next) => {
+  // Use different validation based on whether it's legacy or new format
+  if (req.body.itemFeedback) {
+    // Legacy QR feedback format
+    legacyFeedbackValidation.forEach(validation => validation(req, res, () => {}));
+  } else {
+    // New universal feedback format
+    universalFeedbackValidation.forEach(validation => validation(req, res, () => {}));
+  }
+  next();
+}, submitFeedback);
+
+// Public route for getting order details for feedback
+router.get('/order/:orderId', getOrderForFeedback);
 
 // Admin routes (require authentication)
 router.get('/', auth, getAllFeedback);
 router.get('/stats', auth, getFeedbackStats);
-router.get('/order/:orderId', auth, getFeedbackByOrder);
+router.get('/admin/order/:orderId', auth, getFeedbackByOrder);
 
 module.exports = router;

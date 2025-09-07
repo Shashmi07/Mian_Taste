@@ -1,5 +1,6 @@
 const { getCustomerConnection } = require('../config/customerDatabase');
 const { schema: tableReservationSchema } = require('../models/TableReservation');
+const { sendFeedbackEmail } = require('../services/emailService');
 
 // Get TableReservation model using customer database connection
 const getTableReservationModel = () => {
@@ -300,6 +301,23 @@ const updateReservationStatus = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Reservation not found'
+      });
+    }
+
+    // Send feedback email when reservation is completed
+    if (status === 'completed' && reservation.customerEmail) {
+      console.log(`📧 Sending feedback email for completed table reservation ${reservation.reservationId}`);
+      
+      const emailData = {
+        orderId: reservation.reservationId,
+        orderType: 'reservation',
+        customerName: reservation.customerName,
+        customerEmail: reservation.customerEmail
+      };
+      
+      // Send email asynchronously (don't wait for it)
+      sendFeedbackEmail(emailData).catch(error => {
+        console.error(`Failed to send feedback email for ${reservation.reservationId}:`, error);
       });
     }
 

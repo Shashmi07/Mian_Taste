@@ -1,37 +1,73 @@
 const mongoose = require('mongoose');
 
 const feedbackSchema = new mongoose.Schema({
+  // Universal order identifier (PRE001, RES123456, QR001, etc.)
   orderId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'QrOrder',
-    required: true
-  },
-  orderNumber: {
     type: String,
-    required: true
+    required: true,
+    index: true
   },
-  customerName: {
+  orderType: {
     type: String,
+    enum: ['qr', 'pre', 'reservation'],
     required: true
   },
-  table: {
-    type: String,
-    required: true
-  },
-  itemFeedback: [{
-    itemIndex: {
+  // Ratings for different aspects
+  ratings: {
+    food: {
       type: Number,
-      required: true
+      min: 0,
+      max: 5,
+      default: 0
     },
-    itemName: {
-      type: String,
-      required: true
+    service: {
+      type: Number,
+      min: 0,
+      max: 5,
+      default: 0
     },
-    rating: {
+    ambiance: {
+      type: Number,
+      min: 0,
+      max: 5,
+      default: 0
+    },
+    overall: {
       type: Number,
       min: 1,
       max: 5,
       required: true
+    }
+  },
+  comment: {
+    type: String,
+    maxlength: 1000,
+    trim: true,
+    default: ''
+  },
+  customerInfo: {
+    name: String,
+    email: String,
+    phone: String
+  },
+  // Legacy fields for backward compatibility with QR orders
+  orderNumber: {
+    type: String
+  },
+  table: {
+    type: String
+  },
+  itemFeedback: [{
+    itemIndex: {
+      type: Number
+    },
+    itemName: {
+      type: String
+    },
+    rating: {
+      type: Number,
+      min: 1,
+      max: 5
     }
   }],
   overallComment: {
@@ -42,6 +78,15 @@ const feedbackSchema = new mongoose.Schema({
     type: Number,
     min: 1,
     max: 5
+  },
+  // Reference to the original order (optional)
+  orderRef: {
+    type: mongoose.Schema.Types.ObjectId,
+    refPath: 'orderModel'
+  },
+  orderModel: {
+    type: String,
+    enum: ['QrOrder', 'PreOrder', 'TableReservation']
   }
 }, {
   timestamps: true
@@ -49,14 +94,40 @@ const feedbackSchema = new mongoose.Schema({
 
 // Calculate average rating before saving
 feedbackSchema.pre('save', function(next) {
-  if (this.itemFeedback && this.itemFeedback.length > 0) {
+  // For new rating system
+  if (this.ratings && this.ratings.overall) {
+    const validRatings = [];
+    if (this.ratings.food > 0) validRatings.push(this.ratings.food);
+    if (this.ratings.service > 0) validRatings.push(this.ratings.service);
+    if (this.ratings.ambiance > 0) validRatings.push(this.ratings.ambiance);
+    
+    if (validRatings.length > 0) {
+      const sum = validRatings.reduce((acc, rating) => acc + rating, 0);
+      this.averageRating = Math.round((sum / validRatings.length) * 10) / 10;
+    } else {
+      this.averageRating = this.ratings.overall;
+    }
+  }
+  
+  // Legacy calculation for backward compatibility
+  else if (this.itemFeedback && this.itemFeedback.length > 0) {
     const ratingsWithValues = this.itemFeedback.filter(item => item.rating > 0);
     if (ratingsWithValues.length > 0) {
       const totalRating = ratingsWithValues.reduce((sum, item) => sum + item.rating, 0);
       this.averageRating = Math.round((totalRating / ratingsWithValues.length) * 10) / 10;
     }
   }
+  
   next();
+});
+
+// Compound index for efficient queries
+feedbackSchema.index({ orderId: 1, orderType: 1 });
+
+// Ensure only one feedback per order (but allow multiple for legacy system)
+feedbackSchema.index({ orderId: 1 }, { 
+  unique: true, 
+  partialFilterExpression: { orderType: { $exists: true } } 
 });
 
 module.exports = mongoose.model('Feedback', feedbackSchema);

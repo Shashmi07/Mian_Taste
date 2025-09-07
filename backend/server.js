@@ -71,6 +71,7 @@ app.use('/api/admin-inventory', adminInventoryRoutes); // Admin inventory API (r
 app.use('/api/qr-orders', qrOrderRoutes); // QR order API
 app.use('/api/pre-orders', preOrderRoutes); // PreOrder API
 app.use('/api/feedback', feedbackRoutes); // Feedback API
+app.use('/api/test-email', require('./routes/testEmail')); // Email testing routes
 
 // Socket handlers
 try {
@@ -116,6 +117,6 @@ app.use('*', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT} and accessible from all network interfaces`);
 });

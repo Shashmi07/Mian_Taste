@@ -1,5 +1,6 @@
 const PreOrder = require('../models/PreOrder');
 const { validationResult } = require('express-validator');
+const { sendFeedbackEmail } = require('../services/emailService');
 
 // Get all preorders with filtering
 const getPreOrders = async (req, res) => {
@@ -148,6 +149,23 @@ const updatePreOrderStatus = async (req, res) => {
       return res.status(404).json({ 
         success: false, 
         message: 'Preorder not found' 
+      });
+    }
+
+    // Send feedback email when order is completed
+    if (status === 'completed' && updatedOrder.customerEmail) {
+      console.log(`📧 Sending feedback email for completed pre-order ${updatedOrder.orderId}`);
+      
+      const emailData = {
+        orderId: updatedOrder.orderId,
+        orderType: 'pre',
+        customerName: updatedOrder.customerName,
+        customerEmail: updatedOrder.customerEmail
+      };
+      
+      // Send email asynchronously (don't wait for it)
+      sendFeedbackEmail(emailData).catch(error => {
+        console.error(`Failed to send feedback email for ${updatedOrder.orderId}:`, error);
       });
     }
 

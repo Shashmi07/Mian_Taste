@@ -19,6 +19,7 @@ import LiveTracking from './pages/LiveTracking';
 import PaymentGateway from './pages/PaymentGateway';
 import Menu from './pages/Menu'; // Main menu with category navigation
 import Cart from './pages/Cart';
+import FeedbackPage from './pages/FeedbackPage';
 
 // Import menu category pages
 import Ramen from './pages/menu/Ramen';
@@ -105,6 +106,7 @@ function App() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/payment" element={<PaymentGateway />} />
           <Route path="/track-order" element={<LiveTracking />} />
+          <Route path="/feedback/:orderId" element={<FeedbackPage />} />
           
           {/* Auth routes */}
           <Route 
