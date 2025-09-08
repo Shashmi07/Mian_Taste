@@ -34,9 +34,9 @@ const feedbackSchema = new mongoose.Schema({
     },
     overall: {
       type: Number,
-      min: 1,
+      min: 0,
       max: 5,
-      required: true
+      default: 0
     }
   },
   comment: {
@@ -95,17 +95,18 @@ const feedbackSchema = new mongoose.Schema({
 // Calculate average rating before saving
 feedbackSchema.pre('save', function(next) {
   // For new rating system
-  if (this.ratings && this.ratings.overall) {
+  if (this.ratings) {
     const validRatings = [];
     if (this.ratings.food > 0) validRatings.push(this.ratings.food);
     if (this.ratings.service > 0) validRatings.push(this.ratings.service);
     if (this.ratings.ambiance > 0) validRatings.push(this.ratings.ambiance);
+    if (this.ratings.overall > 0) validRatings.push(this.ratings.overall);
     
     if (validRatings.length > 0) {
       const sum = validRatings.reduce((acc, rating) => acc + rating, 0);
       this.averageRating = Math.round((sum / validRatings.length) * 10) / 10;
     } else {
-      this.averageRating = this.ratings.overall;
+      this.averageRating = 0;
     }
   }
   
@@ -130,4 +131,8 @@ feedbackSchema.index({ orderId: 1 }, {
   partialFilterExpression: { orderType: { $exists: true } } 
 });
 
-module.exports = mongoose.model('Feedback', feedbackSchema);
+// Export schema for use with custom connection
+module.exports = { schema: feedbackSchema };
+
+// For direct use (will use default connection if imported directly)
+module.exports.model = mongoose.model('Feedback', feedbackSchema);

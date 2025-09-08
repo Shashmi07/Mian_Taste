@@ -6,6 +6,7 @@ import ramenImg from '../assets/ramen2.jpeg';
 import chef from '../assets/chefCooking.jpg'
 import food from '../assets/food.jpg';
 import eat from '../assets/eat.jpg';
+import elegant from '../assets/elegant.jpg';
 
 const AboutUs = () => {
   return (
@@ -30,7 +31,7 @@ const AboutUs = () => {
             <div>
               <h2 className="text-4xl font-bold text-gray-900 mb-6">Grand Minato Restaurant</h2>
               <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                Established in 2010, Grand Minato Restaurant has been serving the finest authentic Chinese cuisine for over three decades. Our journey began with a simple vision: to bring the rich flavors and timeless traditions of Chinese cooking to our community.
+                Established in 2021, Grand Minato Restaurant has been serving the finest authentic Chinese cuisine for over three decades. Our journey began with a simple vision: to bring the rich flavors and timeless traditions of Chinese cooking to our community.
               </p>
               <p className="text-lg text-gray-600 mb-6 leading-relaxed">
                 From our humble beginnings as a small family restaurant, we have grown into a beloved culinary destination while never losing sight of our core values: exceptional quality, authentic flavors, and warm hospitality.
@@ -44,7 +45,7 @@ const AboutUs = () => {
                 className="rounded-lg shadow-xl"
               />
               <div className="absolute -bottom-6 -left-6 bg-red-600 text-white p-6 rounded-lg shadow-lg">
-                <p className="text-2xl font-bold">15+</p>
+                <p className="text-2xl font-bold">4+</p>
                 <p className="text-sm">Years of Excellence</p>
               </div>
             </div>
@@ -138,7 +139,7 @@ const AboutUs = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
               <img 
-                src="https://images.pexels.com/photos/1579739/pexels-photo-1579739.jpeg?auto=compress&cs=tinysrgb&w=800" 
+                src={elegant} 
                 alt="Elegant dining room" 
                 className="w-full h-48 object-cover"
               />
@@ -187,7 +188,8 @@ const AboutUs = () => {
             <div className="p-6">
               <MapPin className="h-12 w-12 text-red-600 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-gray-900 mb-2">Location</h3>
-              <p className="text-gray-600">361, High Level Rd<br/>Pannipitiya<br/>City State 10230</p>
+              <p className="text-gray-600">364/1, High Level Rd<br/>Kottawa<br/>
+              </p>
             </div>
             
             <div className="p-6">
@@ -205,7 +207,7 @@ const AboutUs = () => {
             <div className="p-6">
               <Mail className="h-12 w-12 text-red-600 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-gray-900 mb-2">Email</h3>
-              <p className="text-gray-600">info@grandminato.com<br/>reservations@grandminato.com</p>
+              <p className="text-gray-600">grandminatocafe@gmail.com</p>
             </div>
           </div>
         </div>

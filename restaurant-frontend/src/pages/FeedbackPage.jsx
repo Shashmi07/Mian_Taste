@@ -94,8 +94,8 @@ const FeedbackPage = () => {
       setSubmitting(true);
 
       // Validate required fields
-      if (ratings.overall === 0) {
-        alert('Please provide an overall rating');
+      if (ratings.food === 0 || ratings.service === 0) {
+        alert('Please provide ratings for food quality and service quality');
         return;
       }
 
@@ -307,27 +307,6 @@ const FeedbackPage = () => {
                 </div>
               </div>
 
-              {/* Ambiance Rating (only for dine-in) */}
-              {(orderType === 'reservation' || (orderType === 'qr')) && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Ambiance
-                  </label>
-                  <div className="flex justify-center sm:justify-start">
-                    {renderStars('ambiance', ratings.ambiance)}
-                  </div>
-                </div>
-              )}
-
-              {/* Overall Rating */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Overall Experience <span className="text-red-500">*</span>
-                </label>
-                <div className="flex justify-center sm:justify-start">
-                  {renderStars('overall', ratings.overall)}
-                </div>
-              </div>
 
               {/* Comments */}
               <div>
@@ -347,7 +326,7 @@ const FeedbackPage = () => {
               <div className="flex space-x-4 pt-2">
                 <button
                   onClick={submitFeedback}
-                  disabled={submitting || ratings.overall === 0}
+                  disabled={submitting || ratings.food === 0 || ratings.service === 0}
                   className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-4 sm:px-6 py-3 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors text-sm sm:text-base"
                 >
                   {submitting ? (

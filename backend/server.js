@@ -17,7 +17,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001', 'http://10.11.5.232:3000'],
+  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001', 'http://10.11.5.232:3000', 'http://192.168.8.209:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -35,7 +35,7 @@ app.use((req, res, next) => {
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:3001", "http://10.11.5.232:3000"],
+    origin: ["http://localhost:3000", "http://localhost:3001", "http://10.11.5.232:3000", "http://192.168.8.209:3000"],
     methods: ["GET", "POST"]
   }
 });
@@ -55,9 +55,11 @@ const menuRoutes = require('./routes/menuRoutes'); // Menu management routes
 const userManagementRoutes = require('./routes/userManagement'); // User management routes
 const adminAuthRoutes = require('./routes/adminAuth'); // Admin authentication routes
 const adminInventoryRoutes = require('./routes/adminInventory'); // Admin inventory routes (read-only)
+const adminFeedbackRoutes = require('./routes/adminFeedback'); // Admin feedback routes
 const qrOrderRoutes = require('./routes/qrOrders'); // QR order routes
 const preOrderRoutes = require('./routes/preOrders'); // PreOrder routes
 const feedbackRoutes = require('./routes/feedback'); // Feedback routes
+const adminAnalyticsRoutes = require('./routes/adminAnalytics'); // Admin analytics routes
 
 app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
@@ -68,9 +70,11 @@ app.use('/api/menu', menuRoutes); // Menu items API
 app.use('/api/user-management', userManagementRoutes); // User management API
 app.use('/api/admin-auth', adminAuthRoutes); // Admin authentication API
 app.use('/api/admin-inventory', adminInventoryRoutes); // Admin inventory API (read-only)
+app.use('/api/admin-feedback', adminFeedbackRoutes); // Admin feedback API 
 app.use('/api/qr-orders', qrOrderRoutes); // QR order API
 app.use('/api/pre-orders', preOrderRoutes); // PreOrder API
 app.use('/api/feedback', feedbackRoutes); // Feedback API
+app.use('/api/admin-analytics', adminAnalyticsRoutes); // Admin analytics API
 app.use('/api/test-email', require('./routes/testEmail')); // Email testing routes
 
 // Socket handlers

@@ -8,11 +8,12 @@ const FeedbackManagement = () => {
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [filter, setFilter] = useState('all');
+  const [orderTypeFilter, setOrderTypeFilter] = useState('all');
 
   useEffect(() => {
     fetchFeedback();
     fetchStats();
-  }, []);
+  }, [orderTypeFilter]);
 
   const fetchFeedback = async () => {
     try {
@@ -21,7 +22,12 @@ const FeedbackManagement = () => {
         ? 'http://localhost:5000'
         : `http://${window.location.hostname}:5000`;
       
-      const response = await fetch(`${baseUrl}/api/feedback`, {
+      const queryParams = new URLSearchParams();
+      if (orderTypeFilter && orderTypeFilter !== 'all') {
+        queryParams.append('orderType', orderTypeFilter);
+      }
+      
+      const response = await fetch(`${baseUrl}/api/admin-feedback?${queryParams}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -44,7 +50,7 @@ const FeedbackManagement = () => {
         ? 'http://localhost:5000'
         : `http://${window.location.hostname}:5000`;
       
-      const response = await fetch(`${baseUrl}/api/feedback/stats`, {
+      const response = await fetch(`${baseUrl}/api/admin-feedback/stats`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -172,33 +178,51 @@ const FeedbackManagement = () => {
         </div>
       )}
 
-      {/* Filter Buttons */}
-      <div className="flex flex-wrap gap-4">
-        {[
-          { id: 'all', name: 'All Reviews', count: feedback.length },
-          { id: 'high', name: 'High Ratings (4-5★)', count: feedback.filter(f => f.averageRating >= 4).length },
-          { id: 'medium', name: 'Medium Ratings (2.5-4★)', count: feedback.filter(f => f.averageRating >= 2.5 && f.averageRating < 4).length },
-          { id: 'low', name: 'Low Ratings (<2.5★)', count: feedback.filter(f => f.averageRating < 2.5).length }
-        ].map(filterOption => (
-          <button
-            key={filterOption.id}
-            onClick={() => setFilter(filterOption.id)}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg border transition-colors ${
-              filter === filterOption.id
-                ? 'btn-primary'
-                : 'bg-white text-gray-700 border-orange-200 hover:bg-orange-50'
-            }`}
+      {/* Filter Controls */}
+      <div className="space-y-4">
+        {/* Order Type Filter Dropdown */}
+        <div className="flex items-center space-x-4">
+          <label className="text-sm font-medium text-gray-700">Order Type:</label>
+          <select 
+            value={orderTypeFilter}
+            onChange={(e) => setOrderTypeFilter(e.target.value)}
+            className="px-3 py-2 border border-orange-200 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           >
-            <span>{filterOption.name}</span>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-              filter === filterOption.id
-                ? 'bg-orange-600 text-white'
-                : 'bg-orange-100 text-orange-600'
-            }`}>
-              {filterOption.count}
-            </span>
-          </button>
-        ))}
+            <option value="all">All Order Types</option>
+            <option value="qr">QR Orders</option>
+            <option value="pre">Pre-Orders</option>
+            <option value="reservation">Table Reservations</option>
+          </select>
+        </div>
+        
+        {/* Rating Filter Buttons */}
+        <div className="flex flex-wrap gap-4">
+          {[
+            { id: 'all', name: 'All Reviews', count: feedback.length },
+            { id: 'high', name: 'High Ratings (4-5★)', count: feedback.filter(f => f.averageRating >= 4).length },
+            { id: 'medium', name: 'Medium Ratings (2.5-4★)', count: feedback.filter(f => f.averageRating >= 2.5 && f.averageRating < 4).length },
+            { id: 'low', name: 'Low Ratings (<2.5★)', count: feedback.filter(f => f.averageRating < 2.5).length }
+          ].map(filterOption => (
+            <button
+              key={filterOption.id}
+              onClick={() => setFilter(filterOption.id)}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg border transition-colors ${
+                filter === filterOption.id
+                  ? 'btn-primary'
+                  : 'bg-white text-gray-700 border-orange-200 hover:bg-orange-50'
+              }`}
+            >
+              <span>{filterOption.name}</span>
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                filter === filterOption.id
+                  ? 'bg-orange-600 text-white'
+                  : 'bg-orange-100 text-orange-600'
+              }`}>
+                {filterOption.count}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Feedback List */}
@@ -214,7 +238,7 @@ const FeedbackManagement = () => {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase tracking-wider">Order Details</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase tracking-wider">Customer</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase tracking-wider">Rating</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase tracking-wider">Ratings</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase tracking-wider">Date</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -224,22 +248,36 @@ const FeedbackManagement = () => {
                   <tr key={item._id} className="hover:bg-orange-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">{item.orderNumber}</div>
-                        <div className="text-xs text-gray-500">Table {item.table}</div>
+                        <div className="text-sm font-medium text-gray-900">{item.orderId}</div>
+                        <div className="text-xs text-gray-500">
+                          {item.orderType === 'qr' && 'QR Order'}
+                          {item.orderType === 'pre' && 'Pre-Order'}
+                          {item.orderType === 'reservation' && 'Table Reservation'}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <User className="w-4 h-4 text-gray-400 mr-2" />
-                        <span className="text-sm text-gray-900">{item.customerName}</span>
+                        <div>
+                          <div className="text-sm text-gray-900">{item.customerInfo?.name || 'N/A'}</div>
+                          {item.customerInfo?.email && (
+                            <div className="text-xs text-gray-500">{item.customerInfo.email}</div>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-2">
-                        <StarDisplay rating={Math.round(item.averageRating)} />
-                        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getRatingColor(item.averageRating)}`}>
-                          {item.averageRating}/5
-                        </span>
+                      <div className="space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <StarDisplay rating={Math.round(item.averageRating)} />
+                          <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getRatingColor(item.averageRating)}`}>
+                            {item.averageRating}/5
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Food: {item.ratings?.food}/5, Service: {item.ratings?.service}/5
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -278,7 +316,7 @@ const FeedbackManagement = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-gray-900">Feedback Details - {selectedFeedback.orderNumber}</h3>
+              <h3 className="text-xl font-bold text-gray-900">Feedback Details - {selectedFeedback.orderId}</h3>
               <button 
                 onClick={() => setShowModal(false)}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -294,16 +332,28 @@ const FeedbackManagement = () => {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Order ID:</span>
-                      <span>{selectedFeedback.orderNumber}</span>
+                      <span>{selectedFeedback.orderId}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Order Type:</span>
+                      <span className="capitalize">{selectedFeedback.orderType}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Customer:</span>
-                      <span>{selectedFeedback.customerName}</span>
+                      <span>{selectedFeedback.customerInfo?.name || 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Table:</span>
-                      <span>{selectedFeedback.table}</span>
-                    </div>
+                    {selectedFeedback.customerInfo?.email && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Email:</span>
+                        <span>{selectedFeedback.customerInfo.email}</span>
+                      </div>
+                    )}
+                    {selectedFeedback.customerInfo?.phone && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Phone:</span>
+                        <span>{selectedFeedback.customerInfo.phone}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-gray-600">Date:</span>
                       <span>{formatDate(selectedFeedback.createdAt)}</span>
@@ -321,9 +371,44 @@ const FeedbackManagement = () => {
               </div>
               
               <div>
-                <h4 className="font-medium text-gray-900 mb-4">Item Ratings</h4>
+                <h4 className="font-medium text-gray-900 mb-4">Detailed Ratings</h4>
                 <div className="grid gap-3">
-                  {selectedFeedback.itemFeedback.map((item, index) => (
+                  {selectedFeedback.ratings?.food > 0 && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-gray-800">Food Quality</span>
+                        <div className="flex items-center space-x-2">
+                          <StarDisplay rating={selectedFeedback.ratings.food} />
+                          <span className="text-sm text-gray-600">{selectedFeedback.ratings.food}/5</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {selectedFeedback.ratings?.service > 0 && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-gray-800">Service Quality</span>
+                        <div className="flex items-center space-x-2">
+                          <StarDisplay rating={selectedFeedback.ratings.service} />
+                          <span className="text-sm text-gray-600">{selectedFeedback.ratings.service}/5</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {selectedFeedback.ratings?.ambiance > 0 && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-gray-800">Ambiance</span>
+                        <div className="flex items-center space-x-2">
+                          <StarDisplay rating={selectedFeedback.ratings.ambiance} />
+                          <span className="text-sm text-gray-600">{selectedFeedback.ratings.ambiance}/5</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Legacy feedback support */}
+                  {selectedFeedback.itemFeedback && selectedFeedback.itemFeedback.map((item, index) => (
                     <div key={index} className="bg-gray-50 rounded-lg p-4">
                       <div className="flex justify-between items-center">
                         <span className="font-medium text-gray-800">{item.itemName}</span>
@@ -337,11 +422,11 @@ const FeedbackManagement = () => {
                 </div>
               </div>
               
-              {selectedFeedback.overallComment && (
+              {(selectedFeedback.comment || selectedFeedback.overallComment) && (
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">Customer Comment</h4>
                   <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-gray-700">{selectedFeedback.overallComment}</p>
+                    <p className="text-gray-700">{selectedFeedback.comment || selectedFeedback.overallComment}</p>
                   </div>
                 </div>
               )}

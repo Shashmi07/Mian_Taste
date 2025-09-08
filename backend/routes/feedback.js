@@ -2,12 +2,8 @@ const express = require('express');
 const { body } = require('express-validator');
 const {
   submitFeedback,
-  getAllFeedback,
-  getFeedbackByOrder,
-  getFeedbackStats,
   getOrderForFeedback
 } = require('../controllers/feedbackController');
-const auth = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -26,7 +22,8 @@ const legacyFeedbackValidation = [
 const universalFeedbackValidation = [
   body('orderId').notEmpty().withMessage('Order ID is required'),
   body('orderType').isIn(['qr', 'pre', 'reservation']).withMessage('Invalid order type'),
-  body('ratings.overall').isInt({ min: 1, max: 5 }).withMessage('Overall rating is required and must be between 1 and 5')
+  body('ratings.food').isInt({ min: 1, max: 5 }).withMessage('Food quality rating is required and must be between 1 and 5'),
+  body('ratings.service').isInt({ min: 1, max: 5 }).withMessage('Service quality rating is required and must be between 1 and 5')
 ];
 
 // Public routes - submit feedback (no auth required)
@@ -44,10 +41,5 @@ router.post('/', (req, res, next) => {
 
 // Public route for getting order details for feedback
 router.get('/order/:orderId', getOrderForFeedback);
-
-// Admin routes (require authentication)
-router.get('/', auth, getAllFeedback);
-router.get('/stats', auth, getFeedbackStats);
-router.get('/admin/order/:orderId', auth, getFeedbackByOrder);
 
 module.exports = router;

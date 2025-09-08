@@ -1,8 +1,22 @@
-const Feedback = require('../models/Feedback');
+const { schema: feedbackSchema } = require('../models/Feedback');
 const QrOrder = require('../models/QrOrder');
 const PreOrder = require('../models/PreOrder');
-const { model: TableReservation } = require('../models/TableReservation');
+const { getCustomerConnection } = require('../config/customerDatabase');
+const { getAdminConnection } = require('../config/adminDatabase');
+const { schema: tableReservationSchema } = require('../models/TableReservation');
 const { validationResult } = require('express-validator');
+
+// Get Feedback model using admin database connection
+const getFeedbackModel = () => {
+  const adminConnection = getAdminConnection();
+  return adminConnection.model('Feedback', feedbackSchema);
+};
+
+// Get TableReservation model using customer database connection
+const getTableReservationModel = () => {
+  const customerConnection = getCustomerConnection();
+  return customerConnection.model('TableReservation', tableReservationSchema);
+};
 
 // Submit feedback for any order type
 const submitFeedback = async (req, res) => {
@@ -19,6 +33,7 @@ const submitFeedback = async (req, res) => {
         });
       }
 
+      const Feedback = getFeedbackModel();
       const feedback = new Feedback(req.body);
       await feedback.save();
 
@@ -41,10 +56,10 @@ const submitFeedback = async (req, res) => {
     }
 
     // New universal feedback system
-    if (!orderId || !orderType || !ratings || !ratings.overall) {
+    if (!orderId || !orderType || !ratings || !ratings.food || !ratings.service) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields: orderId, orderType, and overall rating'
+        message: 'Missing required fields: orderId, orderType, food quality rating, and service quality rating'
       });
     }
 
@@ -78,6 +93,7 @@ const submitFeedback = async (req, res) => {
         break;
       
       case 'reservation':
+        const TableReservation = getTableReservationModel();
         order = await TableReservation.findOne({ reservationId: orderId.toUpperCase() });
         orderModel = 'TableReservation';
         if (order) {
@@ -104,6 +120,7 @@ const submitFeedback = async (req, res) => {
     }
 
     // Check if feedback already exists
+    const Feedback = getFeedbackModel();
     const existingFeedback = await Feedback.findOne({ orderId: orderId.toUpperCase() });
     if (existingFeedback) {
       return res.status(409).json({
@@ -165,9 +182,17 @@ const submitFeedback = async (req, res) => {
 // Get all feedback (for admin dashboard)
 const getAllFeedback = async (req, res) => {
   try {
-    const { limit = 50, sortBy = 'createdAt', order = 'desc' } = req.query;
+    const { limit = 50, sortBy = 'createdAt', order = 'desc', orderType } = req.query;
     
-    const feedback = await Feedback.find()
+    const Feedback = getFeedbackModel();
+    
+    // Build filter object
+    const filter = {};
+    if (orderType && orderType !== 'all') {
+      filter.orderType = orderType;
+    }
+    
+    const feedback = await Feedback.find(filter)
       .sort({ [sortBy]: order === 'desc' ? -1 : 1 })
       .limit(parseInt(limit))
       .populate('orderId', 'orderId table createdAt');
@@ -192,6 +217,7 @@ const getFeedbackByOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
     
+    const Feedback = getFeedbackModel();
     const feedback = await Feedback.findOne({ orderId })
       .populate('orderId', 'orderId table createdAt');
     
@@ -219,6 +245,7 @@ const getFeedbackByOrder = async (req, res) => {
 // Get feedback statistics
 const getFeedbackStats = async (req, res) => {
   try {
+    const Feedback = getFeedbackModel();
     const totalFeedback = await Feedback.countDocuments();
     
     const averageRatingResult = await Feedback.aggregate([
@@ -285,6 +312,7 @@ const getOrderForFeedback = async (req, res) => {
       order = await PreOrder.findOne({ orderId: orderId.toUpperCase() });
       orderType = 'pre';
     } else if (orderId.toUpperCase().startsWith('RES')) {
+      const TableReservation = getTableReservationModel();
       order = await TableReservation.findOne({ reservationId: orderId.toUpperCase() });
       orderType = 'reservation';
     } else {
@@ -299,15 +327,29 @@ const getOrderForFeedback = async (req, res) => {
       });
     }
 
-    // Check if order is completed
-    if (order.status !== 'completed') {
+    // Check if order is completed (different completion statuses for different order types)
+    const isOrderCompleted = (order, orderType) => {
+      switch (orderType) {
+        case 'qr':
+          return order.status === 'delivered';
+        case 'pre':
+        case 'reservation':
+          return order.status === 'completed';
+        default:
+          return false;
+      }
+    };
+
+    if (!isOrderCompleted(order, orderType)) {
+      const expectedStatus = orderType === 'qr' ? 'delivered' : 'completed';
       return res.status(400).json({
         success: false,
-        message: 'Feedback can only be submitted for completed orders.'
+        message: `Feedback can only be submitted for ${expectedStatus} orders. Current status: ${order.status}`
       });
     }
 
     // Check if feedback already exists
+    const Feedback = getFeedbackModel();
     const existingFeedback = await Feedback.findOne({ orderId: orderId.toUpperCase() });
     if (existingFeedback) {
       return res.status(200).json({
