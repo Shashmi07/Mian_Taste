@@ -370,21 +370,6 @@ const NavBar = () => {
                     </div>
                   </div>
                   
-                  {authState.type === 'customer' && (
-                    <div className="p-2">
-                      <button 
-                        onClick={() => {
-                          scrollToTop();
-                          navigate('/profile');
-                          setShowProfileMenu(false);
-                        }}
-                        className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700 rounded-lg transition-colors"
-                      >
-                        <User size={18} />
-                        <span className="font-medium">My Profile</span>
-                      </button>
-                    </div>
-                  )}
                   
                   <div className="border-t border-gray-100 p-2">
                     <button 
@@ -506,19 +491,6 @@ const NavBar = () => {
                   </div>
                 </div>
                 
-                {authState.type === 'customer' && (
-                  <button 
-                    onClick={() => {
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                      navigate('/profile');
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="w-full flex items-center gap-3 bg-white bg-opacity-20 font-medium px-4 py-3 border border-white border-opacity-50 rounded-lg cursor-pointer transition-all duration-300 mb-3 text-white"
-                  >
-                    <User size={20} />
-                    My Profile
-                  </button>
-                )}
                 
                 <button 
                   onClick={handleLogout}

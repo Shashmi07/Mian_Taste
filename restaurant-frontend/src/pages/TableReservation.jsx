@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, CheckCircle, UtensilsCrossed, CreditCard, Users, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
 import NavBar from '../components/NavBar';
-import Footer from '../components/Footer';
+import Footer from '../components/footer';
 import { checkAvailability } from '../services/tableReservationAPI';
 import { useCart } from '../context/CartContext';
+import { tableReservationSchema } from '../utils/validation';
 
 // Table pricing constant
 const TABLE_PRICE_PER_TABLE = 500;
@@ -24,6 +26,13 @@ export default function TableReservation() {
   const [availableTables, setAvailableTables] = useState([1, 2, 3, 4, 5, 6, 7, 8]);
   const [loading, setLoading] = useState(false);
   const [specialRequests, setSpecialRequests] = useState('');
+  
+  // Customer info for validation
+  const [customerInfo, setCustomerInfo] = useState({
+    customerName: '',
+    customerEmail: '',
+    customerPhone: ''
+  });
 
   const timeSlots = [
     '09:00 - 10:00', '10:00 - 11:00', '11:00 - 12:00', '12:00 - 13:00',
@@ -50,9 +59,24 @@ export default function TableReservation() {
     // Check if user returned from login and restore reservation state
     const savedReservationState = localStorage.getItem('reservationState');
     const customerToken = localStorage.getItem('customerToken');
+    const customerUser = localStorage.getItem('customerUser');
     
     console.log('Checking for saved reservation state:', !!savedReservationState);
     console.log('User logged in:', !!customerToken);
+    
+    // Auto-populate customer info if user is logged in
+    if (customerToken && customerUser) {
+      try {
+        const userData = JSON.parse(customerUser);
+        setCustomerInfo({
+          customerName: userData.username || userData.name || '',
+          customerEmail: userData.email || '',
+          customerPhone: userData.phoneNumber || userData.phone || ''
+        });
+      } catch (error) {
+        console.error('Error parsing customer data:', error);
+      }
+    }
     
     if (savedReservationState && customerToken) {
       try {
@@ -126,11 +150,20 @@ export default function TableReservation() {
     if (!availableTables.includes(tableId)) return;
     
     setSelectedTables(prev => {
-      if (prev.includes(tableId)) {
-        return prev.filter(id => id !== tableId);
-      } else {
-        return [...prev, tableId];
+      const newSelection = prev.includes(tableId) 
+        ? prev.filter(id => id !== tableId)
+        : [...prev, tableId];
+      
+      // Update Formik field value if form is available
+      const form = document.querySelector('form');
+      if (form) {
+        // Trigger a form update event
+        window.dispatchEvent(new CustomEvent('tableSelectionChange', { 
+          detail: { selectedTables: newSelection } 
+        }));
       }
+      
+      return newSelection;
     });
   };
 
@@ -411,43 +444,147 @@ export default function TableReservation() {
               </div>
             </div>
 
-            {/* Date & Time Selection */}
-            <div className="mb-8">
-              <h2 className="text-gray-800 text-xl font-semibold mb-6 text-center">
-                Select Date & Time
-              </h2>
-              <div className="grid md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Calendar className="inline w-4 h-4 mr-2" />
-                    Date
-                  </label>
-                  <input
-                    type="date"
-                    min={today}
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Clock className="inline w-4 h-4 mr-2" />
-                    Time Slot
-                  </label>
-                  <select
-                    value={selectedTimeSlot}
-                    onChange={(e) => setSelectedTimeSlot(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                  >
-                    <option value="">Select time slot</option>
-                    {timeSlots.map((slot) => (
-                      <option key={slot} value={slot}>{slot}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
+            <Formik
+              initialValues={{
+                customerName: customerInfo.customerName,
+                customerEmail: customerInfo.customerEmail,
+                customerPhone: customerInfo.customerPhone,
+                reservationDate: selectedDate,
+                timeSlot: selectedTimeSlot,
+                selectedTables: selectedTables
+              }}
+              validationSchema={tableReservationSchema}
+              enableReinitialize={true}
+              onSubmit={handleProceed}
+            >
+              {({ values, setFieldValue, errors, touched }) => {
+                // Update Formik when selectedTables changes
+                React.useEffect(() => {
+                  setFieldValue('selectedTables', selectedTables);
+                }, [selectedTables, setFieldValue]);
+
+                // Update Formik when date/time changes
+                React.useEffect(() => {
+                  setFieldValue('reservationDate', selectedDate);
+                }, [selectedDate, setFieldValue]);
+
+                React.useEffect(() => {
+                  setFieldValue('timeSlot', selectedTimeSlot);
+                }, [selectedTimeSlot, setFieldValue]);
+
+                return (
+                <Form>
+
+                  {/* Customer Information */}
+                  <div className="mb-8">
+                    <h2 className="text-gray-800 text-xl font-semibold mb-6 text-center">
+                      Customer Information
+                    </h2>
+                    <div className="grid md:grid-cols-3 gap-6 mb-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Name *
+                        </label>
+                        <Field
+                          name="customerName"
+                          type="text"
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
+                            errors.customerName && touched.customerName ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                          onChange={(e) => {
+                            setFieldValue('customerName', e.target.value);
+                            setCustomerInfo(prev => ({ ...prev, customerName: e.target.value }));
+                          }}
+                        />
+                        <ErrorMessage name="customerName" component="div" className="text-red-500 text-xs mt-1" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Email *
+                        </label>
+                        <Field
+                          name="customerEmail"
+                          type="email"
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
+                            errors.customerEmail && touched.customerEmail ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                          onChange={(e) => {
+                            setFieldValue('customerEmail', e.target.value);
+                            setCustomerInfo(prev => ({ ...prev, customerEmail: e.target.value }));
+                          }}
+                        />
+                        <ErrorMessage name="customerEmail" component="div" className="text-red-500 text-xs mt-1" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Phone *
+                        </label>
+                        <Field
+                          name="customerPhone"
+                          type="text"
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
+                            errors.customerPhone && touched.customerPhone ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                          onChange={(e) => {
+                            setFieldValue('customerPhone', e.target.value);
+                            setCustomerInfo(prev => ({ ...prev, customerPhone: e.target.value }));
+                          }}
+                        />
+                        <ErrorMessage name="customerPhone" component="div" className="text-red-500 text-xs mt-1" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Date & Time Selection */}
+                  <div className="mb-8">
+                    <h2 className="text-gray-800 text-xl font-semibold mb-6 text-center">
+                      Select Date & Time
+                    </h2>
+                    <div className="grid md:grid-cols-2 gap-6 mb-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <Calendar className="inline w-4 h-4 mr-2" />
+                          Date *
+                        </label>
+                        <Field
+                          name="reservationDate"
+                          type="date"
+                          min={today}
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
+                            errors.reservationDate && touched.reservationDate ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                          onChange={(e) => {
+                            setFieldValue('reservationDate', e.target.value);
+                            setSelectedDate(e.target.value);
+                          }}
+                        />
+                        <ErrorMessage name="reservationDate" component="div" className="text-red-500 text-xs mt-1" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <Clock className="inline w-4 h-4 mr-2" />
+                          Time Slot *
+                        </label>
+                        <Field
+                          name="timeSlot"
+                          as="select"
+                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
+                            errors.timeSlot && touched.timeSlot ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                          onChange={(e) => {
+                            setFieldValue('timeSlot', e.target.value);
+                            setSelectedTimeSlot(e.target.value);
+                          }}
+                        >
+                          <option value="">Select time slot</option>
+                          {timeSlots.map((slot) => (
+                            <option key={slot} value={slot}>{slot}</option>
+                          ))}
+                        </Field>
+                        <ErrorMessage name="timeSlot" component="div" className="text-red-500 text-xs mt-1" />
+                      </div>
+                    </div>
+                  </div>
 
             {/* Table Selection - Original Design */}
             {selectedDate && selectedTimeSlot && (
@@ -545,6 +682,13 @@ export default function TableReservation() {
                         <p className="font-bold text-red-600 text-lg">💰 Table Cost: Rs.{getTableTotal()}</p>
                       </div>
                     )}
+                    
+                    {/* Table selection validation error */}
+                    {errors.selectedTables && touched.selectedTables && (
+                      <div className="text-red-500 text-sm text-center mt-4">
+                        {errors.selectedTables}
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -567,37 +711,41 @@ export default function TableReservation() {
             )}
 
 
-            {/* Proceed Button */}
-            <div className="flex justify-center">
-              <button
-                onClick={handleProceed}
-                disabled={!selectedDate || !selectedTimeSlot || selectedTables.length === 0 || loading}
-                className={`
-                  px-8 py-3 rounded-lg font-bold text-lg transition-all duration-200 flex items-center gap-2
-                  ${(selectedDate && selectedTimeSlot && selectedTables.length > 0 && !loading)
-                    ? 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800 shadow-lg hover:shadow-xl transform hover:scale-105'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  }
-                `}
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Processing...
-                  </>
-                ) : reservationType === 'table-only' ? (
-                  <>
-                    <CreditCard className="w-5 h-5" />
-                    Proceed to Payment
-                  </>
-                ) : (
-                  <>
-                    <UtensilsCrossed className="w-5 h-5" />
-                    Choose Food Items
-                  </>
-                )}
-              </button>
-            </div>
+                  {/* Proceed Button */}
+                  <div className="flex justify-center">
+                    <button
+                      type="submit"
+                      disabled={!selectedDate || !selectedTimeSlot || selectedTables.length === 0 || loading}
+                      className={`
+                        px-8 py-3 rounded-lg font-bold text-lg transition-all duration-200 flex items-center gap-2
+                        ${(selectedDate && selectedTimeSlot && selectedTables.length > 0 && !loading)
+                          ? 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800 shadow-lg hover:shadow-xl transform hover:scale-105'
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        }
+                      `}
+                    >
+                      {loading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                          Processing...
+                        </>
+                      ) : reservationType === 'table-only' ? (
+                        <>
+                          <CreditCard className="w-5 h-5" />
+                          Proceed to Payment
+                        </>
+                      ) : (
+                        <>
+                          <UtensilsCrossed className="w-5 h-5" />
+                          Choose Food Items
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </Form>
+                );
+              }}
+            </Formik>
           </div>
         </div>
       </main>
