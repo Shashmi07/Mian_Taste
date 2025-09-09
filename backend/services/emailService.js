@@ -2,13 +2,24 @@ const nodemailer = require('nodemailer');
 
 // Gmail email transporter
 const createGmailTransporter = () => {
-  return nodemailer.createTransport({
-    service: 'gmail',
+  // Try multiple configurations for better reliability
+  const gmailConfig = {
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // Use TLS
     auth: {
-      user: process.env.GMAIL_USER, // Your restaurant's Gmail
-      pass: process.env.GMAIL_APP_PASSWORD // App password (not your regular password)
-    }
-  });
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD
+    },
+    tls: {
+      rejectUnauthorized: false
+    },
+    connectionTimeout: 60000, // 60 seconds
+    greetingTimeout: 30000,   // 30 seconds
+    socketTimeout: 60000      // 60 seconds
+  };
+
+  return nodemailer.createTransport(gmailConfig);
 };
 
 // Send feedback request email to customers
