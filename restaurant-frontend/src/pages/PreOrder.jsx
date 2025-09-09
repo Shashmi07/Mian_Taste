@@ -307,40 +307,75 @@ function PreOrder() {
             {/* Date and Time Selection */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Date & Time</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Calendar className="inline h-4 w-4 mr-2" />
-                    Select Date
-                  </label>
-                  <input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Clock className="inline h-4 w-4 mr-2" />
-                    Select Time
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={selectedTime}
-                      onChange={(e) => setSelectedTime(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 appearance-none"
-                    >
-                      <option value="">Choose time slot</option>
-                      {timeSlots.map((time) => (
-                        <option key={time} value={time}>{time}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
-                  </div>
-                </div>
-              </div>
+              
+              <Formik
+                initialValues={{
+                  customerName: customerInfo.name,
+                  customerEmail: customerInfo.email,
+                  customerPhone: customerInfo.phone,
+                  scheduledDate: selectedDate,
+                  scheduledTime: selectedTime,
+                  orderType: selectedOrderType
+                }}
+                validationSchema={preOrderSchema}
+                enableReinitialize={true}
+                onSubmit={(values) => {
+                  // Update state with validated values
+                  setCustomerInfo({
+                    name: values.customerName,
+                    email: values.customerEmail,
+                    phone: values.customerPhone,
+                    address: customerInfo.address
+                  });
+                  setSelectedDate(values.scheduledDate);
+                  setSelectedTime(values.scheduledTime);
+                  console.log('PreOrder form validated:', values);
+                }}
+              >
+                {({ values, setFieldValue, errors, touched }) => (
+                    <Form>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <Calendar className="inline h-4 w-4 mr-2" />
+                            Select Date *
+                          </label>
+                          <Field
+                            name="scheduledDate"
+                            type="date"
+                            min={new Date().toISOString().split('T')[0]}
+                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
+                              errors.scheduledDate && touched.scheduledDate ? 'border-red-500' : 'border-gray-300'
+                            }`}
+                          />
+                          <ErrorMessage name="scheduledDate" component="div" className="text-red-500 text-sm mt-1" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <Clock className="inline h-4 w-4 mr-2" />
+                            Select Time *
+                          </label>
+                          <div className="relative">
+                            <Field
+                              name="scheduledTime"
+                              as="select"
+                              className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 appearance-none ${
+                                errors.scheduledTime && touched.scheduledTime ? 'border-red-500' : 'border-gray-300'
+                              }`}
+                            >
+                              <option value="">Choose time slot</option>
+                              {timeSlots.map((time) => (
+                                <option key={time} value={time}>{time}</option>
+                              ))}
+                            </Field>
+                            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+                          </div>
+                          <ErrorMessage name="scheduledTime" component="div" className="text-red-500 text-sm mt-1" />
+                        </div>
+                      </div>
+                    </Form>
+                )}
+              </Formik>
             </div>
 
             {/* Menu Section */}
@@ -465,62 +500,95 @@ function PreOrder() {
                 </button>
               </div>
 
-              {/* Customer Information Form */}
-              <div className="space-y-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={customerInfo.name}
-                    onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                    placeholder="Enter your full name"
-                  />
-                </div>
+              {/* Customer Information Form with Validation */}
+              <Formik
+                initialValues={{
+                  customerName: customerInfo.name,
+                  customerEmail: customerInfo.email,
+                  customerPhone: customerInfo.phone,
+                  scheduledDate: selectedDate,
+                  scheduledTime: selectedTime,
+                  orderType: selectedOrderType
+                }}
+                validationSchema={preOrderSchema}
+                enableReinitialize={true}
+                onSubmit={(values) => {
+                  // Update customer info state
+                  setCustomerInfo({
+                    name: values.customerName,
+                    email: values.customerEmail,
+                    phone: values.customerPhone,
+                    address: customerInfo.address
+                  });
+                  console.log('Customer info validated:', values);
+                }}
+              >
+                {({ values, setFieldValue, errors, touched }) => (
+                    <Form>
+                      <div className="space-y-4 mb-6">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Full Name *
+                          </label>
+                          <Field
+                            name="customerName"
+                            type="text"
+                            placeholder="Enter your full name"
+                            className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
+                              errors.customerName && touched.customerName ? 'border-red-500' : 'border-gray-300'
+                            }`}
+                          />
+                          <ErrorMessage name="customerName" component="div" className="text-red-500 text-xs mt-1" />
+                        </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number *
-                  </label>
-                  <input
-                    type="tel"
-                    value={customerInfo.phone}
-                    onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                    placeholder="Enter your phone number"
-                  />
-                </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Phone Number *
+                          </label>
+                          <Field
+                            name="customerPhone"
+                            type="tel"
+                            placeholder="Enter your phone number"
+                            className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
+                              errors.customerPhone && touched.customerPhone ? 'border-red-500' : 'border-gray-300'
+                            }`}
+                          />
+                          <ErrorMessage name="customerPhone" component="div" className="text-red-500 text-xs mt-1" />
+                        </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={customerInfo.email}
-                    onChange={(e) => setCustomerInfo({...customerInfo, email: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                    placeholder="Enter your email"
-                  />
-                </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Email Address
+                          </label>
+                          <Field
+                            name="customerEmail"
+                            type="email"
+                            placeholder="Enter your email"
+                            className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
+                              errors.customerEmail && touched.customerEmail ? 'border-red-500' : 'border-gray-300'
+                            }`}
+                          />
+                          <ErrorMessage name="customerEmail" component="div" className="text-red-500 text-xs mt-1" />
+                        </div>
 
-                {selectedOrderType === 'delivery' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Delivery Address *
-                    </label>
-                    <textarea
-                      value={customerInfo.address}
-                      onChange={(e) => setCustomerInfo({...customerInfo, address: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                      rows="3"
-                      placeholder="Enter your full delivery address"
-                    />
-                  </div>
+                        {selectedOrderType === 'delivery' && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Delivery Address *
+                            </label>
+                            <textarea
+                              value={customerInfo.address}
+                              onChange={(e) => setCustomerInfo({...customerInfo, address: e.target.value})}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                              rows="3"
+                              placeholder="Enter your full delivery address"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </Form>
                 )}
-              </div>
+              </Formik>
 
               {/* Payment Method */}
               <div className="mb-6">

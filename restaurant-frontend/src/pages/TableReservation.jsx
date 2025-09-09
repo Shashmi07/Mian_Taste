@@ -457,22 +457,7 @@ export default function TableReservation() {
               enableReinitialize={true}
               onSubmit={handleProceed}
             >
-              {({ values, setFieldValue, errors, touched }) => {
-                // Update Formik when selectedTables changes
-                React.useEffect(() => {
-                  setFieldValue('selectedTables', selectedTables);
-                }, [selectedTables, setFieldValue]);
-
-                // Update Formik when date/time changes
-                React.useEffect(() => {
-                  setFieldValue('reservationDate', selectedDate);
-                }, [selectedDate, setFieldValue]);
-
-                React.useEffect(() => {
-                  setFieldValue('timeSlot', selectedTimeSlot);
-                }, [selectedTimeSlot, setFieldValue]);
-
-                return (
+              {({ values, setFieldValue, errors, touched }) => (
                 <Form>
 
                   {/* Customer Information */}
@@ -743,8 +728,7 @@ export default function TableReservation() {
                     </button>
                   </div>
                 </Form>
-                );
-              }}
+              )}
             </Formik>
           </div>
         </div>

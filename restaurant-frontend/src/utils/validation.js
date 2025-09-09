@@ -183,6 +183,54 @@ export const paymentCardInfoSchema = yup.object({
     .required('Cardholder name is required')
 });
 
+// User Management validation schemas
+export const addUserSchema = yup.object({
+  username: yup
+    .string()
+    .min(3, 'Username must be at least 3 characters')
+    .max(50, 'Username cannot exceed 50 characters')
+    .matches(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores')
+    .required('Username is required'),
+  email: emailValidation,
+  password: passwordValidation,
+  fullName: nameValidation,
+  role: yup
+    .string()
+    .oneOf(['admin', 'chef', 'waiter'], 'Please select a valid role')
+    .required('Role is required'),
+  phoneNumber: yup
+    .string()
+    .matches(/^(\+\d{1,4}\d{7,14}|\d{10})$/, 'Phone number must be valid (e.g., +1234567890 or 0771234567)')
+    .required('Phone number is required'),
+  address: yup
+    .string()
+    .max(200, 'Address cannot exceed 200 characters')
+    .optional()
+});
+
+export const editUserSchema = yup.object({
+  username: yup
+    .string()
+    .min(3, 'Username must be at least 3 characters')
+    .max(50, 'Username cannot exceed 50 characters')
+    .matches(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores')
+    .required('Username is required'),
+  email: emailValidation,
+  fullName: nameValidation,
+  role: yup
+    .string()
+    .oneOf(['admin', 'chef', 'waiter'], 'Please select a valid role')
+    .required('Role is required'),
+  phoneNumber: yup
+    .string()
+    .matches(/^(\+\d{1,4}\d{7,14}|\d{10})$/, 'Phone number must be valid (e.g., +1234567890 or 0771234567)')
+    .required('Phone number is required'),
+  address: yup
+    .string()
+    .max(200, 'Address cannot exceed 200 characters')
+    .optional()
+});
+
 // Validation helper functions
 export const validateField = (value, schema) => {
   try {

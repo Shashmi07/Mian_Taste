@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Edit2, Trash2, User, Mail, Phone, Shield, UserCheck, RefreshCw, AlertCircle, X } from 'lucide-react';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { userManagementService } from '../../services/userManagementAPI';
+import { addUserSchema, editUserSchema } from '../../utils/validation';
 
 const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -585,148 +587,179 @@ const UserManagement = () => {
               </div>
             )}
 
-            <form onSubmit={handleAddUser} className="space-y-4">
-              <div>
-                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="fullName"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleFormChange}
-                  className="form-input w-full"
-                  placeholder="Enter full name"
-                  required
-                />
-              </div>
+            <Formik
+              initialValues={{
+                username: '',
+                email: '',
+                password: '',
+                fullName: '',
+                role: 'waiter',
+                phoneNumber: '',
+                address: ''
+              }}
+              validationSchema={addUserSchema}
+              onSubmit={async (values, { setSubmitting }) => {
+                try {
+                  setAddUserLoading(true);
+                  setError(null);
+                  
+                  const response = await userManagementService.createStaffUser(values);
+                  
+                  if (response.success) {
+                    await fetchUsers();
+                    setShowAddUserModal(false);
+                  } else {
+                    throw new Error(response.message || 'Failed to add user');
+                  }
+                } catch (err) {
+                  console.error('Add user error:', err);
+                  setError(err.message || 'Failed to add user. Please try again.');
+                } finally {
+                  setAddUserLoading(false);
+                  setSubmitting(false);
+                }
+              }}
+            >
+              {({ errors, touched }) => (
+                <Form className="space-y-4">
+                  <div>
+                    <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+                      Full Name <span className="text-red-500">*</span>
+                    </label>
+                    <Field
+                      name="fullName"
+                      type="text"
+                      placeholder="Enter full name"
+                      className={`form-input w-full ${
+                        errors.fullName && touched.fullName ? 'border-red-500' : ''
+                      }`}
+                    />
+                    <ErrorMessage name="fullName" component="div" className="text-red-500 text-sm mt-1" />
+                  </div>
 
-              <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                  Username <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="username"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleFormChange}
-                  className="form-input w-full"
-                  placeholder="Enter username"
-                  required
-                />
-              </div>
+                  <div>
+                    <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                      Username <span className="text-red-500">*</span>
+                    </label>
+                    <Field
+                      name="username"
+                      type="text"
+                      placeholder="Enter username"
+                      className={`form-input w-full ${
+                        errors.username && touched.username ? 'border-red-500' : ''
+                      }`}
+                    />
+                    <ErrorMessage name="username" component="div" className="text-red-500 text-sm mt-1" />
+                  </div>
 
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleFormChange}
-                  className="form-input w-full"
-                  placeholder="Enter email address"
-                  required
-                />
-              </div>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <Field
+                      name="email"
+                      type="email"
+                      placeholder="Enter email address"
+                      className={`form-input w-full ${
+                        errors.email && touched.email ? 'border-red-500' : ''
+                      }`}
+                    />
+                    <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
+                  </div>
 
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Password <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleFormChange}
-                  className="form-input w-full"
-                  placeholder="Enter password (min. 6 characters)"
-                  required
-                  minLength={6}
-                />
-              </div>
+                  <div>
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                      Password <span className="text-red-500">*</span>
+                    </label>
+                    <Field
+                      name="password"
+                      type="password"
+                      placeholder="Enter password (min. 8 characters)"
+                      className={`form-input w-full ${
+                        errors.password && touched.password ? 'border-red-500' : ''
+                      }`}
+                    />
+                    <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
+                  </div>
 
-              <div>
-                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-                  Role <span className="text-red-500">*</span>
-                </label>
-                <select
-                  id="role"
-                  name="role"
-                  value={formData.role}
-                  onChange={handleFormChange}
-                  className="form-select w-full"
-                  required
-                >
-                  <option value="admin">Admin</option>
-                  <option value="chef">Chef</option>
-                  <option value="waiter">Waiter</option>
-                </select>
-              </div>
+                  <div>
+                    <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+                      Role <span className="text-red-500">*</span>
+                    </label>
+                    <Field
+                      name="role"
+                      as="select"
+                      className={`form-select w-full ${
+                        errors.role && touched.role ? 'border-red-500' : ''
+                      }`}
+                    >
+                      <option value="admin">Admin</option>
+                      <option value="chef">Chef</option>
+                      <option value="waiter">Waiter</option>
+                    </Field>
+                    <ErrorMessage name="role" component="div" className="text-red-500 text-sm mt-1" />
+                  </div>
 
-              <div>
-                <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={handleFormChange}
-                  className="form-input w-full"
-                  placeholder="Enter phone number (e.g., +1234567890 or 0771234567)"
-                  required
-                />
-              </div>
+                  <div>
+                    <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone Number <span className="text-red-500">*</span>
+                    </label>
+                    <Field
+                      name="phoneNumber"
+                      type="tel"
+                      placeholder="Enter phone number (e.g., +1234567890 or 0771234567)"
+                      className={`form-input w-full ${
+                        errors.phoneNumber && touched.phoneNumber ? 'border-red-500' : ''
+                      }`}
+                    />
+                    <ErrorMessage name="phoneNumber" component="div" className="text-red-500 text-sm mt-1" />
+                  </div>
 
-              <div>
-                <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                  Address
-                </label>
-                <textarea
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleFormChange}
-                  className="form-input w-full"
-                  placeholder="Enter address (optional)"
-                  rows={2}
-                />
-              </div>
+                  <div>
+                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
+                      Address
+                    </label>
+                    <Field
+                      name="address"
+                      as="textarea"
+                      placeholder="Enter address (optional)"
+                      rows={2}
+                      className={`form-input w-full ${
+                        errors.address && touched.address ? 'border-red-500' : ''
+                      }`}
+                    />
+                    <ErrorMessage name="address" component="div" className="text-red-500 text-sm mt-1" />
+                  </div>
 
-              <div className="flex space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowAddUserModal(false)}
-                  className="btn-secondary flex-1"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={addUserLoading}
-                  className="btn-primary flex-1 flex items-center justify-center space-x-2"
-                >
-                  {addUserLoading ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Adding...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4" />
-                      <span>Add User</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+                  <div className="flex space-x-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddUserModal(false)}
+                      className="btn-secondary flex-1"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={addUserLoading}
+                      className="btn-primary flex-1 flex items-center justify-center space-x-2"
+                    >
+                      {addUserLoading ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>Adding...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-4 h-4" />
+                          <span>Add User</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </Form>
+              )}
+            </Formik>
           </div>
         </div>
       )}
@@ -754,133 +787,167 @@ const UserManagement = () => {
               </div>
             )}
 
-            <form onSubmit={handleEditUser} className="space-y-4">
-              <div>
-                <label htmlFor="editFullName" className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="editFullName"
-                  name="fullName"
-                  value={editFormData.fullName}
-                  onChange={handleEditFormChange}
-                  className="form-input w-full"
-                  placeholder="Enter full name"
-                  required
-                />
-              </div>
+            <Formik
+              initialValues={{
+                username: editingUser?.username || '',
+                email: editingUser?.email || '',
+                fullName: editingUser?.fullName || '',
+                role: editingUser?.role || 'waiter',
+                phoneNumber: editingUser?.phoneNumber || '',
+                address: editingUser?.address || ''
+              }}
+              validationSchema={editUserSchema}
+              enableReinitialize={true}
+              onSubmit={async (values, { setSubmitting }) => {
+                try {
+                  setEditUserLoading(true);
+                  setError(null);
+                  
+                  const response = await userManagementService.updateStaffUser(editingUser._id, values);
+                  
+                  if (response.success) {
+                    await fetchUsers();
+                    setShowEditUserModal(false);
+                    setEditingUser(null);
+                  } else {
+                    throw new Error(response.message || 'Failed to update user');
+                  }
+                } catch (err) {
+                  console.error('Edit user error:', err);
+                  setError(err.message || 'Failed to update user. Please try again.');
+                } finally {
+                  setEditUserLoading(false);
+                  setSubmitting(false);
+                }
+              }}
+            >
+              {({ errors, touched }) => (
+                <Form className="space-y-4">
+                  <div>
+                    <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+                      Full Name <span className="text-red-500">*</span>
+                    </label>
+                    <Field
+                      name="fullName"
+                      type="text"
+                      placeholder="Enter full name"
+                      className={`form-input w-full ${
+                        errors.fullName && touched.fullName ? 'border-red-500' : ''
+                      }`}
+                    />
+                    <ErrorMessage name="fullName" component="div" className="text-red-500 text-sm mt-1" />
+                  </div>
 
-              <div>
-                <label htmlFor="editUsername" className="block text-sm font-medium text-gray-700 mb-1">
-                  Username <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="editUsername"
-                  name="username"
-                  value={editFormData.username}
-                  onChange={handleEditFormChange}
-                  className="form-input w-full"
-                  placeholder="Enter username"
-                  required
-                />
-              </div>
+                  <div>
+                    <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                      Username <span className="text-red-500">*</span>
+                    </label>
+                    <Field
+                      name="username"
+                      type="text"
+                      placeholder="Enter username"
+                      className={`form-input w-full ${
+                        errors.username && touched.username ? 'border-red-500' : ''
+                      }`}
+                    />
+                    <ErrorMessage name="username" component="div" className="text-red-500 text-sm mt-1" />
+                  </div>
 
-              <div>
-                <label htmlFor="editEmail" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  id="editEmail"
-                  name="email"
-                  value={editFormData.email}
-                  onChange={handleEditFormChange}
-                  className="form-input w-full"
-                  placeholder="Enter email address"
-                  required
-                />
-              </div>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <Field
+                      name="email"
+                      type="email"
+                      placeholder="Enter email address"
+                      className={`form-input w-full ${
+                        errors.email && touched.email ? 'border-red-500' : ''
+                      }`}
+                    />
+                    <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
+                  </div>
 
-              {editingUser.userType === 'staff' && (
-                <div>
-                  <label htmlFor="editRole" className="block text-sm font-medium text-gray-700 mb-1">
-                    Role <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    id="editRole"
-                    name="role"
-                    value={editFormData.role}
-                    onChange={handleEditFormChange}
-                    className="form-select w-full"
-                    required
-                  >
-                    <option value="admin">Admin</option>
-                    <option value="chef">Chef</option>
-                    <option value="waiter">Waiter</option>
-                  </select>
-                </div>
-              )}
-
-              <div>
-                <label htmlFor="editPhoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  id="editPhoneNumber"
-                  name="phoneNumber"
-                  value={editFormData.phoneNumber}
-                  onChange={handleEditFormChange}
-                  className="form-input w-full"
-                  placeholder="Enter phone number (e.g., +1234567890 or 0771234567)"
-                  required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="editAddress" className="block text-sm font-medium text-gray-700 mb-1">
-                  Address
-                </label>
-                <textarea
-                  id="editAddress"
-                  name="address"
-                  value={editFormData.address}
-                  onChange={handleEditFormChange}
-                  className="form-input w-full"
-                  placeholder="Enter address (optional)"
-                  rows={2}
-                />
-              </div>
-
-              <div className="flex space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowEditUserModal(false)}
-                  className="btn-secondary flex-1"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={editUserLoading}
-                  className="btn-primary flex-1 flex items-center justify-center space-x-2"
-                >
-                  {editUserLoading ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Updating...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Edit2 className="w-4 h-4" />
-                      <span>Update User</span>
-                    </>
+                  {editingUser?.userType === 'staff' && (
+                    <div>
+                      <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+                        Role <span className="text-red-500">*</span>
+                      </label>
+                      <Field
+                        name="role"
+                        as="select"
+                        className={`form-select w-full ${
+                          errors.role && touched.role ? 'border-red-500' : ''
+                        }`}
+                      >
+                        <option value="admin">Admin</option>
+                        <option value="chef">Chef</option>
+                        <option value="waiter">Waiter</option>
+                      </Field>
+                      <ErrorMessage name="role" component="div" className="text-red-500 text-sm mt-1" />
+                    </div>
                   )}
-                </button>
-              </div>
-            </form>
+
+                  <div>
+                    <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone Number <span className="text-red-500">*</span>
+                    </label>
+                    <Field
+                      name="phoneNumber"
+                      type="tel"
+                      placeholder="Enter phone number (e.g., +1234567890 or 0771234567)"
+                      className={`form-input w-full ${
+                        errors.phoneNumber && touched.phoneNumber ? 'border-red-500' : ''
+                      }`}
+                    />
+                    <ErrorMessage name="phoneNumber" component="div" className="text-red-500 text-sm mt-1" />
+                  </div>
+
+                  <div>
+                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
+                      Address
+                    </label>
+                    <Field
+                      name="address"
+                      as="textarea"
+                      placeholder="Enter address (optional)"
+                      rows={2}
+                      className={`form-input w-full ${
+                        errors.address && touched.address ? 'border-red-500' : ''
+                      }`}
+                    />
+                    <ErrorMessage name="address" component="div" className="text-red-500 text-sm mt-1" />
+                  </div>
+
+                  <div className="flex space-x-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowEditUserModal(false)}
+                      className="btn-secondary flex-1"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={editUserLoading}
+                      className="btn-primary flex-1 flex items-center justify-center space-x-2"
+                    >
+                      {editUserLoading ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>Updating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Edit2 className="w-4 h-4" />
+                          <span>Update User</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </Form>
+              )}
+            </Formik>
           </div>
         </div>
       )}
