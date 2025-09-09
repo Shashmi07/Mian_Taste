@@ -1,26 +1,23 @@
 import React, { useState } from 'react';
 import { ChefHat } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { adminAuthAPI } from '../services/api';
+import { adminLoginSchema } from '../utils/validation';
 
 export default function Login({ onLogin }) {
   const navigate = useNavigate();
-  const [credentials, setCredentials] = useState({ 
-    email: '', 
-    password: '' 
-  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    console.log('Login form submitted with:', credentials);
+  const handleLogin = async (values) => {
+    console.log('Login form submitted with:', values);
     setLoading(true);
     setError('');
     
     try {
       console.log('Attempting login...');
-      const response = await adminAuthAPI.login(credentials.email, credentials.password);
+      const response = await adminAuthAPI.login(values.username, values.password);
       console.log('Login response:', response);
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
@@ -56,52 +53,58 @@ export default function Login({ onLogin }) {
           </div>
         )}
         
-        <form onSubmit={handleLogin}>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              value={credentials.email}
-              onChange={(e) => setCredentials({...credentials, email: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-              style={{ '--tw-ring-color': '#dc2626' }}
-              required
-            />
-          </div>
-          
-          <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Password
-            </label>
-            <input
-              type="password"
-              value={credentials.password}
-              onChange={(e) => setCredentials({...credentials, password: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-              style={{ '--tw-ring-color': '#dc2626' }}
-              required
-            />
-          </div>
-          
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full text-white p-3 rounded-lg font-medium transition duration-200 disabled:opacity-50"
-            style={{ backgroundColor: loading ? '#9ca3af' : '#dc2626' }}
-            onMouseEnter={(e) => {
-              if (!loading) e.target.style.backgroundColor = '#b91c1c';
-            }}
-            onMouseLeave={(e) => {
-              if (!loading) e.target.style.backgroundColor = '#dc2626';
-            }}
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
+        <Formik
+          initialValues={{ username: '', password: '' }}
+          validationSchema={adminLoginSchema}
+          onSubmit={handleLogin}
+        >
+          {() => (
+            <Form>
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-2">
+                  Username
+                </label>
+                <Field
+                  name="username"
+                  type="text"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
+                  style={{ '--tw-ring-color': '#dc2626' }}
+                />
+                <ErrorMessage name="username" component="div" className="text-red-500 text-xs mt-1" />
+              </div>
+              
+              <div className="mb-6">
+                <label className="block text-gray-700 text-sm font-bold mb-2">
+                  Password
+                </label>
+                <Field
+                  name="password"
+                  type="password"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
+                  style={{ '--tw-ring-color': '#dc2626' }}
+                />
+                <ErrorMessage name="password" component="div" className="text-red-500 text-xs mt-1" />
+              </div>
+              
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full text-white p-3 rounded-lg font-medium transition duration-200 disabled:opacity-50"
+                style={{ backgroundColor: loading ? '#9ca3af' : '#dc2626' }}
+                onMouseEnter={(e) => {
+                  if (!loading) e.target.style.backgroundColor = '#b91c1c';
+                }}
+                onMouseLeave={(e) => {
+                  if (!loading) e.target.style.backgroundColor = '#dc2626';
+                }}
+              >
+                {loading ? 'Signing in...' : 'Sign In'}
+              </button>
+            </Form>
+          )}
+        </Formik>
         
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
+        <div className="mt-8 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
           <strong>Note:</strong><br />
           Use your chef credentials from the admin dashboard
         </div>

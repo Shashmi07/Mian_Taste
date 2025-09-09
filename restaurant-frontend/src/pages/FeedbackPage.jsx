@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, MessageSquare, Send, CheckCircle, ArrowLeft, Calendar, Clock, UtensilsCrossed, Users } from 'lucide-react';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
 import NavBar from '../components/NavBar';
-import Footer from '../components/Footer';
+import Footer from '../components/footer';
+import { feedbackSchema } from '../utils/validation';
 
 const FeedbackPage = () => {
   const { orderId } = useParams();
@@ -65,13 +67,19 @@ const FeedbackPage = () => {
     }));
   };
 
-  const renderStars = (category, currentRating) => {
+  const renderStars = (category, currentRating, onRatingChange) => {
     return (
       <div className="flex space-x-2 sm:space-x-1">
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
-            onClick={() => handleRatingChange(category, star)}
+            onClick={() => {
+              if (onRatingChange) {
+                onRatingChange(star);
+              } else {
+                handleRatingChange(category, star);
+              }
+            }}
             className={`transition-colors p-1 ${
               star <= currentRating 
                 ? 'text-yellow-400 hover:text-yellow-500' 
@@ -284,65 +292,143 @@ const FeedbackPage = () => {
           <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
             <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">How would you rate your experience?</h3>
 
-            {/* Rating Categories */}
-            <div className="space-y-4 sm:space-y-6">
-              
-              {/* Food Rating */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Food Quality <span className="text-red-500">*</span>
-                </label>
-                <div className="flex justify-center sm:justify-start">
-                  {renderStars('food', ratings.food)}
-                </div>
-              </div>
+            <Formik
+              initialValues={{
+                ratings: {
+                  food: ratings.food,
+                  service: ratings.service,
+                  ambiance: ratings.ambiance,
+                  overall: ratings.overall
+                },
+                comment: comment
+              }}
+              validationSchema={feedbackSchema}
+              enableReinitialize={true}
+              onSubmit={(values) => {
+                setRatings(values.ratings);
+                setComment(values.comment);
+                submitFeedback();
+              }}
+            >
+              {({ values, setFieldValue, errors, touched }) => {
+                // Update local state when Formik values change
+                React.useEffect(() => {
+                  if (values.ratings) {
+                    setRatings(values.ratings);
+                  }
+                }, [values.ratings]);
 
-              {/* Service Rating */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Service Quality <span className="text-red-500">*</span>
-                </label>
-                <div className="flex justify-center sm:justify-start">
-                  {renderStars('service', ratings.service)}
-                </div>
-              </div>
+                React.useEffect(() => {
+                  setComment(values.comment);
+                }, [values.comment]);
 
+                return (
+                  <Form>
+                    {/* Rating Categories */}
+                    <div className="space-y-4 sm:space-y-6">
+                      
+                      {/* Food Rating */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Food Quality <span className="text-red-500">*</span>
+                        </label>
+                        <div className="flex justify-center sm:justify-start">
+                          {renderStars('food', values.ratings.food, (rating) => {
+                            setFieldValue('ratings.food', rating);
+                          })}
+                        </div>
+                        {errors.ratings?.food && touched.ratings?.food && (
+                          <div className="text-red-500 text-sm mt-1">{errors.ratings.food}</div>
+                        )}
+                      </div>
 
-              {/* Comments */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Additional Comments
-                </label>
-                <textarea
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  placeholder="Tell us more about your experience..."
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                />
-              </div>
+                      {/* Service Rating */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Service Quality <span className="text-red-500">*</span>
+                        </label>
+                        <div className="flex justify-center sm:justify-start">
+                          {renderStars('service', values.ratings.service, (rating) => {
+                            setFieldValue('ratings.service', rating);
+                          })}
+                        </div>
+                        {errors.ratings?.service && touched.ratings?.service && (
+                          <div className="text-red-500 text-sm mt-1">{errors.ratings.service}</div>
+                        )}
+                      </div>
 
-              {/* Submit Button */}
-              <div className="flex space-x-4 pt-2">
-                <button
-                  onClick={submitFeedback}
-                  disabled={submitting || ratings.food === 0 || ratings.service === 0}
-                  className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-4 sm:px-6 py-3 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors text-sm sm:text-base"
-                >
-                  {submitting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>Submitting...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Send size={16} />
-                      <span>Submit Feedback</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
+                      {/* Ambiance Rating */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Ambiance <span className="text-red-500">*</span>
+                        </label>
+                        <div className="flex justify-center sm:justify-start">
+                          {renderStars('ambiance', values.ratings.ambiance, (rating) => {
+                            setFieldValue('ratings.ambiance', rating);
+                          })}
+                        </div>
+                        {errors.ratings?.ambiance && touched.ratings?.ambiance && (
+                          <div className="text-red-500 text-sm mt-1">{errors.ratings.ambiance}</div>
+                        )}
+                      </div>
+
+                      {/* Overall Rating */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Overall Experience <span className="text-red-500">*</span>
+                        </label>
+                        <div className="flex justify-center sm:justify-start">
+                          {renderStars('overall', values.ratings.overall, (rating) => {
+                            setFieldValue('ratings.overall', rating);
+                          })}
+                        </div>
+                        {errors.ratings?.overall && touched.ratings?.overall && (
+                          <div className="text-red-500 text-sm mt-1">{errors.ratings.overall}</div>
+                        )}
+                      </div>
+
+                      {/* Comments */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Additional Comments <span className="text-red-500">*</span>
+                        </label>
+                        <Field
+                          name="comment"
+                          as="textarea"
+                          placeholder="Tell us more about your experience..."
+                          rows={4}
+                          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent ${
+                            errors.comment && touched.comment ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                        />
+                        <ErrorMessage name="comment" component="div" className="text-red-500 text-sm mt-1" />
+                      </div>
+
+                      {/* Submit Button */}
+                      <div className="flex space-x-4 pt-2">
+                        <button
+                          type="submit"
+                          disabled={submitting}
+                          className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-4 sm:px-6 py-3 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors text-sm sm:text-base"
+                        >
+                          {submitting ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                              <span>Submitting...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Send size={16} />
+                              <span>Submit Feedback</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </Form>
+                );
+              }}
+            </Formik>
           </div>
 
           {/* Back Link */}

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { CreditCard, DollarSign, ArrowLeft, Lock } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { useCart } from '../context/CartContext';
 import { createReservation } from '../services/tableReservationAPI';
+import { paymentCustomerInfoSchema, paymentCustomerQRSchema, paymentCardInfoSchema } from '../utils/validation';
 
 import NavBar from '../components/NavBar';
 
@@ -16,8 +18,16 @@ export default function PaymentGateway() {
     email: '',
     phone: ''
   });
+  const [cardInfo, setCardInfo] = useState({
+    cardNumber: '',
+    expiryDate: '',
+    cvv: '',
+    cardholderName: ''
+  });
   const [orderData, setOrderData] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [customerErrors, setCustomerErrors] = useState({});
+  const [cardErrors, setCardErrors] = useState({});
 
   // Load order data or reservation data from localStorage
   useEffect(() => {
@@ -227,21 +237,90 @@ export default function PaymentGateway() {
     }));
   };
 
+  const handleCardInputChange = (e) => {
+    const { name, value } = e.target;
+    let formattedValue = value;
+    
+    // Format card number with spaces
+    if (name === 'cardNumber') {
+      formattedValue = value.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim();
+    }
+    // Format expiry date
+    else if (name === 'expiryDate') {
+      formattedValue = value.replace(/\D/g, '').replace(/(\d{2})(\d{2})/, '$1/$2');
+    }
+    // Allow only numbers for CVV
+    else if (name === 'cvv') {
+      formattedValue = value.replace(/\D/g, '');
+    }
+    
+    setCardInfo(prev => ({
+      ...prev,
+      [name]: formattedValue
+    }));
+  };
+
+  const validateCustomerInfo = async () => {
+    try {
+      const schema = orderData?.type === 'qr-order' ? paymentCustomerQRSchema : paymentCustomerInfoSchema;
+      await schema.validate(customerInfo, { abortEarly: false });
+      setCustomerErrors({});
+      return true;
+    } catch (error) {
+      const errors = {};
+      error.inner?.forEach((err) => {
+        if (err.path) {
+          errors[err.path] = err.message;
+        }
+      });
+      setCustomerErrors(errors);
+      return false;
+    }
+  };
+
+  const validateCardInfo = async () => {
+    try {
+      // Only validate card info if payment method is card
+      if (paymentMethod !== 'card') return true;
+      
+      const cardData = {
+        ...cardInfo,
+        cardNumber: cardInfo.cardNumber.replace(/\s/g, '') // Remove spaces for validation
+      };
+      
+      await paymentCardInfoSchema.validate(cardData, { abortEarly: false });
+      setCardErrors({});
+      return true;
+    } catch (error) {
+      const errors = {};
+      error.inner?.forEach((err) => {
+        if (err.path) {
+          errors[err.path] = err.message;
+        }
+      });
+      setCardErrors(errors);
+      return false;
+    }
+  };
+
   const handlePayment = async () => {
     if (!paymentMethod) {
       alert('Please select a payment method');
       return;
     }
-    // For QR orders, only name is required
-    if (orderData?.type === 'qr-order') {
-      if (!customerInfo.name) {
-        alert('Please enter your name');
-        return;
-      }
-    } else {
-      // For other orders, all fields required
-      if (!customerInfo.name || !customerInfo.email || !customerInfo.phone) {
-        alert('Please fill in all customer information');
+    
+    // Validate customer information
+    const isCustomerValid = await validateCustomerInfo();
+    if (!isCustomerValid) {
+      alert('Please fix the errors in customer information');
+      return;
+    }
+    
+    // Validate card information if needed
+    if (paymentMethod === 'card') {
+      const isCardValid = await validateCardInfo();
+      if (!isCardValid) {
+        alert('Please fix the errors in card information');
         return;
       }
     }
@@ -725,9 +804,14 @@ export default function PaymentGateway() {
                     value={customerInfo.name}
                     onChange={handleInputChange}
                     placeholder={orderData?.type === 'qr-order' ? 'First name or nickname' : 'Enter your full name'}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors ${
+                      customerErrors.name ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    }`}
                     required
                   />
+                  {customerErrors.name && (
+                    <p className="text-red-500 text-sm mt-1">{customerErrors.name}</p>
+                  )}
                 </div>
 
                 {/* Only show email and phone for non-QR orders */}
@@ -743,9 +827,14 @@ export default function PaymentGateway() {
                         value={customerInfo.email}
                         onChange={handleInputChange}
                         placeholder="Enter your email address"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors ${
+                          customerErrors.email ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        }`}
                         required
                       />
+                      {customerErrors.email && (
+                        <p className="text-red-500 text-sm mt-1">{customerErrors.email}</p>
+                      )}
                     </div>
 
                     <div>
@@ -757,10 +846,15 @@ export default function PaymentGateway() {
                         name="phone"
                         value={customerInfo.phone}
                         onChange={handleInputChange}
-                        placeholder="Enter your phone number"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+                        placeholder="Enter your phone number (10 digits)"
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors ${
+                          customerErrors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        }`}
                         required
                       />
+                      {customerErrors.phone && (
+                        <p className="text-red-500 text-sm mt-1">{customerErrors.phone}</p>
+                      )}
                     </div>
                   </>
                 )}
@@ -788,9 +882,18 @@ export default function PaymentGateway() {
                     </label>
                     <input
                       type="text"
+                      name="cardNumber"
+                      value={cardInfo.cardNumber}
+                      onChange={handleCardInputChange}
                       placeholder="1234 5678 9012 3456"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+                      maxLength={19}
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors ${
+                        cardErrors.cardNumber ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                      }`}
                     />
+                    {cardErrors.cardNumber && (
+                      <p className="text-red-500 text-sm mt-1">{cardErrors.cardNumber}</p>
+                    )}
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
@@ -800,9 +903,18 @@ export default function PaymentGateway() {
                       </label>
                       <input
                         type="text"
+                        name="expiryDate"
+                        value={cardInfo.expiryDate}
+                        onChange={handleCardInputChange}
                         placeholder="MM/YY"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+                        maxLength={5}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors ${
+                          cardErrors.expiryDate ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        }`}
                       />
+                      {cardErrors.expiryDate && (
+                        <p className="text-red-500 text-sm mt-1">{cardErrors.expiryDate}</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -810,9 +922,18 @@ export default function PaymentGateway() {
                       </label>
                       <input
                         type="text"
+                        name="cvv"
+                        value={cardInfo.cvv}
+                        onChange={handleCardInputChange}
                         placeholder="123"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+                        maxLength={4}
+                        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors ${
+                          cardErrors.cvv ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        }`}
                       />
+                      {cardErrors.cvv && (
+                        <p className="text-red-500 text-sm mt-1">{cardErrors.cvv}</p>
+                      )}
                     </div>
                   </div>
 
@@ -822,9 +943,17 @@ export default function PaymentGateway() {
                     </label>
                     <input
                       type="text"
+                      name="cardholderName"
+                      value={cardInfo.cardholderName}
+                      onChange={handleCardInputChange}
                       placeholder="John Doe"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors ${
+                        cardErrors.cardholderName ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                      }`}
                     />
+                    {cardErrors.cardholderName && (
+                      <p className="text-red-500 text-sm mt-1">{cardErrors.cardholderName}</p>
+                    )}
                   </div>
                 </div>
               </div>
