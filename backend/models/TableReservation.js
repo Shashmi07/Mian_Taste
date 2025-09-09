@@ -89,8 +89,5 @@ tableReservationSchema.pre('save', function(next) {
   next();
 });
 
-// Export schema for use with custom connection
+// Export only the schema - the model should only be created in customer database
 module.exports = { schema: tableReservationSchema };
-
-// For direct use (will use default connection if imported directly)
-module.exports.model = mongoose.model('TableReservation', tableReservationSchema);

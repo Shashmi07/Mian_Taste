@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Star, MessageSquare, Send, CheckCircle, ArrowLeft, Calendar, Clock, UtensilsCrossed, Users } from 'lucide-react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import NavBar from '../components/NavBar';
-import Footer from '../components/footer';
+import Footer from '../components/Footer';
 import { feedbackSchema } from '../utils/validation';
 
 const FeedbackPage = () => {
@@ -311,17 +311,6 @@ const FeedbackPage = () => {
               }}
             >
               {({ values, setFieldValue, errors, touched }) => {
-                // Update local state when Formik values change
-                React.useEffect(() => {
-                  if (values.ratings) {
-                    setRatings(values.ratings);
-                  }
-                }, [values.ratings]);
-
-                React.useEffect(() => {
-                  setComment(values.comment);
-                }, [values.comment]);
-
                 return (
                   <Form>
                     {/* Rating Categories */}

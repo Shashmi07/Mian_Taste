@@ -1,12 +1,15 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
-const { model: AdminUser } = require('../models/AdminUser');
+const { schema: AdminUserSchema } = require('../models/AdminUser');
 
 const createChefUser = async () => {
   try {
     // Connect to Admin MongoDB
-    await mongoose.connect(process.env.ADMIN_MONGO_URI);
+    const adminConnection = await mongoose.createConnection(process.env.ADMIN_MONGO_URI);
     console.log('Connected to Admin MongoDB');
+    
+    // Create AdminUser model on correct connection
+    const AdminUser = adminConnection.model('AdminUser', AdminUserSchema, 'users');
 
     // Delete existing chef user if exists
     await AdminUser.deleteOne({ email: 'chef@restaurant.com' });

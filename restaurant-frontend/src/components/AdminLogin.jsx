@@ -34,10 +34,10 @@ export default function AdminLogin({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center">
-      <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
+      <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-xl">
         <div className="text-center mb-8">
-          <div className="p-3 rounded-full w-16 h-16 mx-auto mb-4" style={{ backgroundColor: '#46923c' }}>
+          <div className="p-3 rounded-full w-16 h-16 mx-auto mb-4 bg-red-600 shadow-lg">
             <Shield className="text-white w-10 h-10" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
@@ -61,8 +61,7 @@ export default function AdminLogin({ onLogin }) {
               type="email"
               value={credentials.email}
               onChange={(e) => setCredentials({...credentials, email: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-              style={{ '--tw-ring-color': '#46923c' }}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
               required
             />
           </div>
@@ -75,8 +74,7 @@ export default function AdminLogin({ onLogin }) {
               type="password"
               value={credentials.password}
               onChange={(e) => setCredentials({...credentials, password: e.target.value})}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
-              style={{ '--tw-ring-color': '#46923c' }}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
               required
             />
           </div>
@@ -84,14 +82,7 @@ export default function AdminLogin({ onLogin }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full text-white p-3 rounded-lg font-medium transition duration-200 disabled:opacity-50"
-            style={{ backgroundColor: loading ? '#9ca3af' : '#46923c' }}
-            onMouseEnter={(e) => {
-              if (!loading) e.target.style.backgroundColor = '#5BC142';
-            }}
-            onMouseLeave={(e) => {
-              if (!loading) e.target.style.backgroundColor = '#46923c';
-            }}
+            className="w-full bg-red-600 hover:bg-red-700 text-white p-3 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105"
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>

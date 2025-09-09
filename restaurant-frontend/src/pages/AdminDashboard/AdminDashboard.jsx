@@ -142,13 +142,13 @@ const AdminDashboard = ({ user, onLogout }) => {
             </div>
             <div className="flex items-center space-x-4">
               {/* Admin info */}
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-medium border-2 border-red-400">
+              <div className="flex items-center gap-2 bg-red-600 bg-opacity-20 backdrop-blur-sm px-4 py-2 border border-red-400 border-opacity-50" style={{borderRadius: '25px'}}>
+                <div className="w-7 h-7 bg-red-500 flex items-center justify-center text-white font-medium text-sm" style={{borderRadius: '50%'}}>
                   {user?.username?.[0]?.toUpperCase() || 'A'}
                 </div>
                 <div className="hidden sm:block">
-                  <p className="text-sm font-medium text-white">{user?.username || 'Admin'}</p>
-                  <p className="text-xs text-red-200">Administrator</p>
+                  <p className="text-sm font-medium text-white">{(user?.username || 'Admin').split(' ')[0]}</p>
+                  <p className="text-xs text-red-200">Admin</p>
                 </div>
               </div>
               

@@ -1,6 +1,6 @@
 import React from 'react';
 import NavBar from '../components/NavBar';
-import Footer from '../components/footer';
+import Footer from '../components/Footer';
 import { MapPin, Clock, Phone, Mail, Users, Award, Heart } from 'lucide-react';
 import ramenImg from '../assets/ramen2.jpeg';
 import chef from '../assets/chefCooking.jpg'

@@ -162,7 +162,7 @@ AdminUserSchema.statics.findActiveByRole = function(role) {
   return this.find({ role, isActive: true });
 };
 
+// Export only the schema - the model should only be created in admin database
 module.exports = {
-  schema: AdminUserSchema,
-  model: mongoose.model('AdminUser', AdminUserSchema, 'users') // Force collection name to be 'users'
+  schema: AdminUserSchema
 };

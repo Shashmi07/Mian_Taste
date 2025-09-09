@@ -343,29 +343,32 @@ const NavBar = () => {
             <div className="relative profile-menu" key={`authenticated-${authState.user.email}`}>
               <button 
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center gap-3 bg-red-600 bg-opacity-90 backdrop-blur-sm text-sm font-medium px-4 py-2 lg:px-5 lg:py-3 border-2 border-red-400 border-opacity-50 rounded-xl cursor-pointer transition-all duration-300 hover:bg-red-700 hover:shadow-lg transform hover:scale-105"
+                className="flex items-center gap-2 bg-red-600 bg-opacity-90 backdrop-blur-sm font-medium px-4 py-2 border border-red-400 border-opacity-50 cursor-pointer transition-all duration-300 hover:bg-red-700 hover:shadow-lg transform hover:scale-105"
                 style={{
+                  borderRadius: '25px',
                   color: '#ffffff',
-                  boxShadow: '0 4px 15px rgba(220, 38, 38, 0.3)'
+                  boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)'
                 }}
               >
-                <User size={20} className="text-white" />
-                <span className="hidden lg:block text-sm font-semibold">
-                  {authState.user.username || authState.user.name || 'User'}
+                <div className="w-7 h-7 bg-white bg-opacity-20 flex items-center justify-center" style={{borderRadius: '50%'}}>
+                  <User size={16} className="text-white" />
+                </div>
+                <span className="hidden lg:block text-sm font-medium">
+                  {(authState.user.username || authState.user.name || 'User').split(' ')[0]}
                 </span>
               </button>
 
               {/* Enhanced Profile Dropdown */}
               {showProfileMenu && (
-                <div className="absolute right-0 top-full mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+                <div className="absolute right-0 top-full mt-3 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
                   <div className="bg-gradient-to-r from-red-600 to-red-700 p-4 text-white">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                        <User size={24} className="text-white" />
+                      <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                        <User size={20} className="text-white" />
                       </div>
-                      <div>
-                        <p className="font-semibold text-lg">{authState.user.username || authState.user.name || 'User'}</p>
-                        <p className="text-sm opacity-90">{authState.user.email}</p>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm">{authState.user.username || authState.user.name || 'User'}</p>
+                        <p className="text-xs opacity-90 truncate">{authState.user.email}</p>
                       </div>
                     </div>
                   </div>
@@ -482,12 +485,12 @@ const NavBar = () => {
           {/* Mobile Authentication Section */}
           {authState.isAuthenticated && authState.user ? (
             <div className="border-t border-gray-600 pt-6 mt-6">
-              <div className="bg-red-600 bg-opacity-90 backdrop-blur-sm px-4 py-4 border border-red-400 border-opacity-50 rounded-xl mb-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <User size={24} className="text-white" />
-                  <div>
-                    <p className="font-semibold text-white">{authState.user.username || authState.user.name || 'User'}</p>
-                    <p className="text-sm text-red-100">{authState.user.email}</p>
+              <div className="bg-red-600 bg-opacity-90 backdrop-blur-sm px-3 py-3 border border-red-400 border-opacity-50 rounded-lg mb-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <User size={18} className="text-white" />
+                  <div className="min-w-0">
+                    <p className="font-medium text-white text-sm truncate">{(authState.user.username || authState.user.name || 'User').split(' ')[0]}</p>
+                    <p className="text-xs text-red-100 truncate">{authState.user.email}</p>
                   </div>
                 </div>
                 

@@ -49,9 +49,9 @@ connectAdminDB(); // Admin dashboard database
 const authRoutes = require('./routes/auth'); // Changed from authRoutes
 const orderRoutes = require('./routes/orders'); // Changed from orderRoutes  
 const inventoryRoutes = require('./routes/inventory'); // Changed from inventoryRoutes
-const tableReservationRoutes = require('./routes/tableReservationRoutes');
-const customerRoutes = require('./routes/customerRoutes'); // Customer registration and authentication
-const menuRoutes = require('./routes/menuRoutes'); // Menu management routes
+const tableReservationRoutes = require('./routes/tableReservations');
+const customerRoutes = require('./routes/customers'); // Customer registration and authentication
+const menuRoutes = require('./routes/menu'); // Menu management routes
 const userManagementRoutes = require('./routes/userManagement'); // User management routes
 const adminAuthRoutes = require('./routes/adminAuth'); // Admin authentication routes
 const adminInventoryRoutes = require('./routes/adminInventory'); // Admin inventory routes (read-only)

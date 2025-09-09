@@ -1,7 +1,14 @@
-const { model: AdminUser } = require('../models/AdminUser');
+const { schema: AdminUserSchema } = require('../models/AdminUser');
+const { getAdminConnection } = require('../config/adminDatabase');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { validationResult } = require('express-validator');
+
+// Get AdminUser model from admin database connection
+const getAdminUserModel = () => {
+  const adminConnection = getAdminConnection();
+  return adminConnection.model('AdminUser', AdminUserSchema, 'users');
+};
 
 // Login admin user
 const adminLogin = async (req, res) => {
@@ -17,6 +24,7 @@ const adminLogin = async (req, res) => {
     const { email, password } = req.body;
 
     // Check if admin user exists
+    const AdminUser = getAdminUserModel();
     const user = await AdminUser.findOne({ email, isActive: true });
     if (!user) {
       return res.status(401).json({ 

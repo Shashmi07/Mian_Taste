@@ -9,9 +9,9 @@ import AboutUs from './pages/AboutUs';
 import ScrollToTop from './components/ScrollToTop';
 import PreOrder from './pages/PreOrder';
 import TableReservation from './pages/TableReservation';
-import Login from './components/Login';
+import ChefLogin from './components/ChefLogin';
 import AdminLogin from './components/AdminLogin';
-import LoginScreen from './pages/LoginScreen';
+import CustomerLogin from './pages/CustomerLogin';
 import SignupScreen from './pages/SignupScreen';
 import ChefDashboard from './pages/ChefDashboard';
 import AdminDashboard from './pages/AdminDashboard';
@@ -113,7 +113,7 @@ function App() {
             path="/login" 
             element={
               !isAuthenticated ? (
-                <LoginScreen onLogin={handleLogin} />
+                <CustomerLogin onLogin={handleLogin} />
               ) : (
                 <Navigate to="/" replace />
               )
@@ -157,7 +157,7 @@ function App() {
 
           <Route 
             path="/chef-login" 
-            element={<Login onLogin={handleLogin} />}
+            element={<ChefLogin onLogin={handleLogin} />}
           />
           
           <Route 

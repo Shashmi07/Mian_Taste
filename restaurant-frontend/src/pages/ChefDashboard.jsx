@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, CheckCircle, Package, ChefHat, Timer, Eye, Minus, Bell, Users, Plus, AlertCircle } from 'lucide-react';
+import { Clock, CheckCircle, Package, ChefHat, Timer, Eye, Minus, Bell, Users, Plus, AlertCircle, LogOut } from 'lucide-react';
 import { ordersAPI, inventoryAPI } from '../services/api';
 import socketService from '../services/socket';
 import OrderCard from '../components/OrderCard';
@@ -336,15 +336,69 @@ export default function ChefDashboard({ user, onLogout }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-gradient-to-r from-red-900 to-red-700 text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-red-50 to-orange-50">
+      {/* Notification Dropdown Overlay */}
+      {showNotifications && (
+        <div className="fixed inset-0 z-[9999]" onClick={() => setShowNotifications(false)}>
+          <div 
+            className="absolute bg-white border-2 border-gray-300 rounded-xl shadow-2xl w-80"
+            style={{ 
+              right: '20px',
+              top: '70px',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 bg-gradient-to-r from-red-50 to-orange-50 border-b border-gray-200">
+              <h3 className="font-semibold text-gray-900 flex items-center">
+                <Bell className="text-red-500 mr-2" size={18} />
+                Inventory Notifications
+              </h3>
+            </div>
+            
+            <div className="max-h-80 overflow-y-auto">
+              {getOutOfStockItems().length > 0 ? (
+                <div className="p-3">
+                  <div className="mb-2">
+                    <p className="text-xs font-medium text-red-600 uppercase tracking-wide">Critical Items</p>
+                  </div>
+                  {getOutOfStockItems().map(item => (
+                    <div key={item._id} className="flex justify-between items-center py-3 px-3 bg-gradient-to-r from-red-50 to-red-100 rounded-lg mb-2 border-l-4 border-red-500">
+                      <div className="flex items-center">
+                        <AlertCircle className="text-red-500 mr-2" size={16} />
+                        <span className="text-sm text-red-800 font-medium">{item.name}</span>
+                      </div>
+                      <span className="text-xs text-red-600 bg-red-200 px-2 py-1 rounded-full font-semibold">
+                        OUT OF STOCK
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-6 text-center">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <CheckCircle className="text-green-500" size={28} />
+                  </div>
+                  <h4 className="font-semibold text-gray-900 mb-1">All Good!</h4>
+                  <p className="text-sm text-gray-500">No notifications at the moment.</p>
+                  <p className="text-xs text-gray-400 mt-2">All inventory items are in stock.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      <nav className="bg-gradient-to-r from-red-900 via-red-800 to-orange-700 text-white shadow-2xl backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-6 py-5">
           <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <div className="bg-red-600 p-2 rounded-lg">
-                <ChefHat className="text-white" size={24} />
+            <div className="flex items-center group">
+              <div className="bg-gradient-to-br from-red-500 to-orange-500 p-3 rounded-xl shadow-lg transform transition-all duration-300 group-hover:scale-110 group-hover:rotate-3">
+                <ChefHat className="text-white" size={28} />
               </div>
-              <h1 className="text-2xl font-bold text-white ml-3">Chef Dashboard</h1>
+              <div className="ml-4">
+                <h1 className="text-2xl font-bold text-white tracking-tight">Chef Dashboard</h1>
+                <p className="text-red-100 text-sm">Kitchen Management System</p>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               <div className="relative">
@@ -359,60 +413,21 @@ export default function ChefDashboard({ user, onLogout }) {
                     </span>
                   )}
                 </button>
-                
-                {/* Notification Dropdown */}
-                {showNotifications && (
-                  <div className="notification-dropdown absolute right-0 top-12 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                    <div className="p-4 border-b border-gray-200">
-                      <h3 className="font-semibold text-gray-900 flex items-center">
-                        <AlertCircle className="text-red-500 mr-2" size={18} />
-                        Out of Stock Items
-                      </h3>
-                    </div>
-                    
-                    <div className="max-h-80 overflow-y-auto">
-                      {/* Out of Stock Items Only */}
-                      {getOutOfStockItems().length > 0 ? (
-                        <div className="p-3">
-                          {getOutOfStockItems().map(item => (
-                            <div key={item._id} className="flex justify-between items-center py-2 px-3 bg-red-50 rounded mb-2">
-                              <span className="text-sm text-red-800 font-medium">{item.name}</span>
-                              <span className="text-xs text-red-600 bg-red-200 px-2 py-1 rounded">
-                                0 {item.unit}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="p-4 text-center text-gray-500">
-                          <CheckCircle className="mx-auto mb-2 text-red-500" size={24} />
-                          <p className="text-sm">All items are in stock!</p>
-                        </div>
-                      )}
-                      
-                      <div className="p-3 border-t border-gray-200 bg-gray-50">
-                        <button 
-                          onClick={() => {
-                            setActiveTab('inventory');
-                            setShowNotifications(false);
-                          }}
-                          className="w-full text-sm bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded"
-                        >
-                          Manage Inventory
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
-              <div className="text-right">
-                <p className="font-semibold text-white">{user?.name || 'Chef'}</p>
-                <p className="text-sm text-red-100">{user?.role || 'Kitchen Manager'}</p>
+              <div className="flex items-center gap-2 bg-red-600 bg-opacity-20 backdrop-blur-sm px-4 py-2 border border-red-400 border-opacity-50" style={{borderRadius: '25px'}}>
+                <div className="w-7 h-7 bg-red-500 flex items-center justify-center text-white font-medium text-sm" style={{borderRadius: '50%'}}>
+                  {(user?.name || 'Chef')[0]?.toUpperCase() || 'C'}
+                </div>
+                <div className="text-right">
+                  <p className="font-medium text-white text-sm">{(user?.name || 'Chef').split(' ')[0]}</p>
+                  <p className="text-xs text-red-100">Chef</p>
+                </div>
               </div>
               <button
                 onClick={onLogout}
-                className="text-red-100 hover:text-white px-3 py-2 rounded-lg hover:bg-red-800 hover:bg-opacity-30"
+                className="flex items-center gap-2 text-red-100 hover:text-white px-4 py-2 rounded-lg hover:bg-red-800 hover:bg-opacity-30 transition-all duration-300 font-medium"
               >
+                <LogOut size={18} />
                 Logout
               </button>
             </div>
@@ -420,27 +435,31 @@ export default function ChefDashboard({ user, onLogout }) {
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Enhanced Statistics Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <button 
             onClick={() => {
               setActiveTab('orders');
               setSelectedOrderFilter('pending');
             }}
-            className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow text-left border border-gray-200"
+            className="group bg-gradient-to-br from-white to-red-50 rounded-lg p-4 shadow-md hover:shadow-xl transition-all duration-300 text-left border border-red-100 transform hover:scale-105 hover:-translate-y-1"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Pending Orders</p>
+                <p className="text-xs font-medium text-gray-600 mb-1">Pending Orders</p>
                 <p className={`text-2xl font-bold text-red-600 ${
                   orders.filter(o => o.status === 'pending').length > 0 
-                    ? 'animate-bounce' 
+                    ? 'animate-pulse' 
                     : ''
                 }`}>
                   {orders.filter(o => o.status === 'pending').length}
                 </p>
+                <p className="text-xs text-red-500 font-medium">Needs Attention</p>
               </div>
-              <Clock className="text-red-500" size={24} />
+              <div className="p-2 bg-red-100 rounded-lg group-hover:bg-red-200 transition-colors">
+                <Clock className="text-red-600" size={20} />
+              </div>
             </div>
           </button>
 
@@ -449,16 +468,19 @@ export default function ChefDashboard({ user, onLogout }) {
               setActiveTab('orders');
               setSelectedOrderFilter('active');
             }}
-            className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow text-left border border-gray-200"
+            className="group bg-gradient-to-br from-white to-orange-50 rounded-lg p-4 shadow-md hover:shadow-xl transition-all duration-300 text-left border border-orange-100 transform hover:scale-105 hover:-translate-y-1"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Active Orders</p>
-                <p className="text-2xl font-bold text-red-600">
+                <p className="text-xs font-medium text-gray-600 mb-1">Active Orders</p>
+                <p className="text-2xl font-bold text-orange-600">
                   {orders.filter(o => o.status === 'accepted' || o.status === 'preparing' || o.status === 'finished').length}
                 </p>
+                <p className="text-xs text-orange-500 font-medium">In Progress</p>
               </div>
-              <ChefHat className="text-red-500" size={24} />
+              <div className="p-2 bg-orange-100 rounded-lg group-hover:bg-orange-200 transition-colors">
+                <ChefHat className="text-orange-600" size={20} />
+              </div>
             </div>
           </button>
 
@@ -467,16 +489,19 @@ export default function ChefDashboard({ user, onLogout }) {
               setActiveTab('orders');
               setSelectedOrderFilter('ready');
             }}
-            className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow text-left border border-gray-200"
+            className="group bg-gradient-to-br from-white to-green-50 rounded-lg p-4 shadow-md hover:shadow-xl transition-all duration-300 text-left border border-green-100 transform hover:scale-105 hover:-translate-y-1"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Ready for Service</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {orders.filter(o => o.status === 'ready').length} {/* Changed from 'ready for pickup' */}
+                <p className="text-xs font-medium text-gray-600 mb-1">Ready for Service</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {orders.filter(o => o.status === 'ready').length}
                 </p>
+                <p className="text-xs text-green-500 font-medium">Ready to Go</p>
               </div>
-              <CheckCircle className="text-red-500" size={24} />
+              <div className="p-2 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
+                <CheckCircle className="text-green-600" size={20} />
+              </div>
             </div>
           </button>
 
@@ -485,60 +510,70 @@ export default function ChefDashboard({ user, onLogout }) {
               setActiveTab('orders');
               setSelectedOrderFilter('completed');
             }}
-            className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow text-left border border-gray-200"
+            className="group bg-gradient-to-br from-white to-purple-50 rounded-lg p-4 shadow-md hover:shadow-xl transition-all duration-300 text-left border border-purple-100 transform hover:scale-105 hover:-translate-y-1"
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Completed</p>
+                <p className="text-xs font-medium text-gray-600 mb-1">Completed</p>
                 <p className="text-2xl font-bold text-purple-600">
                   {orders.filter(o => o.status === 'delivered').length}
                 </p>
+                <p className="text-xs text-purple-500 font-medium">Total Served</p>
               </div>
-              <Users className="text-purple-500" size={24} />
+              <div className="p-2 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors">
+                <Users className="text-purple-600" size={20} />
+              </div>
             </div>
           </button>
         </div>
 
-        <div className="flex space-x-1 bg-white rounded-lg p-1 mb-6 border border-gray-200">
+        {/* Enhanced Tab Navigation */}
+        <div className="flex space-x-2 bg-gradient-to-r from-white to-gray-50 rounded-2xl p-2 mb-8 shadow-lg border border-gray-100">
           <button
             onClick={() => setActiveTab('orders')}
-            className={`flex-1 py-3 px-4 rounded-md font-medium text-center ${
+            className={`flex-1 py-4 px-6 rounded-xl font-semibold text-center transition-all duration-300 flex items-center justify-center ${
               activeTab === 'orders'
-                ? 'bg-red-600 text-white'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg transform scale-105'
+                : 'text-gray-600 hover:text-red-600 hover:bg-red-50 hover:shadow-md'
             }`}
           >
-            <Clock className="inline mr-2" size={16} />
-            Orders
+            <Clock className="mr-2" size={20} />
+            Orders Management
           </button>
           <button
             onClick={() => setActiveTab('inventory')}
-            className={`flex-1 py-3 px-4 rounded-md font-medium text-center ${
+            className={`flex-1 py-4 px-6 rounded-xl font-semibold text-center transition-all duration-300 flex items-center justify-center ${
               activeTab === 'inventory'
-                ? 'bg-red-600 text-white'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                ? 'bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg transform scale-105'
+                : 'text-gray-600 hover:text-red-600 hover:bg-red-50 hover:shadow-md'
             }`}
           >
-            <Package className="inline mr-2" size={16} />
-            Inventory
+            <Package className="mr-2" size={20} />
+            Inventory Control
           </button>
         </div>
 
         {activeTab === 'orders' && (
-          <div>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Orders</h2>
-              <select 
-                value={selectedOrderFilter}
-                onChange={(e) => setSelectedOrderFilter(e.target.value)}
-                className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-red-500"
-              >
-                <option value="all">All Orders</option>
-                <option value="pending">Pending</option>
-                <option value="active">Active</option>
-                <option value="ready">Ready for Service</option>
-                <option value="completed">Completed</option>
-              </select>
+          <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">Order Management</h2>
+                <p className="text-gray-600">Track and manage kitchen orders in real-time</p>
+              </div>
+              <div className="flex items-center space-x-3">
+                <label className="text-sm font-medium text-gray-700">Filter by Status:</label>
+                <select 
+                  value={selectedOrderFilter}
+                  onChange={(e) => setSelectedOrderFilter(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-4 py-2 bg-white shadow-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
+                >
+                  <option value="all">🍽️ All Orders</option>
+                  <option value="pending">⏰ Pending</option>
+                  <option value="active">👨‍🍳 Active</option>
+                  <option value="ready">✅ Ready for Service</option>
+                  <option value="completed">🎉 Completed</option>
+                </select>
+              </div>
             </div>
 
             {(() => {
@@ -587,14 +622,17 @@ export default function ChefDashboard({ user, onLogout }) {
         )}
 
         {activeTab === 'inventory' && (
-          <div>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Kitchen Inventory</h2>
+          <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">Kitchen Inventory</h2>
+                <p className="text-gray-600">Monitor stock levels and manage ingredients</p>
+              </div>
               <button
                 onClick={() => setShowAddItemForm(!showAddItemForm)}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium flex items-center"
+                className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-6 py-3 rounded-xl font-semibold flex items-center shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
               >
-                <Plus size={16} className="mr-2" />
+                <Plus size={20} className="mr-2" />
                 Add New Item
               </button>
             </div>
