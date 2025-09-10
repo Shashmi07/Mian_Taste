@@ -33,7 +33,7 @@ export default function HomePage() {
               </p>
               
               {/* CTA buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <div className="flex flex-col justify-center gap-4 sm:flex-row lg:justify-start">
                 <button 
                   onClick={() => window.location.href = '/menu'}
                   className="inline-flex items-center px-8 py-4 space-x-2 text-lg font-semibold text-white transition-all duration-300 transform bg-red-600 rounded-full shadow-lg hover:bg-red-700 hover:shadow-xl hover:-translate-y-1"
@@ -46,7 +46,7 @@ export default function HomePage() {
                 
                 <button 
                   onClick={() => window.location.href = '/table-reservation'}
-                  className="inline-flex items-center px-8 py-4 space-x-2 text-lg font-semibold text-red-600 bg-white border-2 border-red-600 rounded-full transition-all duration-300 transform hover:bg-red-600 hover:text-white hover:shadow-xl hover:-translate-y-1"
+                  className="inline-flex items-center px-8 py-4 space-x-2 text-lg font-semibold text-red-600 transition-all duration-300 transform bg-white border-2 border-red-600 rounded-full hover:bg-red-600 hover:text-white hover:shadow-xl hover:-translate-y-1"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -60,18 +60,18 @@ export default function HomePage() {
             <div className="order-2 lg:flex lg:justify-center">
               <div className="w-full max-w-lg">
                 {/* Enhanced outer container */}
-                <div className="relative p-6 bg-white shadow-2xl rounded-3xl border border-red-100">
+                <div className="relative p-6 bg-white border border-red-100 shadow-2xl rounded-3xl">
                   
                   {/* Floating elements for visual appeal */}
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-red-400 to-red-600 rounded-full opacity-70 animate-pulse"></div>
-                  <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-gradient-to-tr from-red-300 to-red-500 rounded-full opacity-60 animate-pulse" style={{animationDelay: '1s'}}></div>
+                  <div className="absolute w-8 h-8 rounded-full -top-2 -right-2 bg-gradient-to-br from-red-400 to-red-600 opacity-70 animate-pulse"></div>
+                  <div className="absolute w-6 h-6 rounded-full -bottom-2 -left-2 bg-gradient-to-tr from-red-300 to-red-500 opacity-60 animate-pulse" style={{animationDelay: '1s'}}></div>
                   
                   {/* Inner grid layout */}
                   <div className="grid grid-cols-2 gap-4">
                     
                     {/* Top-left: noodles2 (taller, aspect ratio ~3:4) */}
                     <div className="relative row-span-2 group">
-                      <div className="relative overflow-hidden rounded-2xl shadow-lg">
+                      <div className="relative overflow-hidden shadow-lg rounded-2xl">
                         <img 
                           src={noodles2} 
                           alt="Authentic Japanese ramen bowl with rich tonkotsu broth, tender chashu pork, and fresh scallions"
@@ -81,47 +81,47 @@ export default function HomePage() {
                           loading="eager"
                         />
                         {/* Enhanced overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <div className="absolute top-3 right-3 w-4 h-4 bg-yellow-400 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 animate-ping"></div>
+                        <div className="absolute inset-0 transition-opacity duration-300 opacity-0 bg-gradient-to-t from-black/20 via-transparent to-transparent group-hover:opacity-100"></div>
+                        <div className="absolute w-4 h-4 transition-all duration-300 bg-yellow-400 rounded-full opacity-0 top-3 right-3 group-hover:opacity-100 animate-ping"></div>
                       </div>
                     </div>
                     
                     {/* Top-right: enhanced hover effects */}
                     <div className="relative group">
-                      <div className="relative overflow-hidden rounded-xl shadow-lg">
+                      <div className="relative overflow-hidden shadow-lg rounded-xl">
                         <img 
                           src={noodles1} 
                           alt="Traditional miso ramen with corn, bamboo shoots, and perfectly seasoned broth"
-                          className="object-cover w-full transition-all duration-400 shadow-md h-36 group-hover:scale-110 group-hover:brightness-110 sm:h-40"
+                          className="object-cover w-full transition-all shadow-md duration-400 h-36 group-hover:scale-110 group-hover:brightness-110 sm:h-40"
                           width="240"
                           height="192"
                           loading="lazy"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-br from-red-500/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-bounce"></div>
+                        <div className="absolute inset-0 transition-opacity duration-300 opacity-0 bg-gradient-to-br from-red-500/15 to-transparent group-hover:opacity-100"></div>
+                        <div className="absolute w-3 h-3 transition-opacity duration-300 bg-red-400 rounded-full opacity-0 -top-1 -right-1 group-hover:opacity-100 animate-bounce"></div>
                       </div>
                     </div>
                     
                     {/* Bottom-right: enhanced effects */}
                     <div className="relative group">
-                      <div className="relative overflow-hidden rounded-xl shadow-lg">
+                      <div className="relative overflow-hidden shadow-lg rounded-xl">
                         <img 
                           src={noodles4} 
                           alt="Spicy Korean-style ramen with perfect seasoning"
-                          className="object-cover w-full transition-all duration-400 shadow-md h-32 group-hover:scale-110 group-hover:brightness-110 sm:h-36"
+                          className="object-cover w-full h-32 transition-all shadow-md duration-400 group-hover:scale-110 group-hover:brightness-110 sm:h-36"
                           width="240"
                           height="144"
                           loading="lazy"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-bl from-red-500/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <div className="absolute -top-1 -left-1 w-3 h-3 bg-red-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                        <div className="absolute inset-0 transition-opacity duration-300 opacity-0 bg-gradient-to-bl from-red-500/15 to-transparent group-hover:opacity-100"></div>
+                        <div className="absolute w-3 h-3 transition-opacity duration-300 bg-red-400 rounded-full opacity-0 -top-1 -left-1 group-hover:opacity-100 animate-bounce" style={{animationDelay: '0.1s'}}></div>
                       </div>
                     </div>
                   </div>
                   
                   {/* Bottom spanning image with enhanced styling */}
                   <div className="relative mt-4 group">
-                    <div className="relative overflow-hidden rounded-2xl shadow-lg">
+                    <div className="relative overflow-hidden shadow-lg rounded-2xl">
                       <img 
                         src={Rice} 
                         alt="Premium rice dishes showcasing authentic Asian flavors"
@@ -132,13 +132,13 @@ export default function HomePage() {
                         style={{ aspectRatio: '5/2' }}
                       />
                       {/* Animated gradient overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-red-600/10 to-red-700/10 opacity-0 group-hover:opacity-100 transition-opacity duration-400"></div>
+                      <div className="absolute inset-0 transition-opacity opacity-0 bg-gradient-to-r from-red-500/10 via-red-600/10 to-red-700/10 group-hover:opacity-100 duration-400"></div>
                       
                       {/* Corner sparkles */}
-                      <div className="absolute top-2 left-2 w-2 h-2 bg-red-300 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
-                      <div className="absolute top-2 right-2 w-2 h-2 bg-red-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                      <div className="absolute bottom-2 left-2 w-2 h-2 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse" style={{animationDelay: '0.4s'}}></div>
-                      <div className="absolute bottom-2 right-2 w-2 h-2 bg-red-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse" style={{animationDelay: '0.6s'}}></div>
+                      <div className="absolute w-2 h-2 transition-opacity duration-300 bg-red-300 rounded-full opacity-0 top-2 left-2 group-hover:opacity-100 animate-pulse"></div>
+                      <div className="absolute w-2 h-2 transition-opacity duration-300 bg-red-400 rounded-full opacity-0 top-2 right-2 group-hover:opacity-100 animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                      <div className="absolute w-2 h-2 transition-opacity duration-300 bg-red-500 rounded-full opacity-0 bottom-2 left-2 group-hover:opacity-100 animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                      <div className="absolute w-2 h-2 transition-opacity duration-300 bg-red-600 rounded-full opacity-0 bottom-2 right-2 group-hover:opacity-100 animate-pulse" style={{animationDelay: '0.6s'}}></div>
                     </div>
                   </div>
                 </div>
@@ -173,8 +173,8 @@ export default function HomePage() {
               </div>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-2xl font-bold text-gray-900">$16.99</span>
-                  <span className="text-gray-500 line-through">$24.99</span>
+                  <span className="text-2xl font-bold text-gray-900">Rs.16.99</span>
+                  <span className="text-gray-500 line-through">Rs.24.99</span>
                 </div>
                 <p className="mb-4 text-gray-600">Choice of Tonkotsu, Miso, or Shoyu ramen + gyoza + fresh juice</p>
                 <button className="w-full py-3 font-semibold text-white transition-colors duration-300 transform bg-red-600 hover:bg-red-700 rounded-xl group-hover:scale-105">
@@ -195,8 +195,8 @@ export default function HomePage() {
               </div>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-2xl font-bold text-gray-900">$12.99</span>
-                  <span className="text-gray-500 line-through">$18.99</span>
+                  <span className="text-2xl font-bold text-gray-900">Rs.12.99</span>
+                  <span className="text-gray-500 line-through">Rs.18.99</span>
                 </div>
                 <p className="mb-4 text-gray-600">Orange + Mango + Green Apple juice (16oz each) - Perfect for sharing!</p>
                 <button className="w-full py-3 font-semibold text-white transition-colors duration-300 transform bg-green-500 hover:green-600 rounded-xl group-hover:scale-105">
@@ -217,52 +217,13 @@ export default function HomePage() {
               </div>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-2xl font-bold text-gray-900">$14.99</span>
-                  <span className="text-gray-500 line-through">$21.99</span>
+                  <span className="text-2xl font-bold text-gray-900">Rs.14.99</span>
+                  <span className="text-gray-500 line-through">Rs.21.99</span>
                 </div>
                 <p className="mb-4 text-gray-600">Teriyaki chicken rice bowl + miso soup + side salad + green tea</p>
                 <button className="w-full py-3 font-semibold text-white transition-colors duration-300 transform bg-amber-500 hover:bg-amber-600 rounded-xl group-hover:scale-105">
                   Order Rice Bowl
                 </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Additional Ramen + Juice + Rice Combo */}
-          <div className="mt-8">
-            <div className="overflow-hidden transition-shadow duration-300 bg-white shadow-lg rounded-2xl hover:shadow-xl">
-              <div className="p-6 text-center text-white bg-gradient-to-r from-purple-500 to-pink-500">
-                <div className="mb-3 text-5xl">🍜🥤🍚</div>
-                <h3 className="mb-2 text-2xl font-bold">Grand Minato Triple Threat</h3>
-                <p className="text-purple-100">The ultimate combination - Ramen + Juice + Rice!</p>
-              </div>
-              <div className="p-6">
-                <div className="grid items-center gap-6 md:grid-cols-3">
-                  <div className="text-center">
-                    <h4 className="mb-2 font-semibold text-gray-900">What You Get:</h4>
-                    <ul className="space-y-1 text-sm text-gray-600">
-                      <li>• Premium ramen of choice</li>
-                      <li>• Fresh fruit juice (20oz)</li>
-                      <li>• Chicken teriyaki rice bowl</li>
-                      <li>• Miso soup & salad</li>
-                    </ul>
-                  </div>
-                  <div className="text-center">
-                    <div className="mb-4">
-                      <span className="text-3xl font-bold text-gray-900">$26.99</span>
-                      <span className="block text-lg text-gray-500 line-through">$38.99</span>
-                    </div>
-                    <div className="px-3 py-1 text-sm font-semibold text-green-800 bg-green-100 rounded-full">
-                      Save $12.00!
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <button className="w-full py-4 text-lg font-bold text-white transition-all duration-300 transform shadow-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-xl hover:scale-105">
-                      Order Triple Threat
-                    </button>
-                    <p className="mt-2 text-xs text-gray-500">Perfect for 1-2 people</p>
-                  </div>
-                </div>
               </div>
             </div>
           </div>

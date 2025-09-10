@@ -20,11 +20,10 @@ const FeedbackPage = () => {
   
   // Feedback state
   const [ratings, setRatings] = useState({
-    food: 0,
     service: 0,
-    ambiance: 0,
-    overall: 0
+    food: 0
   });
+  const [itemRatings, setItemRatings] = useState({});
   const [comment, setComment] = useState('');
 
   // Fetch order details based on orderId
@@ -73,7 +72,10 @@ const FeedbackPage = () => {
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
-            onClick={() => {
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               if (onRatingChange) {
                 onRatingChange(star);
               } else {
@@ -97,21 +99,50 @@ const FeedbackPage = () => {
     );
   };
 
-  const submitFeedback = async () => {
+  const submitFeedback = async (formValues) => {
     try {
       setSubmitting(true);
 
-      // Validate required fields
-      if (ratings.food === 0 || ratings.service === 0) {
-        alert('Please provide ratings for food quality and service quality');
+      // Validate required fields - service rating and food ratings
+      console.log('Form values:', formValues);
+      
+      if (!formValues.ratings.service || formValues.ratings.service === 0) {
+        alert('Please provide a service quality rating');
         return;
+      }
+
+      // Check food ratings based on order structure
+      const orderItems = order.items || order.foodItems || [];
+      
+      if (orderItems.length > 0) {
+        // Has individual items - check individual ratings
+        const missingRatings = [];
+        orderItems.forEach(item => {
+          if (!formValues.itemRatings[item.name] || formValues.itemRatings[item.name] === 0) {
+            missingRatings.push(item.name);
+          }
+        });
+
+        if (missingRatings.length > 0) {
+          alert(`Please rate the following items: ${missingRatings.join(', ')}`);
+          return;
+        }
+      } else {
+        // No individual items - check overall food rating
+        if (!formValues.ratings?.food || formValues.ratings.food === 0) {
+          alert('Please provide a food quality rating');
+          return;
+        }
       }
 
       const feedbackData = {
         orderId,
         orderType,
-        ratings,
-        comment: comment.trim(),
+        ratings: {
+          service: formValues.ratings.service
+        },
+        itemRatings: formValues.itemRatings,
+        comment: formValues.comment.trim(),
         submittedAt: new Date().toISOString()
       };
 
@@ -124,10 +155,12 @@ const FeedbackPage = () => {
       });
 
       const result = await response.json();
+      console.log('Feedback submission response:', result);
 
       if (result.success) {
         setSubmitted(true);
       } else {
+        console.error('Feedback submission failed:', result);
         alert(result.message || 'Failed to submit feedback');
       }
     } catch (err) {
@@ -295,19 +328,18 @@ const FeedbackPage = () => {
             <Formik
               initialValues={{
                 ratings: {
-                  food: ratings.food,
                   service: ratings.service,
-                  ambiance: ratings.ambiance,
-                  overall: ratings.overall
+                  food: ratings.food || 0
                 },
+                itemRatings: itemRatings,
                 comment: comment
               }}
-              validationSchema={feedbackSchema}
               enableReinitialize={true}
               onSubmit={(values) => {
                 setRatings(values.ratings);
+                setItemRatings(values.itemRatings);
                 setComment(values.comment);
-                submitFeedback();
+                submitFeedback(values);
               }}
             >
               {({ values, setFieldValue, errors, touched }) => {
@@ -316,20 +348,44 @@ const FeedbackPage = () => {
                     {/* Rating Categories */}
                     <div className="space-y-4 sm:space-y-6">
                       
-                      {/* Food Rating */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Food Quality <span className="text-red-500">*</span>
-                        </label>
-                        <div className="flex justify-center sm:justify-start">
-                          {renderStars('food', values.ratings.food, (rating) => {
-                            setFieldValue('ratings.food', rating);
-                          })}
+                      {/* Individual Food Item Ratings */}
+                      {(order?.items || order?.foodItems || []).length > 0 ? (
+                        <div>
+                          <h4 className="block text-sm font-medium text-gray-700 mb-4">
+                            Rate Each Food Item <span className="text-red-500">*</span>
+                          </h4>
+                          <div className="space-y-4">
+                            {(order.items || order.foodItems || []).map((item, index) => (
+                              <div key={index} className="bg-gray-50 rounded-lg p-4">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3">
+                                  <div className="flex-1 mb-2 sm:mb-0">
+                                    <h5 className="font-medium text-gray-900">{item.name}</h5>
+                                    <p className="text-sm text-gray-600">
+                                      Quantity: {item.quantity} | Price: Rs. {item.price * item.quantity}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex justify-center sm:justify-start">
+                                  {renderStars(item.name, values.itemRatings[item.name] || 0, (rating) => {
+                                    setFieldValue(`itemRatings.${item.name}`, rating);
+                                  })}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                        {errors.ratings?.food && touched.ratings?.food && (
-                          <div className="text-red-500 text-sm mt-1">{errors.ratings.food}</div>
-                        )}
-                      </div>
+                      ) : (
+                        <div>
+                          <h4 className="block text-sm font-medium text-gray-700 mb-4">
+                            Food Quality <span className="text-red-500">*</span>
+                          </h4>
+                          <div className="flex justify-center sm:justify-start">
+                            {renderStars('food', values.ratings?.food || 0, (rating) => {
+                              setFieldValue('ratings.food', rating);
+                            })}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Service Rating */}
                       <div>
@@ -346,40 +402,11 @@ const FeedbackPage = () => {
                         )}
                       </div>
 
-                      {/* Ambiance Rating */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Ambiance <span className="text-red-500">*</span>
-                        </label>
-                        <div className="flex justify-center sm:justify-start">
-                          {renderStars('ambiance', values.ratings.ambiance, (rating) => {
-                            setFieldValue('ratings.ambiance', rating);
-                          })}
-                        </div>
-                        {errors.ratings?.ambiance && touched.ratings?.ambiance && (
-                          <div className="text-red-500 text-sm mt-1">{errors.ratings.ambiance}</div>
-                        )}
-                      </div>
-
-                      {/* Overall Rating */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Overall Experience <span className="text-red-500">*</span>
-                        </label>
-                        <div className="flex justify-center sm:justify-start">
-                          {renderStars('overall', values.ratings.overall, (rating) => {
-                            setFieldValue('ratings.overall', rating);
-                          })}
-                        </div>
-                        {errors.ratings?.overall && touched.ratings?.overall && (
-                          <div className="text-red-500 text-sm mt-1">{errors.ratings.overall}</div>
-                        )}
-                      </div>
 
                       {/* Comments */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Additional Comments <span className="text-red-500">*</span>
+                          Additional Comments <span className="text-gray-400">(Optional)</span>
                         </label>
                         <Field
                           name="comment"

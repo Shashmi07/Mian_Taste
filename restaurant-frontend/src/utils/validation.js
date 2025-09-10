@@ -127,23 +127,12 @@ export const feedbackSchema = yup.object({
       .number()
       .min(1, 'Please rate the service')
       .max(5, 'Rating cannot exceed 5')
-      .required('Service rating is required'),
-    ambiance: yup
-      .number()
-      .min(1, 'Please rate the ambiance')
-      .max(5, 'Rating cannot exceed 5')
-      .required('Ambiance rating is required'),
-    overall: yup
-      .number()
-      .min(1, 'Please provide an overall rating')
-      .max(5, 'Rating cannot exceed 5')
-      .required('Overall rating is required')
+      .required('Service rating is required')
   }),
   comment: yup
     .string()
-    .min(10, 'Comment must be at least 10 characters')
     .max(1000, 'Comment cannot exceed 1000 characters')
-    .required('Comment is required')
+    .optional()
 });
 
 // Payment Gateway validation schemas

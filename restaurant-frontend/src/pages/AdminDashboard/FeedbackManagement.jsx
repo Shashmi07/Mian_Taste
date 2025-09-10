@@ -276,7 +276,10 @@ const FeedbackManagement = () => {
                           </span>
                         </div>
                         <div className="text-xs text-gray-500">
-                          Food: {item.ratings?.food}/5, Service: {item.ratings?.service}/5
+                          {item.itemRatings && Object.keys(item.itemRatings).length > 0 
+                            ? `${Object.keys(item.itemRatings).length} items rated`
+                            : `Food: ${item.ratings?.food || 'N/A'}/5`
+                          }, Service: {item.ratings?.service || 'N/A'}/5
                         </div>
                       </div>
                     </td>
@@ -373,24 +376,45 @@ const FeedbackManagement = () => {
               <div>
                 <h4 className="font-medium text-gray-900 mb-4">Detailed Ratings</h4>
                 <div className="grid gap-3">
-                  {selectedFeedback.ratings?.food > 0 && (
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium text-gray-800">Food Quality</span>
-                        <div className="flex items-center space-x-2">
-                          <StarDisplay rating={selectedFeedback.ratings.food} />
-                          <span className="text-sm text-gray-600">{selectedFeedback.ratings.food}/5</span>
+                  {/* Individual Food Item Ratings (New System) */}
+                  {selectedFeedback.itemRatings && Object.keys(selectedFeedback.itemRatings).length > 0 && (
+                    <div>
+                      <h5 className="text-sm font-medium text-gray-700 mb-3">Individual Food Items</h5>
+                      {Object.entries(selectedFeedback.itemRatings).map(([itemName, rating], index) => (
+                        <div key={index} className="bg-blue-50 rounded-lg p-4 mb-2">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium text-gray-800">{itemName}</span>
+                            <div className="flex items-center space-x-2">
+                              <StarDisplay rating={rating} />
+                              <span className="text-sm text-gray-600">{rating}/5</span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                      ))}
                     </div>
                   )}
+
+                  {/* Service Rating */}
                   {selectedFeedback.ratings?.service > 0 && (
-                    <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="bg-green-50 rounded-lg p-4">
                       <div className="flex justify-between items-center">
                         <span className="font-medium text-gray-800">Service Quality</span>
                         <div className="flex items-center space-x-2">
                           <StarDisplay rating={selectedFeedback.ratings.service} />
                           <span className="text-sm text-gray-600">{selectedFeedback.ratings.service}/5</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Legacy/Old System Support */}
+                  {selectedFeedback.ratings?.food > 0 && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-gray-800">Food Quality (Overall)</span>
+                        <div className="flex items-center space-x-2">
+                          <StarDisplay rating={selectedFeedback.ratings.food} />
+                          <span className="text-sm text-gray-600">{selectedFeedback.ratings.food}/5</span>
                         </div>
                       </div>
                     </div>
@@ -407,11 +431,11 @@ const FeedbackManagement = () => {
                     </div>
                   )}
                   
-                  {/* Legacy feedback support */}
+                  {/* Legacy QR feedback support */}
                   {selectedFeedback.itemFeedback && selectedFeedback.itemFeedback.map((item, index) => (
                     <div key={index} className="bg-gray-50 rounded-lg p-4">
                       <div className="flex justify-between items-center">
-                        <span className="font-medium text-gray-800">{item.itemName}</span>
+                        <span className="font-medium text-gray-800">{item.itemName} (Legacy)</span>
                         <div className="flex items-center space-x-2">
                           <StarDisplay rating={item.rating} />
                           <span className="text-sm text-gray-600">{item.rating}/5</span>

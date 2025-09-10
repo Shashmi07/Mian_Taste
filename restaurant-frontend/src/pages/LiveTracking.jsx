@@ -272,7 +272,8 @@ const LiveTracking = () => {
         : `http://${window.location.hostname}:5000`;
 
       const feedbackData = {
-        orderId: order._id,
+        orderId: order.orderId, // Use the order ID string, not the MongoDB _id
+        orderType: 'qr', // Add the missing orderType field
         orderNumber: order.orderId,
         itemFeedback: Object.keys(feedback).map(index => ({
           itemIndex: parseInt(index),

@@ -33,12 +33,23 @@ const submitFeedback = async (req, res) => {
         });
       }
 
+      // Create feedback data for legacy system with proper customer info
+      const legacyFeedbackData = {
+        ...req.body,
+        customerInfo: {
+          name: req.body.customerName || 'Customer',
+          phone: 'N/A', // QR orders don't have phone in legacy system
+          table: req.body.table
+        }
+      };
+
       const Feedback = getFeedbackModel();
-      const feedback = new Feedback(req.body);
+      const feedback = new Feedback(legacyFeedbackData);
       await feedback.save();
 
       console.log('✅ Legacy feedback submitted successfully:', {
         orderNumber: feedback.orderNumber,
+        customerName: feedback.customerInfo?.name,
         averageRating: feedback.averageRating,
         itemCount: feedback.itemFeedback.length
       });
@@ -49,17 +60,30 @@ const submitFeedback = async (req, res) => {
         feedback: {
           _id: feedback._id,
           orderNumber: feedback.orderNumber,
+          customerName: feedback.customerInfo?.name,
           averageRating: feedback.averageRating,
           createdAt: feedback.createdAt
         }
       });
     }
 
-    // New universal feedback system
-    if (!orderId || !orderType || !ratings || !ratings.food || !ratings.service) {
+    // New universal feedback system - softened validation
+    if (!orderId || !orderType) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields: orderId, orderType, food quality rating, and service quality rating'
+        message: 'Missing required fields: orderId and orderType'
+      });
+    }
+
+    // Flexible rating validation - accept either old format or new format
+    const hasServiceRating = ratings && ratings.service > 0;
+    const hasItemRatings = req.body.itemRatings && Object.keys(req.body.itemRatings).length > 0;
+    const hasOldFoodRating = ratings && ratings.food > 0;
+
+    if (!hasServiceRating && !hasItemRatings && !hasOldFoodRating) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide at least a service rating or food ratings'
       });
     }
 
@@ -74,8 +98,9 @@ const submitFeedback = async (req, res) => {
         orderModel = 'QrOrder';
         if (order) {
           customerInfo = {
-            name: order.customerName,
-            phone: order.customerPhone
+            name: order.customerName || 'Customer', // Use the customer name from QR order
+            phone: order.customerPhone || 'N/A', // QR orders might not have phone
+            table: order.table
           };
         }
         break;
@@ -129,16 +154,27 @@ const submitFeedback = async (req, res) => {
       });
     }
 
-    // Create feedback
-    const feedback = new Feedback({
+    // Create feedback - handle both old and new rating formats
+    const feedbackData = {
       orderId: orderId.toUpperCase(),
       orderType,
-      ratings,
       comment: comment || '',
       customerInfo,
       orderRef: order._id,
       orderModel
-    });
+    };
+
+    // Add ratings (service rating)
+    if (ratings) {
+      feedbackData.ratings = ratings;
+    }
+
+    // Add individual item ratings if provided
+    if (req.body.itemRatings) {
+      feedbackData.itemRatings = req.body.itemRatings;
+    }
+
+    const feedback = new Feedback(feedbackData);
 
     await feedback.save();
 
@@ -163,6 +199,7 @@ const submitFeedback = async (req, res) => {
 
   } catch (error) {
     console.error('Error submitting feedback:', error);
+    console.error('Request data:', { orderId: req.body.orderId, orderType: req.body.orderType, ratings: req.body.ratings, itemRatings: req.body.itemRatings });
     
     if (error.code === 11000) {
       return res.status(409).json({
@@ -173,7 +210,7 @@ const submitFeedback = async (req, res) => {
     
     res.status(500).json({
       success: false,
-      message: 'Server error',
+      message: 'Server error: ' + error.message,
       error: error.message
     });
   }

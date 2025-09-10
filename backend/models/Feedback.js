@@ -14,30 +14,22 @@ const feedbackSchema = new mongoose.Schema({
   },
   // Ratings for different aspects
   ratings: {
-    food: {
-      type: Number,
-      min: 0,
-      max: 5,
-      default: 0
-    },
     service: {
       type: Number,
       min: 0,
       max: 5,
       default: 0
-    },
-    ambiance: {
-      type: Number,
-      min: 0,
-      max: 5,
-      default: 0
-    },
-    overall: {
-      type: Number,
-      min: 0,
-      max: 5,
-      default: 0
     }
+  },
+  // Individual food item ratings
+  itemRatings: {
+    type: Map,
+    of: {
+      type: Number,
+      min: 1,
+      max: 5
+    },
+    default: new Map()
   },
   comment: {
     type: String,
@@ -94,13 +86,19 @@ const feedbackSchema = new mongoose.Schema({
 
 // Calculate average rating before saving
 feedbackSchema.pre('save', function(next) {
-  // For new rating system
-  if (this.ratings) {
+  // For new rating system with individual item ratings
+  if (this.itemRatings && this.itemRatings.size > 0) {
     const validRatings = [];
-    if (this.ratings.food > 0) validRatings.push(this.ratings.food);
-    if (this.ratings.service > 0) validRatings.push(this.ratings.service);
-    if (this.ratings.ambiance > 0) validRatings.push(this.ratings.ambiance);
-    if (this.ratings.overall > 0) validRatings.push(this.ratings.overall);
+    
+    // Add all individual food item ratings
+    for (const rating of this.itemRatings.values()) {
+      if (rating > 0) validRatings.push(rating);
+    }
+    
+    // Add service rating
+    if (this.ratings && this.ratings.service > 0) {
+      validRatings.push(this.ratings.service);
+    }
     
     if (validRatings.length > 0) {
       const sum = validRatings.reduce((acc, rating) => acc + rating, 0);

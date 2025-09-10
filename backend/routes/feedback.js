@@ -18,12 +18,11 @@ const legacyFeedbackValidation = [
   body('itemFeedback.*.rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5')
 ];
 
-// New validation middleware for universal feedback
+// New validation middleware for universal feedback - softened for flexibility
 const universalFeedbackValidation = [
   body('orderId').notEmpty().withMessage('Order ID is required'),
-  body('orderType').isIn(['qr', 'pre', 'reservation']).withMessage('Invalid order type'),
-  body('ratings.food').isInt({ min: 1, max: 5 }).withMessage('Food quality rating is required and must be between 1 and 5'),
-  body('ratings.service').isInt({ min: 1, max: 5 }).withMessage('Service quality rating is required and must be between 1 and 5')
+  body('orderType').isIn(['qr', 'pre', 'reservation']).withMessage('Invalid order type')
+  // Remove strict validation for ratings to be more flexible
 ];
 
 // Public routes - submit feedback (no auth required)
