@@ -141,8 +141,8 @@ export default function HomePage() {
               </div>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-2xl font-bold text-gray-900">$16.99</span>
-                  <span className="text-gray-500 line-through">$24.99</span>
+                  <span className="text-2xl font-bold text-gray-900">Rs .16.99</span>
+                  <span className="text-gray-500 line-through">Rs. 24.99</span>
                 </div>
                 <p className="mb-4 text-gray-600">Choice of Tonkotsu, Miso, or Shoyu ramen + gyoza + fresh juice</p>
                 <button className="w-full py-3 font-semibold text-white transition-colors duration-300 transform bg-orange-500 hover:bg-orange-600 rounded-xl group-hover:scale-105">
@@ -163,8 +163,8 @@ export default function HomePage() {
               </div>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-2xl font-bold text-gray-900">$12.99</span>
-                  <span className="text-gray-500 line-through">$18.99</span>
+                  <span className="text-2xl font-bold text-gray-900">Rs. 12.99</span>
+                  <span className="text-gray-500 line-through">Rs. 18.99</span>
                 </div>
                 <p className="mb-4 text-gray-600">Orange + Mango + Green Apple juice (16oz each) - Perfect for sharing!</p>
                 <button className="w-full py-3 font-semibold text-white transition-colors duration-300 transform bg-green-500 hover:green-600 rounded-xl group-hover:scale-105">
@@ -185,8 +185,8 @@ export default function HomePage() {
               </div>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-2xl font-bold text-gray-900">$14.99</span>
-                  <span className="text-gray-500 line-through">$21.99</span>
+                  <span className="text-2xl font-bold text-gray-900">Rs. 14.99</span>
+                  <span className="text-gray-500 line-through">Rs. 21.99</span>
                 </div>
                 <p className="mb-4 text-gray-600">Teriyaki chicken rice bowl + miso soup + side salad + green tea</p>
                 <button className="w-full py-3 font-semibold text-white transition-colors duration-300 transform bg-amber-500 hover:bg-amber-600 rounded-xl group-hover:scale-105">
@@ -196,44 +196,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Additional Ramen + Juice + Rice Combo */}
-          <div className="mt-8">
-            <div className="overflow-hidden transition-shadow duration-300 bg-white shadow-lg rounded-2xl hover:shadow-xl">
-              <div className="p-6 text-center text-white bg-gradient-to-r from-purple-500 to-pink-500">
-                <div className="mb-3 text-5xl">🍜🥤🍚</div>
-                <h3 className="mb-2 text-2xl font-bold">Grand Minato Triple Threat</h3>
-                <p className="text-purple-100">The ultimate combination - Ramen + Juice + Rice!</p>
-              </div>
-              <div className="p-6">
-                <div className="grid items-center gap-6 md:grid-cols-3">
-                  <div className="text-center">
-                    <h4 className="mb-2 font-semibold text-gray-900">What You Get:</h4>
-                    <ul className="space-y-1 text-sm text-gray-600">
-                      <li>• Premium ramen of choice</li>
-                      <li>• Fresh fruit juice (20oz)</li>
-                      <li>• Chicken teriyaki rice bowl</li>
-                      <li>• Miso soup & salad</li>
-                    </ul>
-                  </div>
-                  <div className="text-center">
-                    <div className="mb-4">
-                      <span className="text-3xl font-bold text-gray-900">$26.99</span>
-                      <span className="block text-lg text-gray-500 line-through">$38.99</span>
-                    </div>
-                    <div className="px-3 py-1 text-sm font-semibold text-green-800 bg-green-100 rounded-full">
-                      Save $12.00!
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <button className="w-full py-4 text-lg font-bold text-white transition-all duration-300 transform shadow-lg bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-xl hover:scale-105">
-                      Order Triple Threat
-                    </button>
-                    <p className="mt-2 text-xs text-gray-500">Perfect for 1-2 people</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          
 
           {/* Additional promotional banner */}
           <div className="relative p-8 mt-12 overflow-hidden text-center text-white bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl">
