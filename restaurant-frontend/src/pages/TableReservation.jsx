@@ -6,7 +6,7 @@ import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 import { checkAvailability } from '../services/tableReservationAPI';
 import { useCart } from '../context/CartContext';
-import { tableReservationSchema } from '../utils/validation';
+import { tableSelectionSchema } from '../utils/validation';
 
 // Table pricing constant
 const TABLE_PRICE_PER_TABLE = 500;
@@ -446,79 +446,16 @@ export default function TableReservation() {
 
             <Formik
               initialValues={{
-                customerName: customerInfo.customerName,
-                customerEmail: customerInfo.customerEmail,
-                customerPhone: customerInfo.customerPhone,
                 reservationDate: selectedDate,
                 timeSlot: selectedTimeSlot,
                 selectedTables: selectedTables
               }}
-              validationSchema={tableReservationSchema}
+              validationSchema={tableSelectionSchema}
               enableReinitialize={true}
               onSubmit={handleProceed}
             >
               {({ values, setFieldValue, errors, touched }) => (
                 <Form>
-
-                  {/* Customer Information */}
-                  <div className="mb-8">
-                    <h2 className="text-gray-800 text-xl font-semibold mb-6 text-center">
-                      Customer Information
-                    </h2>
-                    <div className="grid md:grid-cols-3 gap-6 mb-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Name *
-                        </label>
-                        <Field
-                          name="customerName"
-                          type="text"
-                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                            errors.customerName && touched.customerName ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                          onChange={(e) => {
-                            setFieldValue('customerName', e.target.value);
-                            setCustomerInfo(prev => ({ ...prev, customerName: e.target.value }));
-                          }}
-                        />
-                        <ErrorMessage name="customerName" component="div" className="text-red-500 text-xs mt-1" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Email *
-                        </label>
-                        <Field
-                          name="customerEmail"
-                          type="email"
-                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                            errors.customerEmail && touched.customerEmail ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                          onChange={(e) => {
-                            setFieldValue('customerEmail', e.target.value);
-                            setCustomerInfo(prev => ({ ...prev, customerEmail: e.target.value }));
-                          }}
-                        />
-                        <ErrorMessage name="customerEmail" component="div" className="text-red-500 text-xs mt-1" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Phone *
-                        </label>
-                        <Field
-                          name="customerPhone"
-                          type="text"
-                          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                            errors.customerPhone && touched.customerPhone ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                          onChange={(e) => {
-                            setFieldValue('customerPhone', e.target.value);
-                            setCustomerInfo(prev => ({ ...prev, customerPhone: e.target.value }));
-                          }}
-                        />
-                        <ErrorMessage name="customerPhone" component="div" className="text-red-500 text-xs mt-1" />
-                      </div>
-                    </div>
-                  </div>
 
                   {/* Date & Time Selection */}
                   <div className="mb-8">

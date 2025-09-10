@@ -92,6 +92,18 @@ export const tableReservationSchema = yup.object({
     .required('Table selection is required')
 });
 
+export const tableSelectionSchema = yup.object({
+  reservationDate: yup
+    .date()
+    .min(new Date(), 'Reservation date cannot be in the past')
+    .required('Reservation date is required'),
+  timeSlot: yup.string().required('Time slot is required'),
+  selectedTables: yup
+    .array()
+    .min(1, 'Please select at least one table')
+    .required('Table selection is required')
+});
+
 export const preOrderSchema = yup.object({
   customerName: nameValidation,
   customerEmail: emailValidation,
