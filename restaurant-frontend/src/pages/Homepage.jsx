@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ShoppingCart, Menu, X, Utensils } from 'lucide-react';
 import NavBar from '../components/NavBar';
-import Footer from '../components/Footer';
+import Footer from '../components/Footer.jsx';
 
 // Import images from assets
 import noodles1 from '../assets/noodles1.jpg';
