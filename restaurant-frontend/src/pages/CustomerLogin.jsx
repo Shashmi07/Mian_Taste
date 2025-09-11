@@ -193,7 +193,11 @@ const LoginScreen = ({ onLogin }) => {
                     <input type="checkbox" className="rounded border-gray-300 text-green-500 focus:border-green-500 focus:ring-green-500" />
                     <span className="ml-2 text-gray-600">Remember me</span>
                   </label>
-                  <button type="button" className="text-green-600 hover:text-green-700 transition-colors">
+                  <button 
+                    type="button" 
+                    className="text-green-600 hover:text-green-700 transition-colors"
+                    onClick={() => navigate("/forgot-password")}
+                  >
                     Forgot password?
                   </button>
                 </div>

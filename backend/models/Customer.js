@@ -39,6 +39,14 @@ const customerSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  resetPasswordToken: {
+    type: String,
+    default: null
+  },
+  resetPasswordExpires: {
+    type: Date,
+    default: null
+  },
   orders: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Order'

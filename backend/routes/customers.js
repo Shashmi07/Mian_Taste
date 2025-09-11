@@ -4,7 +4,9 @@ const {
   registerCustomer,
   loginCustomer,
   getCustomerProfile,
-  updateCustomerProfile
+  updateCustomerProfile,
+  forgotPassword,
+  resetPassword
 } = require('../controllers/customerController');
 const auth = require('../middleware/auth');
 
@@ -45,6 +47,22 @@ const loginValidation = [
     .withMessage('Password is required')
 ];
 
+const forgotPasswordValidation = [
+  body('email')
+    .isEmail()
+    .withMessage('Please provide a valid email')
+    .normalizeEmail()
+];
+
+const resetPasswordValidation = [
+  body('token')
+    .notEmpty()
+    .withMessage('Reset token is required'),
+  body('newPassword')
+    .isLength({ min: 6 })
+    .withMessage('New password must be at least 6 characters long')
+];
+
 // Customer registration route
 router.post('/register', registerValidation, registerCustomer);
 
@@ -56,5 +74,11 @@ router.get('/profile', auth, getCustomerProfile);
 
 // Update customer profile (protected route)
 router.put('/profile', auth, updateCustomerProfile);
+
+// Forgot password route
+router.post('/forgot-password', forgotPasswordValidation, forgotPassword);
+
+// Reset password route
+router.post('/reset-password', resetPasswordValidation, resetPassword);
 
 module.exports = router;

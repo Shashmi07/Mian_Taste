@@ -340,10 +340,15 @@ function PreOrder() {
                             <Calendar className="inline h-4 w-4 mr-2" />
                             Select Date *
                           </label>
-                          <Field
+                          <input
                             name="scheduledDate"
                             type="date"
+                            value={values.scheduledDate}
                             min={new Date().toISOString().split('T')[0]}
+                            onChange={(e) => {
+                              setFieldValue('scheduledDate', e.target.value);
+                              setSelectedDate(e.target.value);
+                            }}
                             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
                               errors.scheduledDate && touched.scheduledDate ? 'border-red-500' : 'border-gray-300'
                             }`}
@@ -356,9 +361,13 @@ function PreOrder() {
                             Select Time *
                           </label>
                           <div className="relative">
-                            <Field
+                            <select
                               name="scheduledTime"
-                              as="select"
+                              value={values.scheduledTime}
+                              onChange={(e) => {
+                                setFieldValue('scheduledTime', e.target.value);
+                                setSelectedTime(e.target.value);
+                              }}
                               className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 appearance-none ${
                                 errors.scheduledTime && touched.scheduledTime ? 'border-red-500' : 'border-gray-300'
                               }`}
@@ -367,7 +376,7 @@ function PreOrder() {
                               {timeSlots.map((time) => (
                                 <option key={time} value={time}>{time}</option>
                               ))}
-                            </Field>
+                            </select>
                             <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
                           </div>
                           <ErrorMessage name="scheduledTime" component="div" className="text-red-500 text-sm mt-1" />

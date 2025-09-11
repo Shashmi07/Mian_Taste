@@ -13,6 +13,8 @@ import ChefLogin from './components/ChefLogin';
 import AdminLogin from './components/AdminLogin';
 import CustomerLogin from './pages/CustomerLogin';
 import SignupScreen from './pages/SignupScreen';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import ChefDashboard from './pages/ChefDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import LiveTracking from './pages/LiveTracking';
@@ -125,6 +127,29 @@ function App() {
             element={
               !isAuthenticated ? (
                 <SignupScreen />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            } 
+          />
+          
+          {/* Forgot Password routes */}
+          <Route 
+            path="/forgot-password" 
+            element={
+              !isAuthenticated ? (
+                <ForgotPassword />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            } 
+          />
+          
+          <Route 
+            path="/reset-password" 
+            element={
+              !isAuthenticated ? (
+                <ResetPassword />
               ) : (
                 <Navigate to="/" replace />
               )

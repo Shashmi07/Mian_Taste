@@ -49,7 +49,9 @@ export const customerAPI = {
     return axios.put('/customers/profile', profileData, {
       headers: { Authorization: `Bearer ${token}` }
     });
-  }
+  },
+  forgotPassword: (email) => axios.post('/customers/forgot-password', { email }),
+  resetPassword: (token, newPassword) => axios.post('/customers/reset-password', { token, newPassword })
 };
 
 export const ordersAPI = {

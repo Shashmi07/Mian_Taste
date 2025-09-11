@@ -171,8 +171,96 @@ const sendTestEmail = async (testEmail) => {
   }
 };
 
+// Send password reset email
+const sendPasswordResetEmail = async (email, resetToken, customerName) => {
+  try {
+    const transporter = createGmailTransporter();
+    
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+    
+    const mailOptions = {
+      from: `"Mian Taste Restaurant" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: '🔐 Reset Your Password - Mian Taste Restaurant',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+          <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #dc2626; margin: 0; font-size: 28px;">🍜 Mian Taste</h1>
+              <p style="color: #666; margin: 5px 0 0 0; font-size: 14px;">Authentic Asian Cuisine</p>
+            </div>
+            
+            <h2 style="color: #333; margin-bottom: 20px;">Hi ${customerName}!</h2>
+            
+            <p style="color: #555; line-height: 1.6; margin-bottom: 20px;">
+              We received a request to reset your password for your Mian Taste account.
+            </p>
+            
+            <p style="color: #555; line-height: 1.6; margin-bottom: 30px;">
+              Click the button below to create a new password. This link will expire in 1 hour for security reasons.
+            </p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${resetUrl}" 
+                 style="background-color: #dc2626; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block;">
+                🔐 Reset Password
+              </a>
+            </div>
+            
+            <p style="color: #777; font-size: 14px; margin-bottom: 20px;">
+              If you didn't request a password reset, please ignore this email. Your password will remain unchanged.
+            </p>
+            
+            <p style="color: #777; font-size: 14px; margin-bottom: 20px;">
+              If the button doesn't work, copy and paste this link into your browser:<br>
+              <a href="${resetUrl}" style="color: #dc2626; word-break: break-all;">${resetUrl}</a>
+            </p>
+            
+            <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px;">
+              <p style="color: #888; font-size: 12px; margin: 0;">
+                For security reasons, this link will expire in 1 hour.<br>
+                <strong>The Mian Taste Team</strong>
+              </p>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin-top: 20px;">
+            <p style="color: #999; font-size: 11px;">
+              This email was sent because a password reset was requested for your account.
+            </p>
+          </div>
+        </div>
+      `,
+      text: `
+Hi ${customerName}!
+
+We received a request to reset your password for your Mian Taste account.
+
+Click this link to create a new password (expires in 1 hour):
+${resetUrl}
+
+If you didn't request a password reset, please ignore this email.
+
+The Mian Taste Team
+      `
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('✅ Password reset email sent successfully:', {
+      email,
+      messageId: result.messageId
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('❌ Error sending password reset email:', error);
+    return false;
+  }
+};
+
 module.exports = {
   sendFeedbackEmail,
+  sendPasswordResetEmail,
   testEmailConfig,
   sendTestEmail
 };

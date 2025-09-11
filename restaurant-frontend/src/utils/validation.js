@@ -56,6 +56,18 @@ export const adminLoginSchema = yup.object({
   password: yup.string().required('Password is required')
 });
 
+export const forgotPasswordSchema = yup.object({
+  email: emailValidation
+});
+
+export const resetPasswordSchema = yup.object({
+  newPassword: passwordValidation,
+  confirmPassword: yup
+    .string()
+    .oneOf([yup.ref('newPassword'), null], 'Passwords must match')
+    .required('Please confirm your password')
+});
+
 export const menuItemSchema = yup.object({
   name: yup
     .string()
