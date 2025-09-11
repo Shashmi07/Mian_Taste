@@ -5,7 +5,7 @@ import NavBar from '../components/NavBar';
 import { Link, useNavigate } from 'react-router-dom';
 import { menuAPI } from '../services/api';
 import { preOrderSchema } from '../utils/validation';
-import Footer from '../components/Footer.jsx';
+import Footer from '../components/Footer';
 
 function PreOrder() {
   const navigate = useNavigate();

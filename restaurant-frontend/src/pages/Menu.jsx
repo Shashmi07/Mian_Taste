@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Star, Search, Clock, QrCode, X, Calendar, ShoppingCart, Calendar as CalendarIcon, UtensilsCrossed, Truck } from 'lucide-react';
 import { useLocation, useSearchParams, Link } from 'react-router-dom';
 import NavBar from '../components/NavBar';
-import Footer from '../components/Footer.jsx';
+import Footer from '../components/Footer';
 import { useCart } from '../context/CartContext';
 
 // Import all images from MenuItems folder and create mapping

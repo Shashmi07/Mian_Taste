@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Star, MessageSquare, Send, CheckCircle, ArrowLeft, Calendar, Clock, UtensilsCrossed, Users } from 'lucide-react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import NavBar from '../components/NavBar';
-import Footer from '../components/Footer.jsx';
+import Footer from '../components/Footer';
 import { feedbackSchema } from '../utils/validation';
 
 const FeedbackPage = () => {
