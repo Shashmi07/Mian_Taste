@@ -17,7 +17,15 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001', 'http://10.11.5.232:3000', 'http://192.168.8.209:3000'],
+  origin: [
+    'http://localhost:3000', 
+    'http://localhost:3001', 
+    'http://127.0.0.1:3000', 
+    'http://127.0.0.1:3001', 
+    'http://10.11.5.232:3000', 
+    'http://192.168.8.209:3000',
+    process.env.FRONTEND_URL || 'https://mian-taste.vercel.app'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -35,7 +43,13 @@ app.use((req, res, next) => {
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:3001", "http://10.11.5.232:3000", "http://192.168.8.209:3000"],
+    origin: [
+      "http://localhost:3000", 
+      "http://localhost:3001", 
+      "http://10.11.5.232:3000", 
+      "http://192.168.8.209:3000",
+      process.env.FRONTEND_URL || "https://mian-taste.vercel.app"
+    ],
     methods: ["GET", "POST"]
   }
 });
