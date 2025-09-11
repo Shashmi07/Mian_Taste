@@ -1,7 +1,13 @@
 import axios from 'axios';
 
-// Dynamic API base URL - works for both localhost and IP addresses
+// Dynamic API base URL - works for localhost, IP addresses, and production
 const getAPIBaseURL = () => {
+  // Use environment variable for production, fallback to dynamic detection
+  if (process.env.REACT_APP_API_URL) {
+    return `${process.env.REACT_APP_API_URL}/api`;
+  }
+  
+  // For local development
   const hostname = window.location.hostname;
   return hostname === 'localhost' 
     ? 'http://localhost:5000/api'
