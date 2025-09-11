@@ -653,9 +653,18 @@ const Cart = () => {
               <button 
                 onClick={(e) => {
                   e.preventDefault();
-                  console.log('Sign In button clicked');
+                  e.stopPropagation();
+                  console.log('🔴 Sign In button clicked - delivery customer authentication');
+                  console.log('Current location:', window.location.pathname);
+                  console.log('Setting returnAfterLogin to:', '/cart');
                   localStorage.setItem('returnAfterLogin', '/cart');
-                  navigate('/login');
+                  console.log('Navigating to /login...');
+                  try {
+                    navigate('/login');
+                    console.log('✅ Navigate to /login executed');
+                  } catch (error) {
+                    console.error('❌ Navigation failed:', error);
+                  }
                 }}
                 className="px-8 py-3 bg-red-600 text-white font-semibold rounded-full hover:bg-red-700 transition-colors duration-300 mx-2"
               >
@@ -664,9 +673,18 @@ const Cart = () => {
               <button 
                 onClick={(e) => {
                   e.preventDefault();
-                  console.log('Create Account button clicked');
+                  e.stopPropagation();
+                  console.log('🔴 Create Account button clicked - delivery customer registration');
+                  console.log('Current location:', window.location.pathname);
+                  console.log('Setting returnAfterLogin to:', '/cart');
                   localStorage.setItem('returnAfterLogin', '/cart');
-                  navigate('/signup');
+                  console.log('Navigating to /signup...');
+                  try {
+                    navigate('/signup');
+                    console.log('✅ Navigate to /signup executed');
+                  } catch (error) {
+                    console.error('❌ Navigation failed:', error);
+                  }
                 }}
                 className="px-8 py-3 bg-gray-100 text-gray-700 font-semibold rounded-full hover:bg-gray-200 transition-colors duration-300 mx-2"
               >

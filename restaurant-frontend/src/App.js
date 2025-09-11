@@ -37,22 +37,38 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('🔍 App.js - Checking authentication state...');
+    
     // Check if user is logged in (staff or customer)
     const savedUser = localStorage.getItem('user');
     const token = localStorage.getItem('token');
     const customerUser = localStorage.getItem('customerUser');
     const customerToken = localStorage.getItem('customerToken');
+    const deliveryContext = localStorage.getItem('deliveryContext');
+    
+    console.log('🔍 App.js - Auth tokens check:', {
+      savedUser: !!savedUser,
+      token: !!token,
+      customerUser: !!customerUser,
+      customerToken: !!customerToken,
+      deliveryContext
+    });
     
     if ((savedUser && token) || (customerUser && customerToken)) {
       if (customerUser && customerToken) {
         // Customer is logged in
+        console.log('✅ Customer is authenticated');
         setUser(JSON.parse(customerUser));
         setIsAuthenticated(true);
       } else if (savedUser && token) {
         // Staff is logged in
+        console.log('✅ Staff is authenticated');
         setUser(JSON.parse(savedUser));
         setIsAuthenticated(true);
       }
+    } else {
+      console.log('❌ No valid authentication found');
+      setIsAuthenticated(false);
     }
     setLoading(false);
   }, []);
@@ -126,11 +142,16 @@ function App() {
           <Route 
             path="/login" 
             element={
-              !isAuthenticated ? (
-                <CustomerLogin onLogin={handleLogin} />
-              ) : (
-                <Navigate to="/" replace />
-              )
+              (() => {
+                console.log('🔍 LOGIN ROUTE - isAuthenticated:', isAuthenticated);
+                if (!isAuthenticated) {
+                  console.log('✅ Showing login page');
+                  return <CustomerLogin onLogin={handleLogin} />;
+                } else {
+                  console.log('❌ User authenticated, redirecting to homepage');
+                  return <Navigate to="/" replace />;
+                }
+              })()
             } 
           />
           

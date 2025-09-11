@@ -77,13 +77,6 @@ const sendFeedbackEmail = async (orderData) => {
               Thank you for choosing Mian Taste! Your ${orderTypeText.toLowerCase()} <strong>${orderId}</strong> has been ${isDeliveryOrder ? 'delivered' : 'completed'}.
             </p>
             
-            ${isDeliveryOrder ? `
-            <div style="background-color: #f0f9ff; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; margin-bottom: 20px;">
-              <p style="color: #1e40af; margin: 0; font-weight: 500;">
-                🚚 Delivery Address: ${deliveryAddress || 'As provided during order'}
-              </p>
-            </div>
-            ` : ''}
             
             <p style="color: #555; line-height: 1.6; margin-bottom: 30px;">
               We hope you enjoyed your ${isDeliveryOrder ? 'delivered meal' : 'meal'}! We'd love to hear about your experience to help us serve you better in the future.
@@ -120,9 +113,7 @@ Hi ${customerName}!
 
 Thank you for choosing Mian Taste! Your ${orderTypeText.toLowerCase()} ${orderId} has been ${isDeliveryOrder ? 'delivered' : 'completed'}.
 
-${isDeliveryOrder ? `Delivery Address: ${deliveryAddress || 'As provided during order'}
-
-` : ''}We hope you enjoyed your ${isDeliveryOrder ? 'delivered meal' : 'meal'}! Please take a moment to rate your experience:
+We hope you enjoyed your ${isDeliveryOrder ? 'delivered meal' : 'meal'}! Please take a moment to rate your experience:
 ${feedbackUrl}
 
 Your feedback helps us improve our service.

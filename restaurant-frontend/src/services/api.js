@@ -9,7 +9,7 @@ axios.defaults.baseURL = API_BASE_URL;
 
 // Update axios base URL dynamically (in case hostname changes)
 export const updateAPIBaseURL = () => {
-  axios.defaults.baseURL = getAPIBaseURL();
+  axios.defaults.baseURL = getAPIUrl('/api');
 };
 
 // Chef authAPI export
