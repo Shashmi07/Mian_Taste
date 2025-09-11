@@ -44,6 +44,10 @@ const LoginScreen = ({ onLogin }) => {
         // Continue with basic login data if profile fetch fails
       }
       
+      // Check if user should return to a specific page after login FIRST
+      const returnAfterLogin = localStorage.getItem('returnAfterLogin');
+      console.log('Login success - checking returnAfterLogin:', returnAfterLogin);
+      
       // Dispatch custom event to notify NavBar and other components
       window.dispatchEvent(new CustomEvent('authChange'));
       
@@ -51,13 +55,17 @@ const LoginScreen = ({ onLogin }) => {
         onLogin(response.data);
       }
       
-      // Check if user should return to a specific page after login
-      const returnAfterLogin = localStorage.getItem('returnAfterLogin');
-      if (returnAfterLogin) {
-        navigate(returnAfterLogin);
-      } else {
-        navigate('/'); // Default redirect to homepage
-      }
+      // Navigate after authentication state is set
+      setTimeout(() => {
+        if (returnAfterLogin) {
+          console.log('Found returnAfterLogin, navigating to:', returnAfterLogin);
+          localStorage.removeItem('returnAfterLogin'); // Clear the return path
+          navigate(returnAfterLogin);
+        } else {
+          console.log('No returnAfterLogin found, going to homepage');
+          navigate('/'); // Default redirect to homepage
+        }
+      }, 100); // Small delay to ensure auth state is updated
     } catch (error) {
       console.error('Login failed:', error);
       if (error.response) {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import NavBar from '../../components/NavBar'; // Fixed: components (lowercase)
 import MenuCategory from '../../components/MenuCategory'; // Fixed: components (lowercase)
+import { useCart } from '../../context/CartContext';
 
 // Image imports for mapping
 import eggRamen from '../../assets/MenuItems/eggRamen.jpg';
@@ -46,6 +47,29 @@ const Menu = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { clearCart } = useCart();
+  
+  // Clear cart if user navigated back from cart page
+  useEffect(() => {
+    if (localStorage.getItem('visitedCart') === 'true') {
+      console.log('User returned from cart - clearing cart');
+      clearCart();
+      localStorage.removeItem('visitedCart');
+    }
+  }, [clearCart]);
+  
+  // Set delivery context for direct visitors
+  useEffect(() => {
+    // If user is not from QR, preorder, or reservation - they are delivery customers
+    const hasValidContext = localStorage.getItem('qrTableNumber') ||
+                           localStorage.getItem('preorderContext') ||
+                           localStorage.getItem('reservationContext');
+    
+    if (!hasValidContext) {
+      localStorage.setItem('deliveryContext', 'true');
+      console.log('Direct visitor - set as delivery order');
+    }
+  }, []);
 
   useEffect(() => {
     fetchRamenItems();

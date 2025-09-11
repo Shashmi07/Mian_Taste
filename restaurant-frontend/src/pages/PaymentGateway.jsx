@@ -657,6 +657,38 @@ export default function PaymentGateway() {
         
         // Navigate to home (QR orders don't have tracking - customers wait at table)
         navigate('/');
+      } else if (orderData?.type === 'delivery') {
+        // Handle online delivery order payment
+        console.log('🎉 Processing online delivery order payment');
+        
+        // Create confirmation message for delivery order
+        const confirmationMessage = `🎉 Online Delivery Order Confirmed & Payment Successful!\n\n` +
+          `📋 Order Details:\n` +
+          `Order ID: ${orderData.orderId}\n` +
+          `Customer: ${customerInfo.name}\n` +
+          `Total Paid: Rs.${orderTotal}\n\n` +
+          `🚚 Your order will be delivered to your address.\n` +
+          `📞 We'll call you to confirm the delivery address.\n` +
+          `⏰ Expected delivery time: 30-45 minutes\n\n` +
+          `Thank you for choosing Mian Taste!`;
+        
+        alert(confirmationMessage);
+        
+        // Clean up ALL order and cart data
+        localStorage.removeItem('currentOrder');
+        localStorage.removeItem('pendingReservation');
+        localStorage.removeItem('reservationContext');
+        localStorage.removeItem('deliveryContext');
+        localStorage.removeItem('orderData');
+        localStorage.removeItem('cartItems');
+        localStorage.removeItem('reservationState');
+        localStorage.removeItem('returnAfterLogin');
+        clearCart(); // Clear cart context after successful delivery order
+        
+        console.log('🧹 Cleared all delivery order and cart data after successful payment');
+        
+        // Navigate to home (delivery orders don't have live tracking)
+        navigate('/');
       } else {
         // Handle regular food order payment
         // Clean up ALL reservation and cart data to prevent conflicts
@@ -755,6 +787,22 @@ export default function PaymentGateway() {
                     <CreditCard size={32} className="mx-auto mb-3 text-gray-600" />
                     <span className="block font-semibold text-gray-800">Credit/Debit Card</span>
                     <span className="text-sm text-gray-500">Required for all pre-orders to guarantee pickup</span>
+                  </button>
+                </div>
+              ) : orderData?.type === 'delivery' ? (
+                // Only card payment for delivery orders - no cash on delivery
+                <div className="flex justify-center">
+                  <button
+                    onClick={() => setPaymentMethod('card')}
+                    className={`p-6 rounded-lg border-2 transition-all hover:shadow-md ${
+                      paymentMethod === 'card' 
+                        ? 'border-red-500 bg-red-50 shadow-md' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <CreditCard size={32} className="mx-auto mb-3 text-gray-600" />
+                    <span className="block font-semibold text-gray-800">Credit/Debit Card</span>
+                    <span className="text-sm text-gray-500">Required for online delivery orders - no cash accepted</span>
                   </button>
                 </div>
               ) : (

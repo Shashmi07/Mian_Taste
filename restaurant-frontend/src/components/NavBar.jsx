@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { User, Menu, X, LogOut, MapPin, ShoppingCart, Package2 } from 'lucide-react';
+import { User, Menu, X, LogOut, ShoppingCart, Package2, ChefHat, Star } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import logo from "../assets/logo.jpeg";
-import Cart from "../assets/cart.png";
 
 const NavBar = () => {
   const [menu, setMenu] = useState(null);
@@ -266,257 +265,281 @@ const NavBar = () => {
 
   return (
     <>
-      <nav 
-        className="fixed top-0 w-full flex items-center h-20 z-50 shadow-lg px-4 md:px-10 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900"
-      >
-        {/* Logo */}
-        <div className="flex items-center">
-          <img 
-            src={logo}
-            alt="logo" 
-            className="w-12 h-12 md:w-15 md:h-15 rounded-full cursor-pointer"
-            onClick={() => handleMenuClick('home')} // Will navigate to Homepage and scroll to top
-          />
-        </div>
+      {/* Dark Red Theme Navbar */}
+      <nav className="fixed top-0 w-full z-50 bg-gradient-to-r from-gray-900/95 via-gray-800/95 to-black/95 backdrop-blur-xl border-b border-red-600/30 shadow-lg shadow-red-900/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-20">
+            
+            {/* Logo Section with Enhanced Design */}
+            <div className="flex items-center group cursor-pointer" onClick={() => handleMenuClick('home')}>
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 rounded-full blur-sm group-hover:blur-md transition-all duration-300 opacity-70 group-hover:opacity-100"></div>
+                <img 
+                  src={logo}
+                  alt="Mian Taste Logo" 
+                  className="relative w-14 h-14 rounded-full object-cover border-2 border-white shadow-lg group-hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+              <div className="ml-3 hidden sm:block">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-red-500 via-red-400 to-orange-400 bg-clip-text text-transparent">
+                  Mian Taste
+                </h1>
+                <p className="text-sm text-gray-300 font-medium">Authentic Asian Cuisine</p>
+              </div>
+            </div>
 
-        {/* Desktop Menu Items */}
-        <ul className="hidden md:flex m-0 p-0 list-none font-semibold text-lg flex-1 justify-center gap-5 lg:gap-8">
-          {menuItems.map((item) => (
-            <li
-              key={item}
-              onClick={() => handleMenuClick(item)}
-              className={`cursor-pointer capitalize transition-all duration-300 ${
-                menu === item 
-                  ? 'pb-0.5 border-b-2' 
-                  : 'hover:text-red-400 text-gray-200'
-              }`}
-              style={menu === item ? { 
-                borderBottomColor: '#dc2626',
-                color: '#dc2626' 
-              } : {}}
-            >
-              {item === 'table reservation' ? 'Table Reservation' : 
-               item === 'about' ? 'About Us' :
-               item === 'preorder' ? 'Pre-Order' :
-               item}
-            </li>
-          ))}
-        </ul>
+            {/* Desktop Navigation Menu with Modern Style */}
+            <div className="hidden lg:flex items-center space-x-8">
+              {menuItems.map((item) => (
+                <button
+                  key={item}
+                  onClick={() => handleMenuClick(item)}
+                  className={`relative px-4 py-2 text-base font-semibold capitalize transition-all duration-300 group ${
+                    menu === item 
+                      ? 'text-red-400' 
+                      : 'text-gray-300 hover:text-red-400'
+                  }`}
+                >
+                  <span className="relative z-10">
+                    {item === 'table reservation' ? 'Reservations' : 
+                     item === 'about' ? 'About' :
+                     item === 'preorder' ? 'Pre-Order' :
+                     item}
+                  </span>
+                  {/* Active indicator with smooth animation */}
+                  <div className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 h-0.5 bg-gradient-to-r from-red-500 to-red-400 transition-all duration-300 ${
+                    menu === item ? 'w-full' : 'w-0 group-hover:w-full'
+                  }`}></div>
+                  {/* Hover background */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-900/20 to-red-800/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
+                </button>
+              ))}
+            </div>
 
-        {/* Desktop Right Side Icons - Removed Search Icon */}
-        <div className="hidden md:flex items-center gap-4 lg:gap-6">
-          {/* Order Tracking Icon */}
-          <div 
-            className="relative cursor-pointer"
-            onClick={() => {
-              scrollToTop();
-              navigate('/track-order');
-            }}
-          >
-            <Package2 
-              size={28}
-              className="text-gray-300 hover:text-red-400 transition-colors duration-300"
-            />
-          </div>
-
-          <div 
-            className="relative cursor-pointer"
-            onClick={() => {
-              scrollToTop();
-              navigate('/cart');
-            }}
-          >
-            <ShoppingCart 
-              size={28}
-              className="text-gray-300 hover:text-red-400 transition-colors duration-300"
-            />
-            {itemCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-5 h-5 flex items-center justify-center text-xs font-bold text-white bg-red-500 rounded-full border-2 border-white px-1">
-                {itemCount > 99 ? '99+' : itemCount}
-              </span>
-            )}
-          </div>
-
-
-          {/* Authentication Section */}
-          {authState.isAuthenticated && authState.user ? (
-            <div className="relative profile-menu" key={`authenticated-${authState.user.email}`}>
-              <button 
-                onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center gap-2 bg-red-600 bg-opacity-90 backdrop-blur-sm font-medium px-4 py-2 border border-red-400 border-opacity-50 cursor-pointer transition-all duration-300 hover:bg-red-700 hover:shadow-lg transform hover:scale-105"
-                style={{
-                  borderRadius: '25px',
-                  color: '#ffffff',
-                  boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)'
+            {/* Right Side Actions with Enhanced Icons */}
+            <div className="flex items-center space-x-4">
+              
+              {/* Order Tracking Button */}
+              <button
+                onClick={() => {
+                  scrollToTop();
+                  navigate('/track-order');
                 }}
+                className="relative p-3 text-gray-300 hover:text-red-400 transition-all duration-300 hover:bg-red-900/20 rounded-xl group"
+                title="Track Order"
               >
-                <div className="w-7 h-7 bg-white bg-opacity-20 flex items-center justify-center" style={{borderRadius: '50%'}}>
-                  <User size={16} className="text-white" />
-                </div>
-                <span className="hidden lg:block text-sm font-medium">
-                  {(authState.user.username || authState.user.name || 'User').split(' ')[0]}
-                </span>
+                <Package2 size={20} className="transition-transform duration-300 group-hover:scale-110" />
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               </button>
 
-              {/* Enhanced Profile Dropdown */}
-              {showProfileMenu && (
-                <div className="absolute right-0 top-full mt-3 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
-                  <div className="bg-gradient-to-r from-red-600 to-red-700 p-4 text-white">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                        <User size={20} className="text-white" />
+              {/* Shopping Cart with Enhanced Badge */}
+              <button
+                onClick={() => {
+                  scrollToTop();
+                  navigate('/cart');
+                }}
+                className="relative p-3 text-gray-300 hover:text-red-400 transition-all duration-300 hover:bg-red-900/20 rounded-xl group"
+                title="Shopping Cart"
+              >
+                <ShoppingCart size={20} className="transition-transform duration-300 group-hover:scale-110" />
+                {itemCount > 0 && (
+                  <div className="absolute -top-2 -right-2 min-w-[20px] h-5 flex items-center justify-center">
+                    <span className="text-xs font-bold text-white bg-gradient-to-r from-red-500 to-orange-500 rounded-full px-1.5 py-0.5 shadow-lg animate-pulse">
+                      {itemCount > 99 ? '99+' : itemCount}
+                    </span>
+                  </div>
+                )}
+              </button>
+
+              {/* Authentication Section with Modern Design */}
+              {authState.isAuthenticated && authState.user ? (
+                <div className="relative profile-menu">
+                  <button 
+                    onClick={() => setShowProfileMenu(!showProfileMenu)}
+                    className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-red-600 to-orange-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group"
+                  >
+                    <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                      <User size={16} />
+                    </div>
+                    <span className="hidden md:block text-sm font-medium">
+                      {(authState.user.username || authState.user.name || 'User').split(' ')[0]}
+                    </span>
+                    <div className="w-1 h-1 bg-white/60 rounded-full animate-pulse"></div>
+                  </button>
+
+                  {/* Enhanced Profile Dropdown */}
+                  {showProfileMenu && (
+                    <div className="absolute right-0 top-full mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-in slide-in-from-top-2 duration-300">
+                      {/* Profile Header */}
+                      <div className="bg-gradient-to-r from-red-600 to-orange-500 p-6 text-white">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                            <User size={24} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-lg">{authState.user.username || authState.user.name || 'User'}</p>
+                            <p className="text-sm opacity-90 truncate">{authState.user.email}</p>
+                            <div className="flex items-center gap-1 mt-1">
+                              <Star size={12} className="text-yellow-300" />
+                              <span className="text-xs opacity-80">Premium Member</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-sm">{authState.user.username || authState.user.name || 'User'}</p>
-                        <p className="text-xs opacity-90 truncate">{authState.user.email}</p>
+                      
+                      {/* Menu Actions */}
+                      <div className="p-3">
+                        <button 
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300 group"
+                        >
+                          <LogOut size={18} className="group-hover:scale-110 transition-transform duration-300" />
+                          <span className="font-medium">Sign Out</span>
+                        </button>
                       </div>
                     </div>
-                  </div>
-                  
-                  
-                  <div className="border-t border-gray-100 p-2">
-                    <button 
-                      onClick={handleLogout}
-                      className="w-full text-left px-4 py-3 hover:bg-red-50 flex items-center gap-3 text-red-600 rounded-lg transition-colors"
-                    >
-                      <LogOut size={18} />
-                      <span className="font-medium">Sign Out</span>
-                    </button>
-                  </div>
+                  )}
                 </div>
+              ) : (
+                <button 
+                  onClick={handleSignInClick}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-red-600 to-orange-500 text-white text-base font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group"
+                >
+                  <User size={16} className="group-hover:scale-110 transition-transform duration-300" />
+                  <span>Sign In</span>
+                </button>
               )}
+
+              {/* Mobile Menu Button */}
+              <button 
+                onClick={toggleMobileMenu}
+                className="lg:hidden p-2 text-gray-300 hover:text-red-400 hover:bg-red-900/20 rounded-xl transition-all duration-300"
+              >
+                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
             </div>
-          ) : (
-            <button 
-              key="sign-in-button"
-              onClick={handleSignInClick}
-              type="button"
-              className="flex items-center gap-2 bg-transparent text-sm font-medium px-3 py-2 lg:px-4 border-2 rounded-lg cursor-pointer transition-all duration-300 hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-              style={{
-                color: '#f3f4f6',
-                borderColor: '#f3f4f6'
-              }}
-              aria-label="Sign In"
-            >
-              <User size={16} />
-              <span className="hidden lg:inline">Sign In</span>
-            </button>
-          )}
-        </div>
-
-        {/* Mobile Menu Icons */}
-        <div className="flex md:hidden items-center gap-3 ml-auto">
-          {/* Mobile Order Tracking Icon */}
-          <div 
-            className="cursor-pointer"
-            onClick={() => navigate('/track-order')}
-          >
-            <Package2 
-              size={24}
-              className="text-gray-300 hover:text-red-400 transition-colors duration-300"
-            />
           </div>
-
-          {/* Mobile Cart Icon */}
-          <div 
-            className="relative cursor-pointer"
-            onClick={() => {
-              scrollToTop();
-              navigate('/cart');
-            }}
-          >
-            <ShoppingCart 
-              size={24}
-              className="text-gray-300 hover:text-red-400 transition-colors duration-300"
-            />
-            {itemCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-4 h-4 flex items-center justify-center text-xs font-bold text-white bg-red-500 rounded-full border-2 border-white px-1">
-                {itemCount > 99 ? '99+' : itemCount}
-              </span>
-            )}
-          </div>
-
-          {/* Mobile Hamburger Menu */}
-          <button 
-            onClick={toggleMobileMenu}
-            className="p-2 rounded-lg transition-colors duration-200"
-            style={{ color: '#f3f4f6' }}
-          >
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
         </div>
       </nav>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Overlay with Modern Blur Effect */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
-      {/* Mobile Menu Slide Panel - Removed Search from mobile menu */}
+      {/* Modern Mobile Menu Slide Panel */}
       <div 
-        className={`fixed top-20 right-0 h-screen w-64 z-50 transform transition-transform duration-300 ease-in-out md:hidden bg-gradient-to-b from-gray-800 to-gray-900 ${
+        className={`fixed top-0 right-0 h-full w-80 z-50 transform transition-all duration-500 ease-in-out lg:hidden ${
           isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
+        } bg-gradient-to-b from-gray-900/98 via-gray-800/98 to-black/98 backdrop-blur-xl border-l border-red-600/40 shadow-2xl`}
       >
-        <div className="flex flex-col p-6">
-          {/* Mobile Menu Items */}
-          <ul className="flex flex-col gap-6 mb-8">
-            {menuItems.map((item) => (
-              <li
+        <div className="flex flex-col h-full">
+          
+          {/* Mobile Header */}
+          <div className="flex items-center justify-between p-6 border-b border-red-600/30">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-red-600 to-orange-500 rounded-full blur-sm opacity-70"></div>
+                <img 
+                  src={logo}
+                  alt="Mian Taste" 
+                  className="relative w-10 h-10 rounded-full object-cover"
+                />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">
+                  Mian Taste
+                </h2>
+                <p className="text-sm text-gray-400">Menu</p>
+              </div>
+            </div>
+            <button 
+              onClick={toggleMobileMenu}
+              className="p-2 text-gray-300 hover:text-red-400 hover:bg-red-900/20 rounded-xl transition-all duration-300"
+            >
+              <X size={24} />
+            </button>
+          </div>
+
+          {/* Mobile Menu Items with Modern Cards */}
+          <div className="flex-1 p-6 space-y-3">
+            {menuItems.map((item, index) => (
+              <button
                 key={item}
                 onClick={() => handleMenuClick(item)}
-                className={`cursor-pointer capitalize font-semibold text-lg transition-all duration-300 ${
+                className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 group text-left ${
                   menu === item 
-                    ? 'text-red-400 border-l-4 border-red-400 pl-4' 
-                    : 'text-gray-200 hover:text-red-400 pl-4'
+                    ? 'bg-gradient-to-r from-red-900/40 to-red-800/40 border-2 border-red-500/50 text-red-400' 
+                    : 'hover:bg-red-900/20 text-gray-300 border-2 border-transparent hover:border-red-600/30'
                 }`}
+                style={{
+                  animationDelay: `${index * 100}ms`
+                }}
               >
-                {item === 'table reservation' ? 'Table Reservation' : 
-                 item === 'about' ? 'About Us' :
-                 item === 'preorder' ? 'Pre-Order' :
-                 item}
-              </li>
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                  menu === item
+                    ? 'bg-gradient-to-r from-red-500 to-red-400 text-white'
+                    : 'bg-gray-700/60 text-gray-400 group-hover:bg-red-700 group-hover:text-red-400'
+                }`}>
+                  {item === 'home' && <ChefHat size={18} />}
+                  {item === 'menu' && <Menu size={18} />}
+                  {item === 'preorder' && <Package2 size={18} />}
+                  {item === 'table reservation' && <Star size={18} />}
+                  {item === 'about' && <User size={18} />}
+                </div>
+                <div className="flex-1">
+                  <span className="text-base font-semibold capitalize">
+                    {item === 'table reservation' ? 'Reservations' : 
+                     item === 'about' ? 'About' :
+                     item === 'preorder' ? 'Pre-Order' :
+                     item}
+                  </span>
+                </div>
+                {menu === item && (
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                )}
+              </button>
             ))}
-          </ul>
+          </div>
 
           {/* Mobile Authentication Section */}
-          {authState.isAuthenticated && authState.user ? (
-            <div className="border-t border-gray-600 pt-6 mt-6">
-              <div className="bg-red-600 bg-opacity-90 backdrop-blur-sm px-3 py-3 border border-red-400 border-opacity-50 rounded-lg mb-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <User size={18} className="text-white" />
-                  <div className="min-w-0">
-                    <p className="font-medium text-white text-sm truncate">{(authState.user.username || authState.user.name || 'User').split(' ')[0]}</p>
-                    <p className="text-xs text-red-100 truncate">{authState.user.email}</p>
+          <div className="p-6 border-t border-red-600/30">
+            {authState.isAuthenticated && authState.user ? (
+              <div className="space-y-4">
+                {/* User Profile Card */}
+                <div className="bg-gradient-to-r from-red-600 to-orange-500 p-4 rounded-2xl text-white">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                      <User size={20} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold truncate">{authState.user.username || authState.user.name || 'User'}</p>
+                      <p className="text-sm opacity-90 truncate">{authState.user.email}</p>
+                    </div>
                   </div>
                 </div>
                 
-                
                 <button 
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 bg-red-500 bg-opacity-20 font-medium px-4 py-3 border border-red-400 border-opacity-50 rounded-lg cursor-pointer transition-all duration-300 text-red-700"
+                  className="w-full flex items-center justify-center gap-3 p-4 bg-red-900/30 text-red-400 rounded-2xl font-medium transition-all duration-300 hover:bg-red-800/40 group"
                 >
-                  <LogOut size={20} />
+                  <LogOut size={18} className="group-hover:scale-110 transition-transform duration-300" />
                   Sign Out
                 </button>
               </div>
-            </div>
-          ) : (
-            <button 
-              onClick={handleSignInClick}
-              className="flex items-center gap-3 bg-transparent font-medium px-4 py-3 border-2 rounded-lg cursor-pointer transition-all duration-300 mx-4 hover:bg-red-600 hover:text-white"
-              style={{
-                color: '#f3f4f6',
-                borderColor: '#f3f4f6'
-              }}
-            >
-              <User size={20} />
-              Sign In
-            </button>
-          )}
+            ) : (
+              <button 
+                onClick={handleSignInClick}
+                className="w-full flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-red-600 to-orange-500 text-white rounded-2xl text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group"
+              >
+                <User size={18} className="group-hover:scale-110 transition-transform duration-300" />
+                Sign In
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

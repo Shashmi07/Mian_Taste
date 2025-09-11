@@ -37,13 +37,22 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in
+    // Check if user is logged in (staff or customer)
     const savedUser = localStorage.getItem('user');
     const token = localStorage.getItem('token');
+    const customerUser = localStorage.getItem('customerUser');
+    const customerToken = localStorage.getItem('customerToken');
     
-    if (savedUser && token) {
-      setUser(JSON.parse(savedUser));
-      setIsAuthenticated(true);
+    if ((savedUser && token) || (customerUser && customerToken)) {
+      if (customerUser && customerToken) {
+        // Customer is logged in
+        setUser(JSON.parse(customerUser));
+        setIsAuthenticated(true);
+      } else if (savedUser && token) {
+        // Staff is logged in
+        setUser(JSON.parse(savedUser));
+        setIsAuthenticated(true);
+      }
     }
     setLoading(false);
   }, []);
@@ -63,8 +72,11 @@ function App() {
   const handleLogout = () => {
     setUser(null);
     setIsAuthenticated(false);
+    // Clear both staff and customer tokens
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    localStorage.removeItem('customerUser');
+    localStorage.removeItem('customerToken');
     
     // Dispatch custom event to notify other components
     window.dispatchEvent(new CustomEvent('authChange'));

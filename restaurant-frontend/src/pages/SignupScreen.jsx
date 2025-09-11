@@ -113,14 +113,14 @@ const SignupScreen = () => {
       </div>
 
       {/* Bottom/Right side - Signup form */}
-  <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-12 min-h-[60vh] lg:min-h-screen">
-  <div className="bg-white bg-opacity-80 backdrop-blur-md rounded-2xl lg:rounded-3xl shadow-2xl border border-white border-opacity-20 p-6 sm:p-8 lg:p-10 w-full max-w-md mx-auto">
-          <div className="text-center mb-6 lg:mb-8">
-            <div className="inline-block p-3 lg:p-4 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 shadow-lg mb-4">
-              <img src={logo} alt="logo" className="w-12 h-12 lg:w-16 lg:h-16 object-cover rounded-full" />
+  <div className="w-full lg:w-1/2 flex items-center justify-center p-2 sm:p-4 lg:p-6 min-h-[60vh] lg:min-h-screen">
+  <div className="bg-white bg-opacity-80 backdrop-blur-md rounded-2xl lg:rounded-3xl shadow-2xl border border-white border-opacity-20 p-4 sm:p-6 lg:p-6 w-full max-w-md mx-auto">
+          <div className="text-center mb-4 lg:mb-6">
+            <div className="inline-block p-2 lg:p-3 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 shadow-lg mb-3">
+              <img src={logo} alt="logo" className="w-10 h-10 lg:w-12 lg:h-12 object-cover rounded-full" />
             </div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-2">Grand Minato</h1>
-            <p className="text-gray-600 text-sm lg:text-base">Create your account</p>
+            <h1 className="text-xl lg:text-2xl font-bold text-gray-800 mb-1">Grand Minato</h1>
+            <p className="text-gray-600 text-sm">Create your account</p>
           </div>
 
           <Formik
@@ -136,7 +136,7 @@ const SignupScreen = () => {
             onSubmit={handleSubmit}
           >
             {({ values }) => (
-              <Form className="space-y-4 lg:space-y-6">
+              <Form className="space-y-3 lg:space-y-4">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl mb-4">
                 {error}
@@ -148,7 +148,7 @@ const SignupScreen = () => {
                     name="name"
                     type="text"
                     placeholder="Enter your full name"
-                    className="w-full py-3 lg:py-4 px-4 lg:px-6 pl-10 lg:pl-12 text-base rounded-xl lg:rounded-2xl bg-gradient-to-r from-green-50 to-green-100 border-2 border-transparent placeholder-green-600 text-gray-800 focus:outline-none focus:border-green-400 focus:bg-white transition-all duration-300"
+                    className="w-full py-2 lg:py-3 px-3 lg:px-4 pl-8 lg:pl-10 text-sm lg:text-base rounded-lg lg:rounded-xl bg-gradient-to-r from-green-50 to-green-100 border-2 border-transparent placeholder-green-600 text-gray-800 focus:outline-none focus:border-green-400 focus:bg-white transition-all duration-300"
                   />
                   <ErrorMessage name="name" component="div" className="text-red-500 text-xs mt-1 ml-2" />
                   <div className="absolute inset-y-0 left-0 pl-3 lg:pl-4 flex items-center pointer-events-none">
@@ -162,7 +162,7 @@ const SignupScreen = () => {
                     name="email"
                     type="email"
                     placeholder="Enter your email"
-                    className="w-full py-3 lg:py-4 px-4 lg:px-6 pl-10 lg:pl-12 text-base rounded-xl lg:rounded-2xl bg-gradient-to-r from-green-50 to-green-100 border-2 border-transparent placeholder-green-600 text-gray-800 focus:outline-none focus:border-green-400 focus:bg-white transition-all duration-300"
+                    className="w-full py-2 lg:py-3 px-3 lg:px-4 pl-8 lg:pl-10 text-sm lg:text-base rounded-lg lg:rounded-xl bg-gradient-to-r from-green-50 to-green-100 border-2 border-transparent placeholder-green-600 text-gray-800 focus:outline-none focus:border-green-400 focus:bg-white transition-all duration-300"
                   />
                   <ErrorMessage name="email" component="div" className="text-red-500 text-xs mt-1 ml-2" />
                   <div className="absolute inset-y-0 left-0 pl-3 lg:pl-4 flex items-center pointer-events-none">
@@ -176,7 +176,7 @@ const SignupScreen = () => {
                     name="phone"
                     type="tel"
                     placeholder="Enter your phone number"
-                    className="w-full py-3 lg:py-4 px-4 lg:px-6 pl-10 lg:pl-12 text-base rounded-xl lg:rounded-2xl bg-gradient-to-r from-green-50 to-green-100 border-2 border-transparent placeholder-green-600 text-gray-800 focus:outline-none focus:border-green-400 focus:bg-white transition-all duration-300"
+                    className="w-full py-2 lg:py-3 px-3 lg:px-4 pl-8 lg:pl-10 text-sm lg:text-base rounded-lg lg:rounded-xl bg-gradient-to-r from-green-50 to-green-100 border-2 border-transparent placeholder-green-600 text-gray-800 focus:outline-none focus:border-green-400 focus:bg-white transition-all duration-300"
                   />
                   <ErrorMessage name="phone" component="div" className="text-red-500 text-xs mt-1 ml-2" />
                   <div className="absolute inset-y-0 left-0 pl-3 lg:pl-4 flex items-center pointer-events-none">
@@ -190,7 +190,7 @@ const SignupScreen = () => {
                     name="address"
                     type="text"
                     placeholder="Enter your address (optional)"
-                    className="w-full py-3 lg:py-4 px-4 lg:px-6 pl-10 lg:pl-12 text-base rounded-xl lg:rounded-2xl bg-gradient-to-r from-green-50 to-green-100 border-2 border-transparent placeholder-green-600 text-gray-800 focus:outline-none focus:border-green-400 focus:bg-white transition-all duration-300"
+                    className="w-full py-2 lg:py-3 px-3 lg:px-4 pl-8 lg:pl-10 text-sm lg:text-base rounded-lg lg:rounded-xl bg-gradient-to-r from-green-50 to-green-100 border-2 border-transparent placeholder-green-600 text-gray-800 focus:outline-none focus:border-green-400 focus:bg-white transition-all duration-300"
                   />
                   <div className="absolute inset-y-0 left-0 pl-3 lg:pl-4 flex items-center pointer-events-none">
                     <svg className="w-4 h-4 lg:w-5 lg:h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -256,7 +256,7 @@ const SignupScreen = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-3 lg:py-4 px-4 lg:px-6 text-base lg:text-lg rounded-xl lg:rounded-2xl shadow-lg transform hover:scale-105 disabled:hover:scale-100 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-yellow-300 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-2 lg:py-3 px-3 lg:px-4 text-sm lg:text-base rounded-lg lg:rounded-xl shadow-lg transform hover:scale-105 disabled:hover:scale-100 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-yellow-300 disabled:cursor-not-allowed"
             >
               {loading ? "Creating Account..." : "Sign Up"}
               {!loading && (
@@ -269,8 +269,8 @@ const SignupScreen = () => {
             )}
           </Formik>
 
-          <div className="mt-8 lg:mt-10">
-            <p className="text-center text-gray-600 text-sm lg:text-base">
+          <div className="mt-4 lg:mt-6">
+            <p className="text-center text-gray-600 text-sm">
             Already have an account?{" "}
             <button
               type="button"

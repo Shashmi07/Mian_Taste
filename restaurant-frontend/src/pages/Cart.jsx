@@ -23,14 +23,19 @@ const Cart = () => {
   const [preorderContext, setPreorderContext] = useState(null);
   const [isPreorderOrder, setIsPreorderOrder] = useState(false);
   
+  // Delivery context authentication
+  const [isDeliveryOrder, setIsDeliveryOrder] = useState(false);
+  const [needsAuthentication, setNeedsAuthentication] = useState(false);
+  
   // Ref to track if we've cleaned up to prevent multiple cleanups
   const hasCleanedUp = useRef(false);
   
-  // Only clean up on component unmount or specific actions, not on navigation
+  // Mark that user visited cart page
   useEffect(() => {
+    localStorage.setItem('visitedCart', 'true');
+    
     return () => {
-      // Only clean up on unmount if we're not going to allowed pages
-      // Don't clean up automatically - let specific actions handle it
+      // Clean up on unmount - don't clear cart here, let menu pages handle it
     };
   }, []);
 
@@ -38,7 +43,34 @@ const Cart = () => {
   useEffect(() => {
     console.log('Cart: Checking for order contexts...');
     
-    // Priority 1: QR order (highest priority)
+    // Priority 1: Check for delivery context FIRST (direct website visitors)
+    const deliveryContext = localStorage.getItem('deliveryContext');
+    if (deliveryContext === 'true') {
+      console.log('Cart: Delivery context found - checking authentication');
+      const customerToken = localStorage.getItem('customerToken');
+      const customerUser = localStorage.getItem('customerUser');
+      
+      if (customerToken && customerUser) {
+        try {
+          const userData = JSON.parse(customerUser);
+          console.log('Cart: Authenticated delivery order for:', userData.name || userData.username);
+          setIsTableOrder(false); // Delivery order, not table order
+          setIsDeliveryOrder(true);
+          setCustomerName(userData.name || userData.username || '');
+          setNeedsAuthentication(false);
+          return; // Exit early - authenticated delivery order
+        } catch (error) {
+          console.error('Error parsing customer data for delivery:', error);
+        }
+      } else {
+        console.log('Cart: Delivery order requires authentication');
+        setIsDeliveryOrder(true);
+        setNeedsAuthentication(true);
+        return; // Exit early - will handle in UI
+      }
+    }
+    
+    // Priority 2: QR order (highest priority after delivery)
     const qrTable = localStorage.getItem('qrTableNumber');
     if (qrTable) {
       console.log('Cart: QR table found:', qrTable);
@@ -317,6 +349,51 @@ const Cart = () => {
           notes: `Pre-order for ${preorderContext.orderType} on ${preorderContext.scheduledDate} at ${preorderContext.scheduledTime}`
         };
         console.log('Creating preorder with data:', orderData);
+      } else if (isDeliveryOrder) {
+        // Delivery order data structure (for preOrderAPI)
+        let customerPhone = '';
+        let customerEmail = '';
+        
+        try {
+          const customerUser = localStorage.getItem('customerUser');
+          if (customerUser) {
+            const userData = JSON.parse(customerUser);
+            customerPhone = userData.phoneNumber || userData.phone || '';
+            customerEmail = userData.email || '';
+          }
+        } catch (error) {
+          console.error('Error getting customer data for delivery order:', error);
+        }
+
+        // If no phone from login, use a placeholder to satisfy required field
+        if (!customerPhone) {
+          customerPhone = '0000000000'; // Placeholder - should be replaced with proper form collection
+        }
+
+        // Create immediate delivery order (scheduled for "now")
+        const now = new Date();
+        const currentDate = now.toISOString().split('T')[0]; // YYYY-MM-DD format
+        const currentTime = now.toTimeString().split(' ')[0].substring(0, 5); // HH:MM format
+
+        orderData = {
+          orderType: 'delivery',
+          scheduledDate: currentDate,
+          scheduledTime: currentTime,
+          customerName: customerName.trim(),
+          customerPhone: customerPhone,
+          customerEmail: customerEmail,
+          deliveryAddress: 'Customer will be contacted for address', // Placeholder - should be collected in forms
+          table: '', // Not applicable for delivery
+          items: validItems.map(item => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: typeof item.price === 'number' ? item.price : parseInt(item.price) || 0
+          })),
+          totalAmount: total,
+          paymentMethod: 'card',
+          notes: `Online delivery order - immediate delivery requested`
+        };
+        console.log('Creating delivery order with preorder data structure:', orderData);
       } else {
         // Regular order data structure
         orderData = {
@@ -353,6 +430,9 @@ const Cart = () => {
           body: JSON.stringify(orderData)
         });
         response = { data: await response.json() };
+      } else if (isDeliveryOrder) {
+        console.log('Using preOrderAPI endpoint for delivery order: /api/pre-orders');
+        response = await preOrderAPI.createPreOrder(orderData);
       } else {
         console.log('Using ordersAPI endpoint: /api/orders/public');
         response = await ordersAPI.createOrder(orderData);
@@ -372,13 +452,18 @@ const Cart = () => {
           customerName: customerName,
           table: isTableOrder ? tableNumber : 'Pre-order',
           createdAt: new Date().toISOString(),
-          type: isPreorderOrder ? 'preorder' : (isQROrder ? 'qr-order' : 'regular'),
+          type: isPreorderOrder ? 'preorder' : (isQROrder ? 'qr-order' : (isDeliveryOrder ? 'delivery' : 'regular')),
           preorderDetails: isPreorderOrder && preorderContext ? {
             orderType: preorderContext.orderType,
             scheduledDate: preorderContext.scheduledDate,
             scheduledTime: preorderContext.scheduledTime,
             deliveryAddress: preorderContext.deliveryAddress
-          } : null
+          } : (isDeliveryOrder ? {
+            orderType: 'delivery',
+            scheduledDate: orderData.scheduledDate,
+            scheduledTime: orderData.scheduledTime,
+            deliveryAddress: orderData.deliveryAddress
+          } : null)
         };
         
         // If it's a reservation order, add reservation-specific data
@@ -424,13 +509,18 @@ const Cart = () => {
           customerName: customerName,
           table: isTableOrder ? tableNumber : 'Pre-order',
           createdAt: new Date().toISOString(),
-          type: isPreorderOrder ? 'preorder' : (isQROrder ? 'qr-order' : 'regular'),
+          type: isPreorderOrder ? 'preorder' : (isQROrder ? 'qr-order' : (isDeliveryOrder ? 'delivery' : 'regular')),
           preorderDetails: isPreorderOrder && preorderContext ? {
             orderType: preorderContext.orderType,
             scheduledDate: preorderContext.scheduledDate,
             scheduledTime: preorderContext.scheduledTime,
             deliveryAddress: preorderContext.deliveryAddress
-          } : null
+          } : (isDeliveryOrder ? {
+            orderType: 'delivery',
+            scheduledDate: orderData.scheduledDate,
+            scheduledTime: orderData.scheduledTime,
+            deliveryAddress: orderData.deliveryAddress
+          } : null)
         };
         
         // If it's a reservation order, add reservation-specific data
@@ -535,6 +625,12 @@ const Cart = () => {
                       Pre-Order: {preorderContext.orderType.replace('-', ' ')}
                     </div>
                   )}
+                  {isDeliveryOrder && !needsAuthentication && (
+                    <div className="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
+                      <Truck className="w-4 h-4" />
+                      Online Delivery Order
+                    </div>
+                  )}
                 </div>
                 <p className="text-red-100">{cartItems.length} items</p>
               </div>
@@ -544,7 +640,44 @@ const Cart = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-6 py-8">
-        {cartItems.length === 0 ? (
+        {needsAuthentication ? (
+          // Authentication required for delivery orders
+          <div className="text-center py-16">
+            <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-6">
+              <Truck className="w-8 h-8 text-red-600" />
+            </div>
+            <h3 className="text-2xl font-semibold text-gray-900 mb-4">Sign In Required</h3>
+            <p className="text-gray-600 mb-2">You're placing a delivery order!</p>
+            <p className="text-gray-600 mb-8">Please sign in to complete your delivery order and provide your delivery address.</p>
+            <div className="space-y-4">
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  console.log('Sign In button clicked');
+                  localStorage.setItem('returnAfterLogin', '/cart');
+                  navigate('/login');
+                }}
+                className="px-8 py-3 bg-red-600 text-white font-semibold rounded-full hover:bg-red-700 transition-colors duration-300 mx-2"
+              >
+                Sign In
+              </button>
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  console.log('Create Account button clicked');
+                  localStorage.setItem('returnAfterLogin', '/cart');
+                  navigate('/signup');
+                }}
+                className="px-8 py-3 bg-gray-100 text-gray-700 font-semibold rounded-full hover:bg-gray-200 transition-colors duration-300 mx-2"
+              >
+                Create Account
+              </button>
+            </div>
+            <p className="text-sm text-gray-500 mt-6">
+              Your cart items will be saved while you sign in
+            </p>
+          </div>
+        ) : cartItems.length === 0 ? (
           // Empty cart state
           <div className="text-center py-16">
             <ShoppingCart className="mx-auto h-16 w-16 text-gray-400 mb-4" />
@@ -751,6 +884,23 @@ const Cart = () => {
                         />
                         <span>Table + Food Reservation</span>
                         <span className="ml-2 text-blue-600">✓</span>
+                      </label>
+                    </div>
+                  ) : isDeliveryOrder ? (
+                    // Delivery order - show only online delivery option
+                    <div className="space-y-2">
+                      <label className="flex items-center opacity-75">
+                        <input 
+                          type="radio" 
+                          name="orderType" 
+                          value="online-delivery"
+                          checked={true}
+                          disabled={true}
+                          className="mr-3"
+                          style={{ accentColor: '#dc2626' }}
+                        />
+                        <span>Online Delivery Order</span>
+                        <span className="ml-2 text-green-600">✓</span>
                       </label>
                     </div>
                   ) : (

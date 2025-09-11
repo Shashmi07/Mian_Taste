@@ -45,7 +45,7 @@ function PreOrder() {
       orderType: selectedOrderType,
       scheduledDate: selectedDate,
       scheduledTime: selectedTime,
-      deliveryAddress: selectedOrderType === 'delivery' ? customerInfo.address : null
+deliveryAddress: null
     };
     localStorage.setItem('preorderContext', JSON.stringify(preorderData));
     console.log('PreOrder: Context saved:', preorderData);
@@ -156,10 +156,6 @@ function PreOrder() {
         return;
       }
 
-      if (selectedOrderType === 'delivery' && !customerInfo.address) {
-        alert('Please provide delivery address');
-        return;
-      }
 
       // Prepare order data
       const orderData = {
@@ -169,7 +165,7 @@ function PreOrder() {
         customerName: customerInfo.name,
         customerPhone: customerInfo.phone,
         customerEmail: customerInfo.email,
-        deliveryAddress: selectedOrderType === 'delivery' ? customerInfo.address : '',
+        deliveryAddress: '',
         table: selectedOrderType === 'dine-in' ? 'Table 1' : '', // For now, auto-assign table
         items: cartItems.map(item => ({
           name: item.name,
@@ -285,22 +281,6 @@ function PreOrder() {
                   <p className="text-sm text-gray-600">Pick up your order at your convenience</p>
                 </button>
 
-                <button
-                  onClick={() => {
-                    if (requireAuth()) {
-                      setSelectedOrderType('delivery');
-                    }
-                  }}
-                  className={`p-6 rounded-lg border-2 transition-all duration-300 ${
-                    selectedOrderType === 'delivery'
-                      ? 'border-red-600 bg-red-50 text-red-600'
-                      : 'border-gray-200 hover:border-red-300 hover:bg-red-50'
-                  }`}
-                >
-                  <Truck className="h-12 w-12 mx-auto mb-3" />
-                  <h3 className="text-lg font-semibold mb-2">Delivery</h3>
-                  <p className="text-sm text-gray-600">Get your food delivered to your doorstep</p>
-                </button>
               </div>
             </div>
 
@@ -580,20 +560,6 @@ function PreOrder() {
                           <ErrorMessage name="customerEmail" component="div" className="text-red-500 text-xs mt-1" />
                         </div>
 
-                        {selectedOrderType === 'delivery' && (
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Delivery Address *
-                            </label>
-                            <textarea
-                              value={customerInfo.address}
-                              onChange={(e) => setCustomerInfo({...customerInfo, address: e.target.value})}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                              rows="3"
-                              placeholder="Enter your full delivery address"
-                            />
-                          </div>
-                        )}
                       </div>
                     </Form>
                 )}
@@ -623,7 +589,7 @@ function PreOrder() {
                       onChange={(e) => setPaymentMethod(e.target.value)}
                       className="mr-3"
                     />
-                    <span>Cash on {selectedOrderType === 'delivery' ? 'Delivery' : 'Pickup'}</span>
+                    <span>Cash on Pickup</span>
                   </label>
                   <label className="flex items-center">
                     <input

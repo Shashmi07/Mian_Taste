@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Search, Clock, QrCode, X, Calendar } from 'lucide-react';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { Star, Search, Clock, QrCode, X, Calendar, ShoppingCart, Calendar as CalendarIcon, UtensilsCrossed, Truck } from 'lucide-react';
+import { useLocation, useSearchParams, Link } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 import { useCart } from '../context/CartContext';
@@ -105,7 +105,8 @@ const Menu = () => {
   const [allMenuItems, setAllMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addingToCart, setAddingToCart] = useState(null);
-  const { addToCart } = useCart();
+  const { addToCart, clearCart } = useCart();
+  
   
   // QR Code table selection
   const [searchParams] = useSearchParams();
@@ -116,6 +117,32 @@ const Menu = () => {
   // Reservation context
   const [reservationContext, setReservationContext] = useState(null);
   const [isReservationOrder, setIsReservationOrder] = useState(false);
+  
+  // Clear cart if user navigated back from cart page
+  useEffect(() => {
+    if (localStorage.getItem('visitedCart') === 'true') {
+      console.log('User returned from cart - clearing cart');
+      clearCart();
+      localStorage.removeItem('visitedCart');
+    }
+  }, [clearCart]);
+
+  // Set delivery context for direct visitors
+  useEffect(() => {
+    // If user is not from QR, preorder, or reservation - they are delivery customers
+    const hasValidContext = localStorage.getItem('qrTableNumber') ||
+                           localStorage.getItem('preorderContext') ||
+                           localStorage.getItem('reservationContext');
+    
+    if (!hasValidContext) {
+      // Clean up any old/stale contexts that might interfere
+      localStorage.removeItem('pendingReservation');
+      localStorage.removeItem('reservationContext');
+      
+      localStorage.setItem('deliveryContext', 'true');
+      console.log('Direct visitor - set as delivery order');
+    }
+  }, []);
   
   // Check if this is a QR code access
   useEffect(() => {
@@ -377,6 +404,29 @@ const Menu = () => {
           <div className="flex items-center gap-2">
             <QrCode className="w-4 h-4" />
             <span className="text-sm font-semibold">Table {selectedTable}</span>
+          </div>
+        </div>
+      )}
+      
+      {/* Delivery Order Badge for Direct Visitors */}
+      {localStorage.getItem('deliveryContext') && !isQROrder && !isReservationOrder && (
+        <div className="bg-blue-50 border-b border-blue-200 px-4 py-3">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-600 text-white p-2 rounded-full">
+                  <Truck className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-blue-900">
+                    Online Delivery Order
+                  </p>
+                  <p className="text-xs text-blue-700">
+                    Your order will be delivered to your address
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
