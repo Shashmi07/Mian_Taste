@@ -1,20 +1,8 @@
 import axios from 'axios';
+import { getAPIUrl } from '../config/api';
 
-// Dynamic API base URL - works for localhost, IP addresses, and production
-const getAPIBaseURL = () => {
-  // Use environment variable for production, fallback to dynamic detection
-  if (process.env.REACT_APP_API_URL) {
-    return `${process.env.REACT_APP_API_URL}/api`;
-  }
-  
-  // For local development
-  const hostname = window.location.hostname;
-  return hostname === 'localhost' 
-    ? 'http://localhost:5000/api'
-    : `http://${hostname}:5000/api`;
-};
-
-const API_BASE_URL = getAPIBaseURL();
+// Set API base URL using centralized config
+const API_BASE_URL = getAPIUrl('/api');
 
 // Set up axios defaults
 axios.defaults.baseURL = API_BASE_URL;
