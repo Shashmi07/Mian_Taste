@@ -27,7 +27,7 @@ const sendFeedbackEmail = async (orderData) => {
   try {
     const transporter = createGmailTransporter();
     
-    const { orderId, orderType, customerName, customerEmail } = orderData;
+    const { orderId, orderType, customerName, customerEmail, preorderOrderType, deliveryAddress } = orderData;
     
     if (!customerEmail) {
       console.warn(`⚠️ No email for order ${orderId} - cannot send feedback email`);
@@ -37,9 +37,17 @@ const sendFeedbackEmail = async (orderData) => {
     const feedbackUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/feedback/${orderId}`;
     
     let orderTypeText = '';
+    let isDeliveryOrder = false;
+    
     switch (orderType) {
       case 'pre':
-        orderTypeText = 'Pre-Order';
+        // Check if this is a delivery preorder
+        if (preorderOrderType === 'delivery') {
+          orderTypeText = 'Delivery Order';
+          isDeliveryOrder = true;
+        } else {
+          orderTypeText = 'Pre-Order';
+        }
         break;
       case 'reservation':
         orderTypeText = 'Table Reservation';
@@ -66,11 +74,19 @@ const sendFeedbackEmail = async (orderData) => {
             <h2 style="color: #333; margin-bottom: 20px;">Hi ${customerName}!</h2>
             
             <p style="color: #555; line-height: 1.6; margin-bottom: 20px;">
-              Thank you for choosing Mian Taste! Your ${orderTypeText.toLowerCase()} <strong>${orderId}</strong> has been completed.
+              Thank you for choosing Mian Taste! Your ${orderTypeText.toLowerCase()} <strong>${orderId}</strong> has been ${isDeliveryOrder ? 'delivered' : 'completed'}.
             </p>
             
+            ${isDeliveryOrder ? `
+            <div style="background-color: #f0f9ff; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; margin-bottom: 20px;">
+              <p style="color: #1e40af; margin: 0; font-weight: 500;">
+                🚚 Delivery Address: ${deliveryAddress || 'As provided during order'}
+              </p>
+            </div>
+            ` : ''}
+            
             <p style="color: #555; line-height: 1.6; margin-bottom: 30px;">
-              We hope you enjoyed your meal! We'd love to hear about your experience to help us serve you better in the future.
+              We hope you enjoyed your ${isDeliveryOrder ? 'delivered meal' : 'meal'}! We'd love to hear about your experience to help us serve you better in the future.
             </p>
             
             <div style="text-align: center; margin: 30px 0;">
@@ -102,14 +118,16 @@ const sendFeedbackEmail = async (orderData) => {
       text: `
 Hi ${customerName}!
 
-Thank you for choosing Mian Taste! Your ${orderTypeText.toLowerCase()} ${orderId} has been completed.
+Thank you for choosing Mian Taste! Your ${orderTypeText.toLowerCase()} ${orderId} has been ${isDeliveryOrder ? 'delivered' : 'completed'}.
 
-We hope you enjoyed your meal! Please take a moment to rate your experience:
+${isDeliveryOrder ? `Delivery Address: ${deliveryAddress || 'As provided during order'}
+
+` : ''}We hope you enjoyed your ${isDeliveryOrder ? 'delivered meal' : 'meal'}! Please take a moment to rate your experience:
 ${feedbackUrl}
 
 Your feedback helps us improve our service.
 
-Thank you for dining with us!
+Thank you for ${isDeliveryOrder ? 'choosing our delivery service' : 'dining with us'}!
 The Mian Taste Team
       `
     };

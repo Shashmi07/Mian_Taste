@@ -160,7 +160,9 @@ const updatePreOrderStatus = async (req, res) => {
         orderId: updatedOrder.orderId,
         orderType: 'pre',
         customerName: updatedOrder.customerName,
-        customerEmail: updatedOrder.customerEmail
+        customerEmail: updatedOrder.customerEmail,
+        preorderOrderType: updatedOrder.orderType, // delivery, dine-in, takeaway
+        deliveryAddress: updatedOrder.deliveryAddress
       };
       
       // Send email asynchronously (don't wait for it)
