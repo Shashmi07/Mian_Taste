@@ -12,7 +12,7 @@ const connectCustomerDB = async () => {
       useUnifiedTopology: true,
     });
 
-    console.log(`Customer Database Connected: ${customerConnection.connection.host}/${customerConnection.connection.name}`);
+    console.log(`Customer Database Connected: ${customerConnection.host}/${customerConnection.name}`);
     
     // Create indexes for customer database
     await createCustomerIndexes();

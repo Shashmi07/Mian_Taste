@@ -12,7 +12,7 @@ const connectAdminDB = async () => {
       useUnifiedTopology: true,
     });
 
-    console.log(`Admin Database Connected: ${adminConnection.connection.host}/${adminConnection.connection.name}`);
+    console.log(`Admin Database Connected: ${adminConnection.host}/${adminConnection.name}`);
     
     // Create indexes for admin database
     await createAdminIndexes();
