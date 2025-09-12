@@ -24,6 +24,8 @@ app.use(cors({
     'http://127.0.0.1:3001', 
     'http://10.11.5.232:3000', 
     'http://192.168.8.209:3000',
+    'https://mian-taste-restaurant.netlify.app',
+    'https://68c33ff2b8951a73c1eaedb8--mian-taste-restaurant.netlify.app',
     process.env.FRONTEND_URL || 'https://mian-taste.vercel.app'
   ],
   credentials: true,
@@ -48,6 +50,8 @@ const io = socketIo(server, {
       "http://localhost:3001", 
       "http://10.11.5.232:3000", 
       "http://192.168.8.209:3000",
+      "https://mian-taste-restaurant.netlify.app",
+      "https://68c33ff2b8951a73c1eaedb8--mian-taste-restaurant.netlify.app",
       process.env.FRONTEND_URL || "https://mian-taste.vercel.app"
     ],
     methods: ["GET", "POST"]
