@@ -195,10 +195,17 @@ const Menu = () => {
       try {
         setLoading(true);
         console.log('Fetching menu items...');
-        // Dynamic API URL based on current hostname
-        const apiUrl = window.location.hostname === 'localhost' 
-          ? 'http://localhost:5000/api/menu'
-          : `http://${window.location.hostname}:5000/api/menu`;
+        // Dynamic API URL - use environment variable for production, localhost for development
+        const getAPIURL = () => {
+          if (process.env.REACT_APP_API_URL) {
+            return process.env.REACT_APP_API_URL;
+          }
+          return window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000/api'
+            : `http://${window.location.hostname}:5000/api`;
+        };
+        const apiUrl = `${getAPIURL()}/menu`;
+        console.log('API URL:', apiUrl);
         const response = await fetch(apiUrl);
         if (response.ok) {
           const data = await response.json();
