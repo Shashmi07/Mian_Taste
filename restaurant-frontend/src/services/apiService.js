@@ -16,18 +16,13 @@ class APIService {
    * Determine the appropriate API base URL based on environment
    */
   getAPIBaseURL() {
-    const hostname = window.location.hostname;
-    
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return 'http://localhost:8000/api';
-    } else if (hostname === '10.11.5.232') {
-      return 'http://10.11.5.232:8000/api';
-    } else if (hostname === '192.168.8.209') {
-      return 'http://192.168.8.209:8000/api';
-    } else {
-      // Default fallback
-      return 'http://localhost:8000/api';
+    // Production - use environment variable
+    if (process.env.REACT_APP_API_URL) {
+      return `${process.env.REACT_APP_API_URL}/api`;
     }
+    
+    // Local development
+    return 'http://localhost:5000/api';
   }
 
   /**

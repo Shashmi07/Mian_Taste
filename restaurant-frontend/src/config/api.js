@@ -1,6 +1,6 @@
-// API Configuration for all environments
+// Simple API Configuration
 const getAPIConfig = () => {
-  // Use environment variable for production deployment
+  // Production - use environment variable
   if (process.env.REACT_APP_API_URL) {
     return {
       baseURL: process.env.REACT_APP_API_URL,
@@ -8,17 +8,10 @@ const getAPIConfig = () => {
     };
   }
   
-  // For local development - dynamic detection
-  const hostname = window.location.hostname;
-  const isLocalhost = hostname === 'localhost';
-  
+  // Local development
   return {
-    baseURL: isLocalhost 
-      ? 'http://localhost:5000' 
-      : `http://${hostname}:5000`,
-    socketURL: isLocalhost 
-      ? 'http://localhost:5000' 
-      : `http://${hostname}:5000`
+    baseURL: 'http://localhost:5000',
+    socketURL: 'http://localhost:5000'
   };
 };
 

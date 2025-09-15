@@ -5,6 +5,16 @@ import socketService from '../services/socket';
 import OrderCard from '../components/OrderCard';
 
 export default function ChefDashboard({ user, onLogout }) {
+  // Dynamic API URL - use environment variable for production, localhost for development
+  const getAPIURL = () => {
+    if (process.env.REACT_APP_API_URL) {
+      return process.env.REACT_APP_API_URL;
+    }
+    return window.location.hostname === 'localhost' 
+      ? 'http://localhost:5000/api'
+      : `http://${window.location.hostname}:5000/api`;
+  };
+  const API_URL = getAPIURL();
   const [orders, setOrders] = useState([]);
   const [inventory, setInventory] = useState([]);
   const [activeTab, setActiveTab] = useState('orders');
@@ -91,7 +101,7 @@ export default function ChefDashboard({ user, onLogout }) {
       }
       
       // Load only QR orders
-      const qrOrdersResponse = await fetch('http://localhost:5000/api/qr-orders', {
+      const qrOrdersResponse = await fetch(`${API_URL}/qr-orders`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -144,7 +154,7 @@ export default function ChefDashboard({ user, onLogout }) {
       console.log('Accepting QR order:', orderId);
       
       // Accept QR order
-      const response = await fetch(`http://localhost:5000/api/qr-orders/${orderId}/status`, {
+      const response = await fetch(`${API_URL}/qr-orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -182,7 +192,7 @@ export default function ChefDashboard({ user, onLogout }) {
       console.log('Updating QR order status:', orderId, status);
       
       // Update QR order status
-      const response = await fetch(`http://localhost:5000/api/qr-orders/${orderId}/status`, {
+      const response = await fetch(`${API_URL}/qr-orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -221,7 +231,7 @@ export default function ChefDashboard({ user, onLogout }) {
       console.log('Updating QR order cooking status:', orderId, cookingStatus);
       
       // Update QR order cooking status
-      const response = await fetch(`http://localhost:5000/api/qr-orders/${orderId}/status`, {
+      const response = await fetch(`${API_URL}/qr-orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
