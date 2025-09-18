@@ -30,7 +30,7 @@ const Dashboard = () => {
       const token = localStorage.getItem('token');
       const days = range === '7d' ? 7 : range === '30d' ? 30 : range === '90d' ? 90 : 365;
       
-      const response = await fetch(`${baseUrl}/api/admin-analytics/powerbi-data?days=${days}`, {
+      const response = await fetch(`${baseUrl}/api/admin-analytics/data?days=${days}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

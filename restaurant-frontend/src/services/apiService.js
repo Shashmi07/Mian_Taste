@@ -227,7 +227,7 @@ class APIService {
   // ============ ANALYTICS SERVICES ============
 
   async getAnalyticsData() {
-    return await this.request('GET', '/admin-analytics/powerbi-data', null, { userType: 'admin' });
+    return await this.request('GET', '/admin-analytics/data', null, { userType: 'admin' });
   }
 
   // ============ UTILITY METHODS ============
