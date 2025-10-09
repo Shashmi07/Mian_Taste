@@ -43,34 +43,7 @@ const Cart = () => {
   useEffect(() => {
     console.log('Cart: Checking for order contexts...');
     
-    // Priority 1: Check for delivery context FIRST (direct website visitors)
-    const deliveryContext = localStorage.getItem('deliveryContext');
-    if (deliveryContext === 'true') {
-      console.log('Cart: Delivery context found - checking authentication');
-      const customerToken = localStorage.getItem('customerToken');
-      const customerUser = localStorage.getItem('customerUser');
-      
-      if (customerToken && customerUser) {
-        try {
-          const userData = JSON.parse(customerUser);
-          console.log('Cart: Authenticated delivery order for:', userData.name || userData.username);
-          setIsTableOrder(false); // Delivery order, not table order
-          setIsDeliveryOrder(true);
-          setCustomerName(userData.name || userData.username || '');
-          setNeedsAuthentication(false);
-          return; // Exit early - authenticated delivery order
-        } catch (error) {
-          console.error('Error parsing customer data for delivery:', error);
-        }
-      } else {
-        console.log('Cart: Delivery order requires authentication');
-        setIsDeliveryOrder(true);
-        setNeedsAuthentication(true);
-        return; // Exit early - will handle in UI
-      }
-    }
-    
-    // Priority 2: QR order (highest priority after delivery)
+    // Priority 1: QR order (highest priority)
     const qrTable = localStorage.getItem('qrTableNumber');
     if (qrTable) {
       console.log('Cart: QR table found:', qrTable);
@@ -80,8 +53,8 @@ const Cart = () => {
       setCustomerName('Table ' + qrTable + ' Guest');
       return; // Exit early
     }
-    
-    // Priority 2: Check for preorder context from PreOrder page (before reservations)
+
+    // Priority 2: Check for preorder context from PreOrder page (HIGH priority)
     const preorderData = localStorage.getItem('preorderContext');
     if (preorderData) {
       try {
@@ -117,8 +90,35 @@ const Cart = () => {
         localStorage.removeItem('preorderContext');
       }
     }
-    
-    // Priority 3: Check for pending table+food reservation
+
+    // Priority 3: Check for delivery context (direct website visitors)
+    const deliveryContext = localStorage.getItem('deliveryContext');
+    if (deliveryContext === 'true') {
+      console.log('Cart: Delivery context found - checking authentication');
+      const customerToken = localStorage.getItem('customerToken');
+      const customerUser = localStorage.getItem('customerUser');
+
+      if (customerToken && customerUser) {
+        try {
+          const userData = JSON.parse(customerUser);
+          console.log('Cart: Authenticated delivery order for:', userData.name || userData.username);
+          setIsTableOrder(false); // Delivery order, not table order
+          setIsDeliveryOrder(true);
+          setCustomerName(userData.name || userData.username || '');
+          setNeedsAuthentication(false);
+          return; // Exit early - authenticated delivery order
+        } catch (error) {
+          console.error('Error parsing customer data for delivery:', error);
+        }
+      } else {
+        console.log('Cart: Delivery order requires authentication');
+        setIsDeliveryOrder(true);
+        setNeedsAuthentication(true);
+        return; // Exit early - will handle in UI
+      }
+    }
+
+    // Priority 4: Check for pending table+food reservation
     const pendingReservation = localStorage.getItem('pendingReservation');
     if (pendingReservation) {
       try {
@@ -154,7 +154,7 @@ const Cart = () => {
       }
     }
     
-    // Priority 4: Check for legacy reservation context (lowest priority)
+    // Priority 5: Check for legacy reservation context (lowest priority)
     const storedReservationContext = localStorage.getItem('reservationContext');
     if (storedReservationContext) {
       try {
@@ -628,7 +628,7 @@ const Cart = () => {
                   {isDeliveryOrder && !needsAuthentication && (
                     <div className="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
                       <Truck className="w-4 h-4" />
-                      Online Delivery Order
+                      Online Delivery
                     </div>
                   )}
                 </div>
@@ -917,7 +917,7 @@ const Cart = () => {
                           className="mr-3"
                           style={{ accentColor: '#dc2626' }}
                         />
-                        <span>Online Delivery Order</span>
+                        <span>Online Delivery</span>
                         <span className="ml-2 text-green-600">✓</span>
                       </label>
                     </div>

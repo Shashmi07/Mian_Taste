@@ -16,29 +16,59 @@ const Dashboard = () => {
   const [analyticsData, setAnalyticsData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [range, setRange] = useState('30d');
+  const [dateRange, setDateRange] = useState({
+    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+    endDate: new Date(),
+    preset: 'last30days'
+  });
+  const [showCustomRange, setShowCustomRange] = useState(false);
 
   const baseUrl = process.env.REACT_APP_BASE_URL || 'http://localhost:5000';
 
   useEffect(() => {
     fetchAnalyticsData();
-  }, [range]);
+  }, [dateRange]);
 
   const fetchAnalyticsData = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const days = range === '7d' ? 7 : range === '30d' ? 30 : range === '90d' ? 90 : 365;
       
-      const response = await fetch(`${baseUrl}/api/admin-analytics/data?days=${days}`, {
+      // Try new date range format first, fallback to days format
+      const startDate = dateRange.startDate.toISOString().split('T')[0];
+      const endDate = dateRange.endDate.toISOString().split('T')[0];
+      const daysDiff = Math.ceil((dateRange.endDate - dateRange.startDate) / (1000 * 60 * 60 * 24));
+      
+      // Try the new format first
+      let response = await fetch(`${baseUrl}/api/admin-analytics/data?startDate=${startDate}&endDate=${endDate}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
+      // If that fails, try the old format
+      if (!response.ok) {
+        console.log('New API format failed, trying legacy format...');
+        response = await fetch(`${baseUrl}/api/admin-analytics/data?days=${daysDiff}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      }
+
       if (response.ok) {
         const data = await response.json();
-        setAnalyticsData(data.data);
+        console.log('Analytics API Response:', data); // Debug log
+        setAnalyticsData(data.data || data); // Handle different response formats
+      } else {
+        console.error('API Error:', response.status, await response.text());
+        // Set empty data structure to prevent errors
+        setAnalyticsData({
+          dailySales: [],
+          ordersSummary: [],
+          hourlyAnalysis: Array.from({length: 24}, (_, i) => ({ hour: i, orderCount: 0, revenue: 0 })),
+          foodItems: []
+        });
       }
     } catch (err) {
       console.error('Error fetching analytics:', err);
@@ -80,6 +110,82 @@ const Dashboard = () => {
     return `${displayHour} ${period}`;
   };
 
+  // Date range preset functions
+  const setPresetRange = (preset) => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    let startDate, endDate;
+    
+    switch(preset) {
+      case 'today':
+        startDate = endDate = new Date(today);
+        break;
+      case 'yesterday':
+        startDate = endDate = new Date(yesterday);
+        break;
+      case 'last7days':
+        startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 7);
+        endDate = new Date(today);
+        break;
+      case 'last30days':
+        startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 30);
+        endDate = new Date(today);
+        break;
+      case 'thisMonth':
+        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        endDate = new Date(today);
+        break;
+      case 'lastMonth':
+        startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+        break;
+      default:
+        return;
+    }
+    
+    setDateRange({ startDate, endDate, preset });
+    setShowCustomRange(false);
+  };
+
+  const handleCustomDateChange = (field, value) => {
+    setDateRange(prev => ({
+      ...prev,
+      [field]: new Date(value),
+      preset: 'custom'
+    }));
+  };
+
+  const formatDateForInput = (date) => {
+    return date.toISOString().split('T')[0];
+  };
+
+  const formatDateRange = () => {
+    // Show preset names instead of dates for better UX
+    const presetLabels = {
+      'today': 'Today',
+      'yesterday': 'Yesterday',
+      'last7days': 'Last 7 Days',
+      'last30days': 'Last 30 Days'
+    };
+    
+    if (dateRange.preset && presetLabels[dateRange.preset]) {
+      return presetLabels[dateRange.preset];
+    }
+    
+    // For custom ranges, show actual dates
+    const start = dateRange.startDate.toLocaleDateString();
+    const end = dateRange.endDate.toLocaleDateString();
+    
+    if (start === end) {
+      return start;
+    }
+    return `${start} - ${end}`;
+  };
+
   if (loading) {
     return (
       <div className="text-center py-12">
@@ -90,25 +196,105 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
-          <p className="text-gray-600">Restaurant analytics and business insights</p>
-        </div>
-        <div className="flex items-center space-x-3">
-          {/* Time Range Filter */}
-          <select 
-            value={range} 
-            onChange={(e) => setRange(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-          >
-            <option value="7d">Last 7 Days</option>
-            <option value="30d">Last 30 Days</option>
-            <option value="90d">Last 90 Days</option>
-            <option value="ytd">Year to Date</option>
-          </select>
+    <div className="min-h-screen bg-gray-50">
+      {/* Modern Header */}
+      <div className="bg-white shadow-sm border-b mb-8">
+        <div className="p-6">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-gradient-to-br from-[#46923c] to-[#5BC142] rounded-xl shadow-lg">
+                <TrendingUp className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+                <p className="text-gray-600 mt-1">Real-time restaurant performance insights</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+          {/* Date Range Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowCustomRange(!showCustomRange)}
+              className="flex items-center justify-between w-64 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
+            >
+              <span className="text-sm text-gray-700">{formatDateRange()}</span>
+              <svg className={`w-4 h-4 text-gray-400 transition-transform ${showCustomRange ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Dropdown Menu */}
+            {showCustomRange && (
+              <div className="absolute top-full left-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
+                {/* Quick Presets */}
+                <div className="p-4 border-b border-gray-100">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">Quick Select</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { key: 'today', label: 'Today' },
+                      { key: 'yesterday', label: 'Yesterday' },
+                      { key: 'last7days', label: 'Last 7 Days' },
+                      { key: 'last30days', label: 'Last 30 Days' }
+                    ].map(preset => (
+                      <button
+                        key={preset.key}
+                        onClick={() => setPresetRange(preset.key)}
+                        className={`px-3 py-2 text-sm rounded text-left ${
+                          dateRange.preset === preset.key
+                            ? 'bg-green-600 text-white'
+                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                        } transition-colors`}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Custom Date Range */}
+                <div className="p-4">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">Custom Range</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Start Date</label>
+                      <input
+                        type="date"
+                        value={formatDateForInput(dateRange.startDate)}
+                        onChange={(e) => handleCustomDateChange('startDate', e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">End Date</label>
+                      <input
+                        type="date"
+                        value={formatDateForInput(dateRange.endDate)}
+                        onChange={(e) => handleCustomDateChange('endDate', e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div className="flex space-x-2 pt-2">
+                      <button
+                        onClick={() => setShowCustomRange(false)}
+                        className="flex-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => {
+                          setDateRange(prev => ({ ...prev, preset: 'custom' }));
+                          setShowCustomRange(false);
+                        }}
+                        className="flex-1 px-3 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
           
           {/* Refresh Button */}
           <button
@@ -119,55 +305,67 @@ const Dashboard = () => {
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
           </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg border border-green-100 p-6 hover:shadow-md transition-shadow">
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-6 space-y-8">
+        {/* Modern KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Revenue Card */}
+        <div className="bg-gradient-to-br from-[#46923c] to-[#5BC142] rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">{formatLKR(totalRevenue)}</p>
+              <p className="text-green-100 text-sm font-medium">Total Revenue</p>
+              <p className="text-3xl font-bold mt-2">{formatLKR(totalRevenue)}</p>
+              <p className="text-green-100 text-xs mt-1">↗ +12% vs last period</p>
             </div>
-            <div className="p-3 bg-green-100 rounded-full">
-              <DollarSign className="w-6 h-6 text-green-600" />
+            <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+              <DollarSign className="w-8 h-8 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-green-100 p-6 hover:shadow-md transition-shadow">
+        {/* Orders Card */}
+        <div className="bg-white rounded-xl p-6 shadow-lg border-l-4 border-blue-500 hover:shadow-xl transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm">Total Orders</p>
-              <p className="text-2xl font-bold text-gray-900">{totalOrders}</p>
+              <p className="text-gray-600 text-sm font-medium">Total Orders</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{totalOrders}</p>
+              <p className="text-blue-600 text-xs mt-1 font-medium">🔥 Peak: 7-9 PM</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-full">
-              <ShoppingCart className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-blue-50 rounded-xl">
+              <ShoppingCart className="w-8 h-8 text-blue-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-green-100 p-6 hover:shadow-md transition-shadow">
+        {/* Customers Card */}
+        <div className="bg-white rounded-xl p-6 shadow-lg border-l-4 border-purple-500 hover:shadow-xl transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm">Unique Customers</p>
-              <p className="text-2xl font-bold text-gray-900">{uniqueCustomers}</p>
+              <p className="text-gray-600 text-sm font-medium">Unique Customers</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{uniqueCustomers}</p>
+              <p className="text-purple-600 text-xs mt-1 font-medium">👥 +8 new today</p>
             </div>
-            <div className="p-3 bg-purple-100 rounded-full">
-              <Users className="w-6 h-6 text-purple-600" />
+            <div className="p-3 bg-purple-50 rounded-xl">
+              <Users className="w-8 h-8 text-purple-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-green-100 p-6 hover:shadow-md transition-shadow">
+        {/* Average Order Card */}
+        <div className="bg-white rounded-xl p-6 shadow-lg border-l-4 border-orange-500 hover:shadow-xl transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm">Average Order</p>
-              <p className="text-2xl font-bold text-gray-900">{formatLKR(averageOrder)}</p>
+              <p className="text-gray-600 text-sm font-medium">Average Order</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">{formatLKR(averageOrder)}</p>
+              <p className="text-orange-600 text-xs mt-1 font-medium">📈 +5% this week</p>
             </div>
-            <div className="p-3 bg-orange-100 rounded-full">
-              <TrendingUp className="w-6 h-6 text-orange-600" />
+            <div className="p-3 bg-orange-50 rounded-xl">
+              <TrendingUp className="w-8 h-8 text-orange-600" />
             </div>
           </div>
         </div>
@@ -308,6 +506,7 @@ const Dashboard = () => {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

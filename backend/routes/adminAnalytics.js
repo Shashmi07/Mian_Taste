@@ -5,6 +5,201 @@ const router = express.Router();
 // All admin analytics routes require authentication
 router.use(auth);
 
+// Recharts-compatible analytics endpoint
+router.get('/data', async (req, res) => {
+  try {
+    const QrOrder = require('../models/QrOrder');
+    const Order = require('../models/order');
+    const PreOrder = require('../models/PreOrder');
+
+    // Get date range filter
+    const { days = 30, startDate, endDate } = req.query;
+
+    let dateFilter;
+    if (startDate && endDate) {
+      dateFilter = {
+        createdAt: {
+          $gte: new Date(startDate),
+          $lte: new Date(new Date(endDate).getTime() + 24 * 60 * 60 * 1000) // Include end date
+        }
+      };
+    } else {
+      dateFilter = {
+        createdAt: {
+          $gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+        }
+      };
+    }
+
+    // Fetch all order data in parallel
+    const [qrOrders, regularOrders, preOrders] = await Promise.all([
+      QrOrder.find(dateFilter).lean(),
+      Order.find(dateFilter).lean(),
+      PreOrder.find(dateFilter).lean()
+    ]);
+
+    // Combine all orders for processing
+    const allOrders = [
+      ...qrOrders.map(order => ({ ...order, orderType: 'QR', source: 'qr' })),
+      ...regularOrders.map(order => ({ ...order, orderType: 'Regular', source: 'regular' })),
+      ...preOrders.map(order => ({ ...order, orderType: 'Pre-Order', source: 'pre' }))
+    ];
+
+    // Process orders summary for the dashboard
+    const ordersSummary = allOrders.map(order => ({
+      orderId: order.orderId,
+      orderType: order.orderType,
+      customerName: order.customerName,
+      customerEmail: order.customerEmail,
+      table: order.table,
+      totalAmount: order.totalAmount,
+      status: order.status,
+      cookingStatus: order.cookingStatus,
+      priority: order.priority,
+      orderDate: order.createdAt,
+      items: order.items?.length || 0,
+      estimatedTime: order.estimatedTime
+    }));
+
+    // Calculate daily sales data
+    const salesMap = new Map();
+    allOrders.forEach(order => {
+      const date = new Date(order.createdAt).toISOString().split('T')[0];
+      if (!salesMap.has(date)) {
+        salesMap.set(date, {
+          date,
+          totalOrders: 0,
+          totalRevenue: 0,
+          qrOrders: 0,
+          preOrders: 0,
+          regularOrders: 0,
+          qrRevenue: 0,
+          preRevenue: 0,
+          regularRevenue: 0
+        });
+      }
+
+      const existing = salesMap.get(date);
+      existing.totalOrders += 1;
+      existing.totalRevenue += order.totalAmount || 0;
+
+      if (order.source === 'qr') {
+        existing.qrOrders += 1;
+        existing.qrRevenue += order.totalAmount || 0;
+      } else if (order.source === 'pre') {
+        existing.preOrders += 1;
+        existing.preRevenue += order.totalAmount || 0;
+      } else {
+        existing.regularOrders += 1;
+        existing.regularRevenue += order.totalAmount || 0;
+      }
+    });
+
+    const dailySales = Array.from(salesMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+
+    // Calculate hourly analysis
+    const hourlyMap = new Map();
+    for (let hour = 0; hour < 24; hour++) {
+      hourlyMap.set(hour, {
+        hour,
+        orderCount: 0,
+        revenue: 0,
+        qrCount: 0,
+        preCount: 0,
+        regularCount: 0
+      });
+    }
+
+    allOrders.forEach(order => {
+      const hour = new Date(order.createdAt).getHours();
+      const existing = hourlyMap.get(hour);
+      existing.orderCount += 1;
+      existing.revenue += order.totalAmount || 0;
+
+      if (order.source === 'qr') {
+        existing.qrCount += 1;
+      } else if (order.source === 'pre') {
+        existing.preCount += 1;
+      } else {
+        existing.regularCount += 1;
+      }
+    });
+
+    const hourlyAnalysis = Array.from(hourlyMap.values());
+
+    // Process food items analysis
+    const itemsMap = new Map();
+    allOrders.forEach(order => {
+      order.items?.forEach(item => {
+        const key = item.name;
+        if (!itemsMap.has(key)) {
+          itemsMap.set(key, {
+            itemName: item.name,
+            totalQuantity: 0,
+            totalRevenue: 0,
+            orderCount: 0,
+            avgPrice: item.price,
+            orderTypes: { qr: 0, pre: 0, regular: 0 }
+          });
+        }
+        const existing = itemsMap.get(key);
+        existing.totalQuantity += item.quantity;
+        existing.totalRevenue += (item.price * item.quantity);
+        existing.orderCount += 1;
+        existing.orderTypes[order.source] += item.quantity;
+      });
+    });
+
+    const foodItems = Array.from(itemsMap.values()).sort((a, b) => b.totalQuantity - a.totalQuantity);
+
+    // Generate inventory recommendations
+    const inventoryRecommendations = foodItems.map(item => {
+      const dailyAverage = Math.round(item.totalQuantity / (days || 30));
+      return {
+        itemName: item.itemName,
+        dailyAverage,
+        weeklyForecast: dailyAverage * 7,
+        recommendedStock: Math.ceil(dailyAverage * 7 * 1.2), // 20% buffer
+        reorderLevel: Math.ceil(dailyAverage * 3) // 3-day safety stock
+      };
+    }).filter(item => item.dailyAverage > 0);
+
+    // Create empty feedback array (since we don't have feedback data yet)
+    const customerFeedback = [];
+
+    const analyticsData = {
+      ordersSummary,
+      dailySales,
+      hourlyAnalysis,
+      foodItems,
+      inventoryRecommendations,
+      customerFeedback
+    };
+
+    res.json({
+      success: true,
+      data: analyticsData,
+      metadata: {
+        dateRange: startDate && endDate ? `${startDate} to ${endDate}` : `Last ${days} days`,
+        generatedAt: new Date(),
+        recordCounts: {
+          orders: ordersSummary.length,
+          foodItems: foodItems.length,
+          dailyReports: dailySales.length
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error generating analytics data:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate analytics data',
+      error: error.message
+    });
+  }
+});
+
 // Power BI Data Export - Comprehensive restaurant analytics
 router.get('/powerbi-data', async (req, res) => {
   try {
