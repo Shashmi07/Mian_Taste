@@ -417,11 +417,10 @@ const Cart = () => {
         response = await preOrderAPI.createPreOrder(orderData);
       } else if (isQROrder) {
         console.log('Using QR order API endpoint: /api/qr-orders/public');
-        // Determine backend URL based on frontend URL
-        const backendUrl = window.location.hostname === 'localhost' 
-          ? 'http://localhost:5000' 
-          : `http://${window.location.hostname}:5000`;
-        
+        // Use current hostname for backend URL (works for both localhost and IP addresses)
+        const backendUrl = `http://${window.location.hostname}:5000`;
+        console.log('Backend URL:', backendUrl);
+
         response = await fetch(`${backendUrl}/api/qr-orders/public`, {
           method: 'POST',
           headers: {

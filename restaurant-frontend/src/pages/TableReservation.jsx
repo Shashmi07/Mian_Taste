@@ -545,6 +545,7 @@ export default function TableReservation() {
                   <>
                     <div className="space-y-3">
                       <button
+                        type="button"
                         onClick={() => handleTableSelect(1)}
                         className={`
                           w-full h-12 rounded-lg font-semibold text-base transition-all duration-200 border-2
@@ -558,6 +559,7 @@ export default function TableReservation() {
                         {[2, 3, 4].map((tableNum) => (
                           <button
                             key={tableNum}
+                            type="button"
                             onClick={() => handleTableSelect(tableNum)}
                             className={`
                               h-12 rounded-lg font-semibold text-sm transition-all duration-200 border-2
@@ -573,6 +575,7 @@ export default function TableReservation() {
                         {[5, 6, 7].map((tableNum) => (
                           <button
                             key={tableNum}
+                            type="button"
                             onClick={() => handleTableSelect(tableNum)}
                             className={`
                               h-12 rounded-lg font-semibold text-sm transition-all duration-200 border-2
@@ -585,6 +588,7 @@ export default function TableReservation() {
                         ))}
                       </div>
                       <button
+                        type="button"
                         onClick={() => handleTableSelect(8)}
                         className={`
                           w-full h-12 rounded-lg font-semibold text-base transition-all duration-200 border-2

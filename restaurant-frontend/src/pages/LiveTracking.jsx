@@ -147,10 +147,10 @@ const LiveTracking = () => {
     
     try {
       // Search for QR order by orderId (QR001234, etc.)
-      const baseUrl = window.location.hostname === 'localhost' 
-        ? 'http://localhost:5000'
-        : `http://${window.location.hostname}:5000`;
-        
+      // Use current hostname for backend URL (works for both localhost and IP addresses)
+      const baseUrl = `http://${window.location.hostname}:5000`;
+      console.log('Tracking API URL:', baseUrl);
+
       const response = await fetch(`${baseUrl}/api/qr-orders/track/${searchOrderId}`, {
         method: 'GET',
         headers: {
@@ -181,13 +181,12 @@ const LiveTracking = () => {
 
   const refreshOrder = async () => {
     if (!order) return;
-    
+
     setLoading(true);
     try {
-      const baseUrl = window.location.hostname === 'localhost' 
-        ? 'http://localhost:5000'
-        : `http://${window.location.hostname}:5000`;
-        
+      // Use current hostname for backend URL (works for both localhost and IP addresses)
+      const baseUrl = `http://${window.location.hostname}:5000`;
+
       const response = await fetch(`${baseUrl}/api/qr-orders/track/${order.orderId}`);
       const data = await response.json();
       
@@ -265,11 +264,10 @@ const LiveTracking = () => {
 
   const submitFeedback = async () => {
     setSubmittingFeedback(true);
-    
+
     try {
-      const baseUrl = window.location.hostname === 'localhost' 
-        ? 'http://localhost:5000'
-        : `http://${window.location.hostname}:5000`;
+      // Use current hostname for backend URL (works for both localhost and IP addresses)
+      const baseUrl = `http://${window.location.hostname}:5000`;
 
       const feedbackData = {
         orderId: order.orderId, // Use the order ID string, not the MongoDB _id

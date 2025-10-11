@@ -7,11 +7,14 @@ const getAPIConfig = () => {
       socketURL: process.env.REACT_APP_API_URL
     };
   }
-  
-  // Local development
+
+  // Local development - use current hostname (works for both localhost and network IP)
+  const hostname = window.location.hostname;
+  const baseURL = `http://${hostname}:5000`;
+
   return {
-    baseURL: 'http://localhost:5000',
-    socketURL: 'http://localhost:5000'
+    baseURL: baseURL,
+    socketURL: baseURL
   };
 };
 

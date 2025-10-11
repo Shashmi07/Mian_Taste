@@ -3,23 +3,33 @@ import { QrCode, Download, Printer, Copy, Check } from 'lucide-react';
 
 const QRGenerator = () => {
   const [tableNumbers, setTableNumbers] = useState('1,2,3,4,5,6,7,8');
-  const [selectedUrlType, setSelectedUrlType] = useState('localhost');
-  const [customIP, setCustomIP] = useState('192.168.1.100');
+  const [selectedUrlType, setSelectedUrlType] = useState('network-ip');
+  const [customIP, setCustomIP] = useState('10.11.5.232'); // Default to your network IP
   const [copied, setCopied] = useState(null);
-  
+
+  // Get the current machine's IP address from window location
+  const getCurrentIP = () => {
+    const hostname = window.location.hostname;
+    // If we're already on an IP, use it; otherwise default to the custom IP
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      return hostname;
+    }
+    return customIP; // Fallback to custom IP
+  };
+
   const getBaseUrl = () => {
     switch(selectedUrlType) {
       case 'localhost':
         return 'http://localhost:3000/menu?qr=true&table=';
-      case 'production':
-        return `${window.location.origin}/menu?qr=true&table=`;
+      case 'network-ip':
+        return `http://${customIP}:3000/menu?qr=true&table=`;
       case 'custom':
         return customBaseUrl;
       default:
-        return 'http://localhost:3000/menu?qr=true&table=';
+        return `http://${customIP}:3000/menu?qr=true&table=`;
     }
   };
-  
+
   const [customBaseUrl, setCustomBaseUrl] = useState('');
   
   const generateTableNumbers = () => {
@@ -119,15 +129,33 @@ const QRGenerator = () => {
               onChange={(e) => setSelectedUrlType(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#46923c] focus:border-transparent"
             >
+              <option value="network-ip">Network IP (For Mobile Devices)</option>
               <option value="localhost">Localhost (Development)</option>
-              <option value="production">Production (Netlify)</option>
               <option value="custom">Custom URL</option>
             </select>
           </div>
         </div>
         
         {/* URL Configuration based on selection */}
-        
+
+        {selectedUrlType === 'network-ip' && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Network IP Address
+            </label>
+            <input
+              type="text"
+              value={customIP}
+              onChange={(e) => setCustomIP(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#46923c] focus:border-transparent"
+              placeholder="192.168.1.100"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              💡 Find your IP: Run "ipconfig" (Windows) or "ifconfig" (Mac/Linux) in terminal
+            </p>
+          </div>
+        )}
+
         {selectedUrlType === 'custom' && (
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
