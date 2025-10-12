@@ -9,6 +9,8 @@ const PreOrderManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
   // Fetch PreOrders from API
   useEffect(() => {
     fetchPreOrders();
@@ -30,7 +32,7 @@ const PreOrderManagement = () => {
         setLoading(true);
       }
       
-      const response = await fetch('http://localhost:5000/api/pre-orders', {
+      const response = await fetch(`${API_URL}/pre-orders`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -89,7 +91,7 @@ const PreOrderManagement = () => {
 
   const updateOrderStatus = async (orderId, status) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/pre-orders/${orderId}/status`, {
+      const response = await fetch(`${API_URL}/pre-orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

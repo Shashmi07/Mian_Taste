@@ -2,9 +2,13 @@
 const getAPIConfig = () => {
   // Production - use environment variable
   if (process.env.REACT_APP_API_URL) {
+    // Socket.IO connects to the root server, not /api path
+    // Remove /api from the end of the URL for socket connection
+    const socketURL = process.env.REACT_APP_API_URL.replace(/\/api$/, '');
+
     return {
       baseURL: process.env.REACT_APP_API_URL,
-      socketURL: process.env.REACT_APP_API_URL
+      socketURL: socketURL
     };
   }
 

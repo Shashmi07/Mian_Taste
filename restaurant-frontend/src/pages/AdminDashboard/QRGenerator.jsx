@@ -3,9 +3,13 @@ import { QrCode, Download, Printer, Copy, Check } from 'lucide-react';
 
 const QRGenerator = () => {
   const [tableNumbers, setTableNumbers] = useState('1,2,3,4,5,6,7,8');
-  const [selectedUrlType, setSelectedUrlType] = useState('network-ip');
+  const [selectedUrlType, setSelectedUrlType] = useState('production');
   const [customIP, setCustomIP] = useState('10.11.5.232'); // Default to your network IP
   const [copied, setCopied] = useState(null);
+  const [customBaseUrl, setCustomBaseUrl] = useState('');
+
+  // Get production frontend URL from environment variable
+  const productionURL = process.env.REACT_APP_FRONTEND_URL || 'https://your-s3-bucket.s3.amazonaws.com';
 
   // Get the current machine's IP address from window location
   const getCurrentIP = () => {
@@ -19,6 +23,8 @@ const QRGenerator = () => {
 
   const getBaseUrl = () => {
     switch(selectedUrlType) {
+      case 'production':
+        return `${productionURL}/menu?qr=true&table=`;
       case 'localhost':
         return 'http://localhost:3000/menu?qr=true&table=';
       case 'network-ip':
@@ -26,11 +32,9 @@ const QRGenerator = () => {
       case 'custom':
         return customBaseUrl;
       default:
-        return `http://${customIP}:3000/menu?qr=true&table=`;
+        return `${productionURL}/menu?qr=true&table=`;
     }
   };
-
-  const [customBaseUrl, setCustomBaseUrl] = useState('');
   
   const generateTableNumbers = () => {
     return tableNumbers.split(',').map(num => num.trim()).filter(num => num);
@@ -129,14 +133,29 @@ const QRGenerator = () => {
               onChange={(e) => setSelectedUrlType(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#46923c] focus:border-transparent"
             >
+              <option value="production">Production (AWS S3)</option>
               <option value="network-ip">Network IP (For Mobile Devices)</option>
               <option value="localhost">Localhost (Development)</option>
               <option value="custom">Custom URL</option>
             </select>
           </div>
         </div>
-        
+
         {/* URL Configuration based on selection */}
+
+        {selectedUrlType === 'production' && (
+          <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-4">
+            <p className="text-sm text-gray-700">
+              <strong>🚀 Production Mode:</strong> QR codes will point to your AWS S3 deployed frontend.
+            </p>
+            <p className="text-xs text-gray-600 mt-2">
+              Current URL: <code className="bg-white px-2 py-1 rounded">{productionURL}</code>
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              💡 Update <code>REACT_APP_FRONTEND_URL</code> in .env.production if this is incorrect.
+            </p>
+          </div>
+        )}
 
         {selectedUrlType === 'network-ip' && (
           <div className="mb-4">

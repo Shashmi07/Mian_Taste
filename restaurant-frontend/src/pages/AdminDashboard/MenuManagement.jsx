@@ -91,7 +91,7 @@ const MenuManagement = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [categoryStats, setCategoryStats] = useState({});
-  
+
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -99,7 +99,7 @@ const MenuManagement = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  
+
   // Form state
   const [formData, setFormData] = useState({
     name: '',
@@ -117,17 +117,19 @@ const MenuManagement = () => {
   // Available image options from assets
   const availableImages = Object.keys(imageMap);
 
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
   const fetchMenuItems = useCallback(async () => {
     try {
       setLoading(true);
       console.log('Fetching menu items...');
-      
+
       const params = new URLSearchParams();
       if (selectedCategory !== 'all') {
         params.append('category', selectedCategory);
       }
-      
-      const response = await fetch(`http://localhost:5000/api/menu?${params}`);
+
+      const response = await fetch(`${API_URL}/menu?${params}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -152,7 +154,7 @@ const MenuManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedCategory]);
+  }, [selectedCategory, API_URL]);
 
   useEffect(() => {
     fetchMenuItems();
@@ -160,7 +162,7 @@ const MenuManagement = () => {
 
   const toggleAvailability = async (id, currentStatus) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/menu/${id}`, {
+      const response = await fetch(`${API_URL}/menu/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -192,7 +194,7 @@ const MenuManagement = () => {
       setSubmitting(true);
       setError('');
       
-      const response = await fetch('http://localhost:5000/api/menu', {
+      const response = await fetch(`${API_URL}/menu`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -229,7 +231,7 @@ const MenuManagement = () => {
       setSubmitting(true);
       setError('');
       
-      const response = await fetch(`http://localhost:5000/api/menu/${selectedItem._id}`, {
+      const response = await fetch(`${API_URL}/menu/${selectedItem._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -268,7 +270,7 @@ const MenuManagement = () => {
     try {
       setSubmitting(true);
       
-      const response = await fetch(`http://localhost:5000/api/menu/${selectedItem._id}`, {
+      const response = await fetch(`${API_URL}/menu/${selectedItem._id}`, {
         method: 'DELETE'
       });
 

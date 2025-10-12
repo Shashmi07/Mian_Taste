@@ -118,14 +118,9 @@ const Menu = () => {
   const [reservationContext, setReservationContext] = useState(null);
   const [isReservationOrder, setIsReservationOrder] = useState(false);
   
-  // Clear cart if user navigated back from cart page
-  useEffect(() => {
-    if (localStorage.getItem('visitedCart') === 'true') {
-      console.log('User returned from cart - clearing cart');
-      clearCart();
-      localStorage.removeItem('visitedCart');
-    }
-  }, [clearCart]);
+  // Note: Removed cart clearing logic when returning from cart page
+  // Users should be able to add more items without losing existing cart contents
+  // Cart is only cleared after successful payment completion
 
   // Set delivery context for direct visitors
   useEffect(() => {
@@ -270,7 +265,8 @@ const Menu = () => {
   // Filter items based on active category and search term
   const filteredItems = allMenuItems.filter(item => {
     const matchesCategory = activeCategory === 'All' || item.category === activeCategory;
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
+    // Trim whitespace from search term to handle accidental spaces
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.trim().toLowerCase());
     return matchesCategory && matchesSearch;
   });
 

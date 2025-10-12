@@ -213,7 +213,7 @@ const Cart = () => {
 
   // Only clean up on browser back button, not on regular navigation
   useEffect(() => {
-    // Listen for browser back button (popstate) 
+    // Listen for browser back button (popstate)
     const handlePopState = () => {
       // If user used browser back button from cart, clean up immediately
       if (isPreorderOrder && !isCreatingOrder && location.pathname === '/cart') {
@@ -224,7 +224,14 @@ const Cart = () => {
     };
 
     // Listen for beforeunload (when page is about to be closed/refreshed)
-    const handleBeforeUnload = () => {
+    const handleBeforeUnload = (e) => {
+      // Show confirmation if cart has items and not currently placing order
+      if (cartItems.length > 0 && !isCreatingOrder) {
+        e.preventDefault();
+        e.returnValue = ''; // Required for Chrome
+        return ''; // Required for some browsers
+      }
+
       if (isPreorderOrder && !isCreatingOrder) {
         console.log('Cart: Page unload, cleaning preorder context');
         localStorage.removeItem('preorderContext');
@@ -240,7 +247,7 @@ const Cart = () => {
       window.removeEventListener('popstate', handlePopState);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [isPreorderOrder, isCreatingOrder, location.pathname]);
+  }, [isPreorderOrder, isCreatingOrder, location.pathname, cartItems.length]);
 
   // Render star rating
   const renderStars = (rating) => {
@@ -417,11 +424,11 @@ const Cart = () => {
         response = await preOrderAPI.createPreOrder(orderData);
       } else if (isQROrder) {
         console.log('Using QR order API endpoint: /api/qr-orders/public');
-        // Use current hostname for backend URL (works for both localhost and IP addresses)
-        const backendUrl = `http://${window.location.hostname}:5000`;
-        console.log('Backend URL:', backendUrl);
+        // Use API URL from environment variable
+        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+        console.log('Backend URL:', API_URL);
 
-        response = await fetch(`${backendUrl}/api/qr-orders/public`, {
+        response = await fetch(`${API_URL}/qr-orders/public`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

@@ -15,8 +15,9 @@ const LiveTracking = () => {
   const [feedback, setFeedback] = useState({});
   const [overallComment, setOverallComment] = useState('');
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
-  
+
   const { clearCart } = useCart();
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
   // Auto-load tracking order ID if available
   useEffect(() => {
@@ -147,11 +148,9 @@ const LiveTracking = () => {
     
     try {
       // Search for QR order by orderId (QR001234, etc.)
-      // Use current hostname for backend URL (works for both localhost and IP addresses)
-      const baseUrl = `http://${window.location.hostname}:5000`;
-      console.log('Tracking API URL:', baseUrl);
+      console.log('Tracking API URL:', API_URL);
 
-      const response = await fetch(`${baseUrl}/api/qr-orders/track/${searchOrderId}`, {
+      const response = await fetch(`${API_URL}/qr-orders/track/${searchOrderId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -184,10 +183,7 @@ const LiveTracking = () => {
 
     setLoading(true);
     try {
-      // Use current hostname for backend URL (works for both localhost and IP addresses)
-      const baseUrl = `http://${window.location.hostname}:5000`;
-
-      const response = await fetch(`${baseUrl}/api/qr-orders/track/${order.orderId}`);
+      const response = await fetch(`${API_URL}/qr-orders/track/${order.orderId}`);
       const data = await response.json();
       
       if (data.success) {
@@ -266,9 +262,6 @@ const LiveTracking = () => {
     setSubmittingFeedback(true);
 
     try {
-      // Use current hostname for backend URL (works for both localhost and IP addresses)
-      const baseUrl = `http://${window.location.hostname}:5000`;
-
       const feedbackData = {
         orderId: order.orderId, // Use the order ID string, not the MongoDB _id
         orderType: 'qr', // Add the missing orderType field
@@ -284,7 +277,7 @@ const LiveTracking = () => {
         createdAt: new Date().toISOString()
       };
 
-      const response = await fetch(`${baseUrl}/api/feedback`, {
+      const response = await fetch(`${API_URL}/feedback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

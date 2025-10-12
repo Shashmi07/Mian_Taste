@@ -26,6 +26,8 @@ const FeedbackPage = () => {
   const [itemRatings, setItemRatings] = useState({});
   const [comment, setComment] = useState('');
 
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
   // Fetch order details based on orderId
   useEffect(() => {
     fetchOrderDetails();
@@ -37,7 +39,7 @@ const FeedbackPage = () => {
       setError('');
 
       // Use the universal feedback endpoint
-      const response = await fetch(`http://localhost:5000/api/feedback/order/${orderId}`);
+      const response = await fetch(`${API_URL}/feedback/order/${orderId}`);
       const data = await response.json();
       
       if (data.success) {
@@ -146,7 +148,7 @@ const FeedbackPage = () => {
         submittedAt: new Date().toISOString()
       };
 
-      const response = await fetch('http://localhost:5000/api/feedback', {
+      const response = await fetch(`${API_URL}/feedback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

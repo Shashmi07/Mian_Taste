@@ -23,7 +23,7 @@ const Dashboard = () => {
   });
   const [showCustomRange, setShowCustomRange] = useState(false);
 
-  const baseUrl = process.env.REACT_APP_BASE_URL || 'http://localhost:5000';
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
   useEffect(() => {
     fetchAnalyticsData();
@@ -33,14 +33,14 @@ const Dashboard = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      
+
       // Try new date range format first, fallback to days format
       const startDate = dateRange.startDate.toISOString().split('T')[0];
       const endDate = dateRange.endDate.toISOString().split('T')[0];
       const daysDiff = Math.ceil((dateRange.endDate - dateRange.startDate) / (1000 * 60 * 60 * 24));
-      
+
       // Try the new format first
-      let response = await fetch(`${baseUrl}/api/admin-analytics/data?startDate=${startDate}&endDate=${endDate}`, {
+      let response = await fetch(`${API_URL}/admin-analytics/data?startDate=${startDate}&endDate=${endDate}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -49,7 +49,7 @@ const Dashboard = () => {
       // If that fails, try the old format
       if (!response.ok) {
         console.log('New API format failed, trying legacy format...');
-        response = await fetch(`${baseUrl}/api/admin-analytics/data?days=${daysDiff}`, {
+        response = await fetch(`${API_URL}/admin-analytics/data?days=${daysDiff}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

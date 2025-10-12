@@ -1,15 +1,15 @@
 import axios from 'axios';
 import { getAPIUrl } from '../config/api';
 
-// Set API base URL using centralized config
-const API_BASE_URL = getAPIUrl('/api');
+// Set API base URL using centralized config (no /api needed - already in env var)
+const API_BASE_URL = getAPIUrl();
 
 // Set up axios defaults
 axios.defaults.baseURL = API_BASE_URL;
 
 // Update axios base URL dynamically (in case hostname changes)
 export const updateAPIBaseURL = () => {
-  axios.defaults.baseURL = getAPIUrl('/api');
+  axios.defaults.baseURL = getAPIUrl();
 };
 
 // Chef authAPI export

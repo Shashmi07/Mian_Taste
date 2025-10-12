@@ -10,6 +10,8 @@ const FeedbackManagement = () => {
   const [filter, setFilter] = useState('all');
   const [orderTypeFilter, setOrderTypeFilter] = useState('all');
 
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
   useEffect(() => {
     fetchFeedback();
     fetchStats();
@@ -18,16 +20,13 @@ const FeedbackManagement = () => {
   const fetchFeedback = async () => {
     try {
       setLoading(true);
-      const baseUrl = window.location.hostname === 'localhost' 
-        ? 'http://localhost:5000'
-        : `http://${window.location.hostname}:5000`;
-      
+
       const queryParams = new URLSearchParams();
       if (orderTypeFilter && orderTypeFilter !== 'all') {
         queryParams.append('orderType', orderTypeFilter);
       }
-      
-      const response = await fetch(`${baseUrl}/api/admin-feedback?${queryParams}`, {
+
+      const response = await fetch(`${API_URL}/admin-feedback?${queryParams}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -46,11 +45,7 @@ const FeedbackManagement = () => {
 
   const fetchStats = async () => {
     try {
-      const baseUrl = window.location.hostname === 'localhost' 
-        ? 'http://localhost:5000'
-        : `http://${window.location.hostname}:5000`;
-      
-      const response = await fetch(`${baseUrl}/api/admin-feedback/stats`, {
+      const response = await fetch(`${API_URL}/admin-feedback/stats`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }

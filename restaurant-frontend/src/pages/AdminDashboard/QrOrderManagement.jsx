@@ -8,6 +8,8 @@ const QrOrderManagement = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
   // Fetch QR orders from API
   useEffect(() => {
     fetchQrOrders();
@@ -16,12 +18,8 @@ const QrOrderManagement = () => {
   const fetchQrOrders = async () => {
     try {
       setLoading(true);
-      // Dynamic API URL based on current hostname
-      const apiUrl = window.location.hostname === 'localhost' 
-        ? 'http://localhost:5000/api/qr-orders'
-        : `http://${window.location.hostname}:5000/api/qr-orders`;
-      
-      const response = await fetch(apiUrl, {
+
+      const response = await fetch(`${API_URL}/qr-orders`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -70,12 +68,7 @@ const QrOrderManagement = () => {
 
   const updateOrderStatus = async (orderId, status) => {
     try {
-      // Dynamic API URL based on current hostname
-      const baseUrl = window.location.hostname === 'localhost' 
-        ? 'http://localhost:5000'
-        : `http://${window.location.hostname}:5000`;
-      
-      const response = await fetch(`${baseUrl}/api/qr-orders/${orderId}/status`, {
+      const response = await fetch(`${API_URL}/qr-orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -94,12 +87,7 @@ const QrOrderManagement = () => {
 
   const deleteOrder = async (orderId) => {
     try {
-      // Dynamic API URL based on current hostname
-      const baseUrl = window.location.hostname === 'localhost' 
-        ? 'http://localhost:5000'
-        : `http://${window.location.hostname}:5000`;
-      
-      const response = await fetch(`${baseUrl}/api/qr-orders/${orderId}`, {
+      const response = await fetch(`${API_URL}/qr-orders/${orderId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
