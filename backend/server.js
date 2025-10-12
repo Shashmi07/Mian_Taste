@@ -15,16 +15,44 @@ const { connectAdminDB } = require('./config/adminDatabase'); // Admin database
 // Initialize Express
 const app = express();
 
-// Middleware
+// Middleware - CORS Configuration
+// More permissive CORS for public access (customers ordering via QR codes)
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:3001',
-    'http://10.11.5.232:3000',
-    'http://192.168.8.209:3000'
-  ],
+  origin: function(origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+
+    // List of explicitly allowed origins
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:3001',
+      'http://10.11.5.232:3000',
+      'http://192.168.8.209:3000',
+      process.env.FRONTEND_URL,
+      process.env.CLOUDFRONT_URL
+    ].filter(Boolean);
+
+    // Check if origin is in allowed list
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+
+    // Allow any origin that matches S3 or CloudFront patterns (for flexibility)
+    if (origin.includes('.amazonaws.com') || origin.includes('.cloudfront.net')) {
+      return callback(null, true);
+    }
+
+    // For production, allow all origins (needed for public QR code orders)
+    // In development, you might want to be more restrictive
+    if (process.env.NODE_ENV === 'production') {
+      return callback(null, true);
+    }
+
+    // Otherwise, allow it (for development)
+    return callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -42,13 +70,9 @@ app.use((req, res, next) => {
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "http://10.11.5.232:3000",
-      "http://192.168.8.209:3000"
-    ],
-    methods: ["GET", "POST"]
+    origin: true, // Allow all origins for Socket.IO (needed for real-time order tracking)
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
@@ -57,7 +81,7 @@ connectDB(); // Chef dashboard database
 connectCustomerDB(); // Customer dashboard database
 connectAdminDB(); // Admin dashboard database
 
-// Routes - Fix the import names to match your actual file names
+
 const authRoutes = require('./routes/auth'); // Changed from authRoutes
 const orderRoutes = require('./routes/orders'); // Changed from orderRoutes  
 const inventoryRoutes = require('./routes/inventory'); // Changed from inventoryRoutes
