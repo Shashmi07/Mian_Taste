@@ -207,6 +207,7 @@ const TableReservation = () => {
               <option value="all">All Reservations</option>
               <option value="confirmed">Confirmed</option>
               <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
             </select>
           </div>
           <div>

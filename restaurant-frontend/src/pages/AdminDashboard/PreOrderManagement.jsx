@@ -77,6 +77,7 @@ const PreOrderManagement = () => {
   // Count orders by status
   const confirmedCount = orders.filter(o => o.status === 'confirmed').length;
   const completedCount = orders.filter(o => o.status === 'completed').length;
+  const cancelledCount = orders.filter(o => o.status === 'cancelled').length;
 
   // Filter orders
   const getFilteredOrders = (filterType) => {
@@ -85,8 +86,24 @@ const PreOrderManagement = () => {
       filtered = orders.filter(order => order.status === 'confirmed');
     } else if (filterType === 'completed') {
       filtered = orders.filter(order => order.status === 'completed');
+    } else if (filterType === 'cancelled') {
+      filtered = orders.filter(order => order.status === 'cancelled');
     }
     return filtered;
+  };
+
+  // Get status styling
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'confirmed':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'completed':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
   };
 
   const updateOrderStatus = async (orderId, status) => {

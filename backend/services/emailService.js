@@ -326,7 +326,7 @@ const sendCancellationEmail = async (orderData) => {
               <h3 style="color: #333; margin: 0 0 10px 0; font-size: 16px;">Need Assistance?</h3>
               <p style="color: #555; margin: 0; line-height: 1.6;">
                 Please contact us if you have any questions:<br>
-                📞 Phone: +94 XX XXX XXXX<br>
+                📞 Phone: (+94) 76 983 5152<br>
                 📧 Email: ${process.env.GMAIL_USER}
               </p>
             </div>
@@ -360,7 +360,7 @@ We sincerely apologize for any inconvenience this may have caused. This was an u
 If you have already made a payment, it will be refunded within 3-5 business days.
 
 For any questions or concerns, please contact us:
-Phone: +94 XX XXX XXXX
+Phone: (+94) 76 983 5152
 Email: ${process.env.GMAIL_USER}
 
 We value your patronage and hope to serve you again soon.
