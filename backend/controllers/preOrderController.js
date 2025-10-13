@@ -5,25 +5,25 @@ const { sendFeedbackEmail, sendCancellationEmail } = require('../services/emailS
 // Get all preorders with filtering
 const getPreOrders = async (req, res) => {
   try {
-    const { status, orderType, limit = 50 } = req.query;
+    const { status, orderType, limit = 1000 } = req.query;
     let filter = {};
-    
+
     if (status && status !== 'all') filter.status = status;
     if (orderType && orderType !== 'all') filter.orderType = orderType;
-    
+
     const orders = await PreOrder.find(filter)
-      .sort({ scheduledDate: 1, scheduledTime: 1 }) // Sort by scheduled time
+      .sort({ createdAt: -1 }) // Sort by creation date, newest first
       .limit(parseInt(limit));
-    
+
     res.json({
       success: true,
       orders
     });
   } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      message: 'Server error', 
-      error: error.message 
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
     });
   }
 };
