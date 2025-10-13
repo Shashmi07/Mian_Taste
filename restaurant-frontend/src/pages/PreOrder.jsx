@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, Calendar, Clock, ShoppingBag, Truck, UtensilsCrossed, ChevronDown, Star, Plus, Minus } from 'lucide-react';
+import moment from 'moment-timezone';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import NavBar from '../components/NavBar';
 import { Link, useNavigate } from 'react-router-dom';
 import { menuAPI } from '../services/api';
 import { preOrderSchema } from '../utils/validation';
 import Footer from '../components/Footer';
+import CustomDatePicker from '../components/CustomDatePicker';
 
 function PreOrder() {
   const navigate = useNavigate();
@@ -106,51 +108,43 @@ function PreOrder() {
   }, []);
  
 
-  // Get current time in Sri Lanka timezone (UTC+5:30)
-  const getSriLankaTime = () => {
-    const now = new Date();
-    // Convert to Sri Lanka timezone (Asia/Colombo)
-    const sriLankaTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Colombo' }));
-    return sriLankaTime;
+  // Get minimum allowed date (today in Sri Lanka)
+  const getMinDate = () => {
+    return moment().tz('Asia/Colombo').format('YYYY-MM-DD');
+  };
+
+  // Validate if a date is valid (today to next 30 days)
+  const isValidDate = (date) => {
+    const today = moment().tz('Asia/Colombo').startOf('day');
+    const maxDate = moment().tz('Asia/Colombo').add(30, 'days').endOf('day');
+    const selectedDate = moment.tz(date, 'Asia/Colombo').startOf('day');
+    return selectedDate.isSameOrAfter(today) && selectedDate.isSameOrBefore(maxDate);
   };
 
   // Check if a time slot is in the past for the selected date
   const isTimeSlotPast = (timeSlot) => {
     if (!selectedDate) return false;
 
-    const sriLankaTime = getSriLankaTime();
-    const selectedDateObj = new Date(selectedDate);
-    const today = new Date(sriLankaTime.toDateString());
-    const selectedDateOnly = new Date(selectedDateObj.toDateString());
-
-    // If selected date is in the future, all time slots are available
-    if (selectedDateOnly > today) {
+    const now = moment().tz('Asia/Colombo');
+    const selectedMoment = moment.tz(selectedDate, 'Asia/Colombo').startOf('day');
+    
+    // If selected date is in the future, all slots are available
+    if (selectedMoment.isAfter(now, 'day')) {
       return false;
     }
 
-    // If selected date is today, filter out past times
-    if (selectedDateOnly.getTime() === today.getTime()) {
+    // If selected date is today, check time
+    if (selectedMoment.isSame(now, 'day')) {
       // Parse time slot (e.g., "11:30 AM" or "2:30 PM")
-      const [time, period] = timeSlot.split(' ');
-      const [hours, minutes] = time.split(':').map(Number);
-
-      let slotHours = hours;
-      if (period === 'PM' && hours !== 12) {
-        slotHours += 12;
-      } else if (period === 'AM' && hours === 12) {
-        slotHours = 0;
-      }
-
-      const currentHours = sriLankaTime.getHours();
-      const currentMinutes = sriLankaTime.getMinutes();
-      const currentTotalMinutes = currentHours * 60 + currentMinutes;
-      const slotTotalMinutes = slotHours * 60 + minutes;
-
-      // Return true if slot time is in the past
-      return slotTotalMinutes <= currentTotalMinutes;
+      const timeFormat = 'h:mm A';
+      const slotTime = moment.tz(selectedDate + ' ' + timeSlot, 'YYYY-MM-DD ' + timeFormat, 'Asia/Colombo');
+      
+      // Return true if slot time is in the past or within 30 minutes from now
+      return slotTime.isSameOrBefore(now.add(30, 'minutes'));
     }
 
-    return false;
+    // If selected date is in the past, all slots are unavailable
+    return true;
   };
 
   // All available time slots
@@ -160,7 +154,7 @@ function PreOrder() {
   ];
 
   // Filter time slots to show only future times
-  const timeSlots = allTimeSlots.filter(slot => !isTimeSlotPast(slot));
+  // Prepare time slots with availability check
 
   const addToCart = (item) => {
     const itemId = item._id || item.id;
@@ -393,21 +387,23 @@ function PreOrder() {
                             <Calendar className="inline h-4 w-4 mr-2" />
                             Select Date *
                           </label>
-                          <input
-                            name="scheduledDate"
-                            type="date"
-                            value={values.scheduledDate}
-                            min={getSriLankaTime().toISOString().split('T')[0]}
-                            onChange={(e) => {
-                              setFieldValue('scheduledDate', e.target.value);
-                              setSelectedDate(e.target.value);
+                          <CustomDatePicker
+                            selectedDate={values.scheduledDate}
+                            onChange={(date) => {
+                              if (!isValidDate(date)) {
+                                alert('Please select today or a future date');
+                                setFieldValue('scheduledDate', '');
+                                setSelectedDate('');
+                                return;
+                              }
+                              
+                              setFieldValue('scheduledDate', date);
+                              setSelectedDate(date);
                               // Clear selected time when date changes to recalculate available slots
                               setSelectedTime('');
                               setFieldValue('scheduledTime', '');
                             }}
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
-                              errors.scheduledDate && touched.scheduledDate ? 'border-red-500' : 'border-gray-300'
-                            }`}
+                            minDate={getMinDate()}
                           />
                           <ErrorMessage name="scheduledDate" component="div" className="text-red-500 text-sm mt-1" />
                         </div>
@@ -429,9 +425,22 @@ function PreOrder() {
                               }`}
                             >
                               <option value="">Choose time slot</option>
-                              {timeSlots.map((time) => (
-                                <option key={time} value={time}>{time}</option>
-                              ))}
+                              {allTimeSlots.map((time) => {
+                                const isPast = isTimeSlotPast(time);
+                                return (
+                                  <option 
+                                    key={time} 
+                                    value={time} 
+                                    disabled={isPast}
+                                    style={{
+                                      color: isPast ? '#ff0000' : 'inherit',
+                                      backgroundColor: isPast ? '#ffebeb' : 'inherit'
+                                    }}
+                                  >
+                                    {time} {isPast ? '(Past)' : ''}
+                                  </option>
+                                );
+                              })}
                             </select>
                             <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
                           </div>

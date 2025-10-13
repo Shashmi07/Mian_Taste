@@ -1,5 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, CheckCircle, UtensilsCrossed, CreditCard, Users, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react  // Validate if a date is valid (today to next 30 days)
+  const isValidDate = (date) => {
+    const today = moment().tz('Asia/Colombo').startOf('day');
+    const maxDate = moment().tz('Asia/Colombo').add(30, 'days').endOf('day');
+    const selectedDate = moment.tz(date, 'Asia/Colombo').startOf('day');
+    return selectedDate.isSameOrAfter(today) && selectedDate.isSameOrBefore(maxDate);
+  };port { Calendar, Clock, CheckCircle, UtensilsCrossed, CreditCard, Users, ArrowLeft } from 'lucide-react';
 import moment from 'moment-timezone';
 import { useNavigate } from 'react-router-dom';
 import { Formik, Form, Field, ErrorMessage } from 'formik';

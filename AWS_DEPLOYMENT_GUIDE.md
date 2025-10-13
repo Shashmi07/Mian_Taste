@@ -3,6 +3,7 @@
 This guide will walk you through deploying your restaurant management system to AWS completely free.
 
 ## Architecture Overview
+
 - **Frontend**: React app hosted on AWS S3 (Static Website)
 - **Backend**: Node.js/Express API on AWS Elastic Beanstalk (Free tier)
 - **Database**: MongoDB Atlas (Already configured)
@@ -10,6 +11,7 @@ This guide will walk you through deploying your restaurant management system to 
 ---
 
 ## Prerequisites
+
 1. AWS Account (Free tier eligible)
 2. AWS CLI installed: `pip install awscli`
 3. EB CLI installed: `pip install awsebcli`
@@ -20,27 +22,33 @@ This guide will walk you through deploying your restaurant management system to 
 ## Part 1: Deploy Backend to Elastic Beanstalk
 
 ### Step 1: Install EB CLI
+
 ```bash
 pip install awsebcli --upgrade
 ```
 
 ### Step 2: Configure AWS Credentials
+
 ```bash
 aws configure
 ```
+
 Enter your:
+
 - AWS Access Key ID
 - AWS Secret Access Key
 - Default region (e.g., `us-east-1`)
 - Output format: `json`
 
 ### Step 3: Initialize Elastic Beanstalk
+
 ```bash
 cd backend
 eb init
 ```
 
 Answer the prompts:
+
 - **Region**: Choose `us-east-1` (or closest to you)
 - **Application name**: `mian-taste-backend`
 - **Platform**: Node.js
@@ -48,15 +56,18 @@ Answer the prompts:
 - **SSH**: Yes (for debugging if needed)
 
 ### Step 4: Create Environment (Free Tier)
+
 ```bash
 eb create mian-taste-prod --single --instance-type t2.micro
 ```
 
 **Important**:
+
 - `--single` creates a single-instance environment (free tier)
 - `--instance-type t2.micro` uses free tier eligible instance
 
 ### Step 5: Set Environment Variables
+
 ```bash
 eb setenv \
   PORT=8081 \
@@ -71,20 +82,25 @@ eb setenv \
 ```
 
 ### Step 6: Deploy Backend
+
 ```bash
 eb deploy
 ```
 
 ### Step 7: Get Your Backend URL
+
 ```bash
 eb status
 ```
+
 Copy the **CNAME** URL (e.g., `mian-taste-prod.us-east-1.elasticbeanstalk.com`)
 
 ### Step 8: Update Frontend URL in Backend
+
 ```bash
 eb setenv FRONTEND_URL="http://mian-taste-frontend.s3-website-us-east-1.amazonaws.com"
 ```
+
 (You'll update this after creating the S3 bucket)
 
 ---
@@ -92,13 +108,17 @@ eb setenv FRONTEND_URL="http://mian-taste-frontend.s3-website-us-east-1.amazonaw
 ## Part 2: Deploy Frontend to S3
 
 ### Step 1: Update Frontend API URL
+
 Edit `restaurant-frontend/.env.production`:
+
 ```
 REACT_APP_API_URL=http://your-backend-url.elasticbeanstalk.com
 ```
+
 Replace with your actual EB URL from Part 1, Step 7.
 
 ### Step 2: Build Frontend
+
 ```bash
 cd restaurant-frontend
 npm install
@@ -106,22 +126,27 @@ npm run build
 ```
 
 ### Step 3: Create S3 Bucket
+
 ```bash
 aws s3 mb s3://mian-taste-frontend --region us-east-1
 ```
 
 **Note**: Bucket names must be globally unique. If taken, try:
+
 - `mian-taste-restaurant-app`
 - `miantaste-frontend-2024`
 - Add your initials, etc.
 
 ### Step 4: Enable Static Website Hosting
+
 ```bash
 aws s3 website s3://mian-taste-frontend --index-document index.html --error-document index.html
 ```
 
 ### Step 5: Make Bucket Public
+
 Create a file `bucket-policy.json`:
+
 ```json
 {
   "Version": "2012-10-17",
@@ -138,44 +163,52 @@ Create a file `bucket-policy.json`:
 ```
 
 Apply the policy:
+
 ```bash
 aws s3api put-bucket-policy --bucket mian-taste-frontend --policy file://bucket-policy.json
 ```
 
 ### Step 6: Disable Block Public Access
+
 ```bash
 aws s3api put-public-access-block --bucket mian-taste-frontend --public-access-block-configuration "BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false"
 ```
 
 ### Step 7: Upload Build Files
-```bash
-aws s3 sync build/ s3://mian-taste-frontend --delete
-```
+
+````bash
+
+```aws s3 sync build/ s3://mian-taste-restaurant --delete
 
 ### Step 8: Get Your Frontend URL
 Your website will be available at:
-```
+````
+
 http://mian-taste-frontend.s3-website-us-east-1.amazonaws.com
-```
+
+````
 
 ### Step 9: Update Backend CORS Settings
 Update the `FRONTEND_URL` in your backend:
 ```bash
 cd ../backend
 eb setenv FRONTEND_URL="http://mian-taste-frontend.s3-website-us-east-1.amazonaws.com"
-```
+````
 
 ---
 
 ## Part 3: Verification & Testing
 
 ### Test Backend
+
 ```bash
 curl http://your-backend-url.elasticbeanstalk.com/api/auth/health
 ```
 
 ### Test Frontend
+
 Open your browser:
+
 ```
 http://mian-taste-frontend.s3-website-us-east-1.amazonaws.com
 ```
@@ -185,6 +218,7 @@ http://mian-taste-frontend.s3-website-us-east-1.amazonaws.com
 ## Part 4: Useful Commands
 
 ### Elastic Beanstalk Commands
+
 ```bash
 eb status              # Check environment status
 eb health              # Check health of instances
@@ -196,6 +230,7 @@ eb terminate           # Delete environment (WARNING: Destructive)
 ```
 
 ### S3 Commands
+
 ```bash
 # Upload updated build
 aws s3 sync build/ s3://mian-taste-frontend --delete
@@ -209,16 +244,19 @@ aws cloudfront create-invalidation --distribution-id YOUR_ID --paths "/*"
 ## Part 5: Free Tier Limits
 
 ### Elastic Beanstalk (Actually EC2 + other services)
+
 - **750 hours/month** of t2.micro instance (free for 12 months)
 - Use `--single` flag to stay in free tier
 - Avoid load balancers (not free)
 
 ### S3
+
 - **5 GB** storage (free forever)
 - **20,000 GET requests** per month
 - **2,000 PUT requests** per month
 
 ### Data Transfer
+
 - **1 GB** out to internet per month (combined)
 - Unlimited in
 
@@ -239,16 +277,20 @@ aws cloudfront create-invalidation --distribution-id YOUR_ID --paths "/*"
 ### Backend Issues
 
 **Problem**: Backend not starting
+
 ```bash
 eb logs
 ```
+
 Look for errors in logs.
 
 **Problem**: Cannot connect to MongoDB
+
 - Check environment variables are set correctly
 - Verify MongoDB Atlas IP whitelist (add `0.0.0.0/0` to allow all)
 
 **Problem**: CORS errors
+
 ```bash
 eb setenv FRONTEND_URL="http://your-s3-url"
 eb deploy
@@ -257,11 +299,13 @@ eb deploy
 ### Frontend Issues
 
 **Problem**: Blank page
+
 - Check browser console for API URL errors
 - Verify `.env.production` has correct backend URL
 - Rebuild and re-upload: `npm run build && aws s3 sync build/ s3://bucket-name`
 
 **Problem**: 403 Forbidden
+
 - Check bucket policy is applied
 - Verify public access is not blocked
 
@@ -270,6 +314,7 @@ eb deploy
 ## Part 8: Updating Your Application
 
 ### Update Backend Code
+
 ```bash
 cd backend
 # Make your changes
@@ -278,6 +323,7 @@ eb deploy
 ```
 
 ### Update Frontend Code
+
 ```bash
 cd restaurant-frontend
 # Make your changes
@@ -303,6 +349,7 @@ If you want to use your own domain:
 Your MongoDB is already on Atlas, but ensure:
 
 1. **Network Access**:
+
    - Go to MongoDB Atlas Dashboard
    - Network Access → Add IP Address
    - Add `0.0.0.0/0` (allows access from anywhere - needed for EB)
@@ -344,6 +391,7 @@ Your MongoDB is already on Atlas, but ensure:
 ## Need Help?
 
 If you encounter issues:
+
 1. Check AWS Free Tier usage dashboard
 2. Review EB logs: `eb logs`
 3. Check browser console for frontend errors
