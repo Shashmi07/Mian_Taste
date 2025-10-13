@@ -59,9 +59,9 @@ const TableReservation = () => {
         },
         body: JSON.stringify({ status: 'completed' }),
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
         // Refresh reservations
         await fetchReservations();
@@ -77,6 +77,34 @@ const TableReservation = () => {
     }
   };
 
+  // Cancel reservation
+  const cancelReservation = async (reservationId) => {
+    if (!window.confirm('Are you sure you want to cancel this reservation? The customer will be notified.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/table-reservations/${reservationId}/cancel`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        alert('Reservation cancelled successfully. Customer has been notified.');
+        fetchReservations(); // Refresh reservations
+      } else {
+        alert(data.message || 'Failed to cancel reservation');
+      }
+    } catch (error) {
+      console.error('Error cancelling reservation:', error);
+      alert('Failed to cancel reservation. Please try again.');
+    }
+  };
+
   // Get status styling
   const getStatusColor = (status) => {
     switch (status) {
@@ -84,6 +112,8 @@ const TableReservation = () => {
         return 'bg-green-100 text-green-800 border-green-200';
       case 'completed':
         return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800 border-red-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -308,13 +338,22 @@ const TableReservation = () => {
                           <Eye className="w-4 h-4" />
                         </button>
                         {reservation.status === 'confirmed' && (
-                          <button
-                            onClick={() => handleMarkAsCompleted(reservation.reservationId)}
-                            className="text-green-600 hover:text-green-800 p-1"
-                            title="Mark as Completed"
-                          >
-                            <CheckCircle className="w-4 h-4" />
-                          </button>
+                          <>
+                            <button
+                              onClick={() => handleMarkAsCompleted(reservation.reservationId)}
+                              className="text-green-600 hover:text-green-800 p-1"
+                              title="Mark as Completed"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => cancelReservation(reservation.reservationId)}
+                              className="text-red-600 hover:text-red-800 p-1"
+                              title="Cancel Reservation"
+                            >
+                              <XCircle className="w-4 h-4" />
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>

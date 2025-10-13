@@ -62,7 +62,7 @@ const preOrderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['confirmed', 'completed'],
+    enum: ['confirmed', 'completed', 'cancelled'],
     default: 'confirmed'
   },
   paymentMethod: {

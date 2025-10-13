@@ -40,12 +40,14 @@ function PreOrder() {
   // Helper function to save preorder context
   const savePreorderContext = () => {
     if (!requireAuth()) return false;
-    
+
+    // Map 'online-delivery' to 'delivery' for backend compatibility
+    const orderTypeForBackend = selectedOrderType === 'online-delivery' ? 'delivery' : selectedOrderType;
+
     const preorderData = {
-      orderType: selectedOrderType,
+      orderType: orderTypeForBackend,
       scheduledDate: selectedDate,
-      scheduledTime: selectedTime,
-deliveryAddress: null
+      scheduledTime: selectedTime
     };
     localStorage.setItem('preorderContext', JSON.stringify(preorderData));
     console.log('PreOrder: Context saved:', preorderData);
@@ -104,11 +106,61 @@ deliveryAddress: null
   }, []);
  
 
-  // Time slots
-  const timeSlots = [
+  // Get current time in Sri Lanka timezone (UTC+5:30)
+  const getSriLankaTime = () => {
+    const now = new Date();
+    // Convert to Sri Lanka timezone (Asia/Colombo)
+    const sriLankaTime = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Colombo' }));
+    return sriLankaTime;
+  };
+
+  // Check if a time slot is in the past for the selected date
+  const isTimeSlotPast = (timeSlot) => {
+    if (!selectedDate) return false;
+
+    const sriLankaTime = getSriLankaTime();
+    const selectedDateObj = new Date(selectedDate);
+    const today = new Date(sriLankaTime.toDateString());
+    const selectedDateOnly = new Date(selectedDateObj.toDateString());
+
+    // If selected date is in the future, all time slots are available
+    if (selectedDateOnly > today) {
+      return false;
+    }
+
+    // If selected date is today, filter out past times
+    if (selectedDateOnly.getTime() === today.getTime()) {
+      // Parse time slot (e.g., "11:30 AM" or "2:30 PM")
+      const [time, period] = timeSlot.split(' ');
+      const [hours, minutes] = time.split(':').map(Number);
+
+      let slotHours = hours;
+      if (period === 'PM' && hours !== 12) {
+        slotHours += 12;
+      } else if (period === 'AM' && hours === 12) {
+        slotHours = 0;
+      }
+
+      const currentHours = sriLankaTime.getHours();
+      const currentMinutes = sriLankaTime.getMinutes();
+      const currentTotalMinutes = currentHours * 60 + currentMinutes;
+      const slotTotalMinutes = slotHours * 60 + minutes;
+
+      // Return true if slot time is in the past
+      return slotTotalMinutes <= currentTotalMinutes;
+    }
+
+    return false;
+  };
+
+  // All available time slots
+  const allTimeSlots = [
     '11:30 AM', '12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM', '2:00 PM',
     '5:30 PM', '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM'
   ];
+
+  // Filter time slots to show only future times
+  const timeSlots = allTimeSlots.filter(slot => !isTimeSlotPast(slot));
 
   const addToCart = (item) => {
     const itemId = item._id || item.id;
@@ -157,15 +209,18 @@ deliveryAddress: null
       }
 
 
+      // Map 'online-delivery' to 'delivery' for backend compatibility
+      const orderTypeForBackend = selectedOrderType === 'online-delivery' ? 'delivery' : selectedOrderType;
+
       // Prepare order data
       const orderData = {
-        orderType: selectedOrderType,
+        orderType: orderTypeForBackend,
         scheduledDate: selectedDate,
         scheduledTime: selectedTime,
         customerName: customerInfo.name,
         customerPhone: customerInfo.phone,
         customerEmail: customerInfo.email,
-        deliveryAddress: '',
+        deliveryAddress: selectedOrderType === 'online-delivery' ? customerInfo.address : '',
         table: selectedOrderType === 'dine-in' ? 'Table 1' : '', // For now, auto-assign table
         items: cartItems.map(item => ({
           name: item.name,
@@ -173,7 +228,8 @@ deliveryAddress: null
           price: item.price
         })),
         totalAmount: parseFloat(getTotalPrice()),
-        notes: `Payment Method: ${paymentMethod}`
+        paymentMethod: paymentMethod,
+        notes: ''
       };
 
       console.log('Submitting preorder:', orderData);
@@ -281,6 +337,23 @@ deliveryAddress: null
                   <p className="text-sm text-gray-600">Pick up your order at your convenience</p>
                 </button>
 
+                <button
+                  onClick={() => {
+                    if (requireAuth()) {
+                      setSelectedOrderType('online-delivery');
+                    }
+                  }}
+                  className={`p-6 rounded-lg border-2 transition-all duration-300 ${
+                    selectedOrderType === 'online-delivery'
+                      ? 'border-red-600 bg-red-50 text-red-600'
+                      : 'border-gray-200 hover:border-red-300 hover:bg-red-50'
+                  }`}
+                >
+                  <Truck className="h-12 w-12 mx-auto mb-3" />
+                  <h3 className="text-lg font-semibold mb-2">Online Delivery</h3>
+                  <p className="text-sm text-gray-600">Get your order delivered to your doorstep</p>
+                </button>
+
               </div>
             </div>
 
@@ -324,10 +397,13 @@ deliveryAddress: null
                             name="scheduledDate"
                             type="date"
                             value={values.scheduledDate}
-                            min={new Date().toISOString().split('T')[0]}
+                            min={getSriLankaTime().toISOString().split('T')[0]}
                             onChange={(e) => {
                               setFieldValue('scheduledDate', e.target.value);
                               setSelectedDate(e.target.value);
+                              // Clear selected time when date changes to recalculate available slots
+                              setSelectedTime('');
+                              setFieldValue('scheduledTime', '');
                             }}
                             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
                               errors.scheduledDate && touched.scheduledDate ? 'border-red-500' : 'border-gray-300'
@@ -339,7 +415,7 @@ deliveryAddress: null
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             <Clock className="inline h-4 w-4 mr-2" />
                             Select Time *
-                          </label>
+                            </label>
                           <div className="relative">
                             <select
                               name="scheduledTime"

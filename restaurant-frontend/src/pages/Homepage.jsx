@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { ShoppingCart, Menu, X, Utensils } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 
@@ -8,9 +9,102 @@ import noodles1 from '../assets/noodles1.jpg';
 import noodles2 from '../assets/noodles2.jpg';
 import noodles4 from '../assets/noodles4.jpg';
 import Rice from '../assets/Rice.jpg';
+import ramen from '../assets/ramen.jpg';
+import food from '../assets/food.jpg';
+import chefCooking from '../assets/chefCooking.jpg';
 
 export default function HomePage() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const [searchParams] = useSearchParams();
+
+  // Clear QR data when user arrives at homepage without QR parameters (Option B)
+  useEffect(() => {
+    const qrParam = searchParams.get('qr');
+    const tableParam = searchParams.get('table');
+
+    // If user arrived without QR parameters, clear any old QR data
+    if (!qrParam && !tableParam) {
+      const hasQRData = localStorage.getItem('qrTableNumber');
+      if (hasQRData) {
+        console.log('Homepage: No QR params detected - clearing old QR data');
+        localStorage.removeItem('qrTableNumber');
+        console.log('✅ Old QR data cleared from homepage');
+      }
+    }
+  }, [searchParams]);
+
+  // Define 3 real combo offers based on actual menu items
+  const combos = [
+    {
+      id: 1,
+      name: "Ultimate Ramen Combo",
+      description: "Buldak Chicken Ramen + Chicken Soup + Sprite",
+      items: [
+        { id: "68a69fe228e35b54d0874eb9", name: "Buldak Chicken Ramen", price: 1200, image: "buldakChicken.jpg", category: "Ramen" },
+        { id: "68a69fe228e35b54d0874ec9", name: "Chicken Soup", price: 400, image: "chickenSoup.jpg", category: "Soup" },
+        { id: "68a69fe228e35b54d0874ecf", name: "Sprite", price: 120, image: "sprite.jpeg", category: "Drinks" }
+      ],
+      originalPrice: 1720,
+      offerPrice: 1400,
+      savings: 320,
+      emoji: "🍜🥢",
+      color: "from-red-500 to-red-700",
+      buttonColor: "bg-red-600 hover:bg-red-700"
+    },
+    {
+      id: 2,
+      name: "Rice Bowl Feast",
+      description: "Beef Fried Rice + Beef Soup + Orange Juice",
+      items: [
+        { id: "68a69fe228e35b54d0874ec7", name: "Beef Fried Rice", price: 1500, image: "beefRice.jpg", category: "Rice" },
+        { id: "68a69fe228e35b54d0874ecc", name: "Beef Soup", price: 600, image: "beefSoup.jpg", category: "Soup" },
+        { id: "68a69fe228e35b54d0874ed0", name: "Orange Juice", price: 2000, image: "orangeJuice.jpg", category: "Drinks" }
+      ],
+      originalPrice: 4100,
+      offerPrice: 3500,
+      savings: 600,
+      emoji: "🍚🥩",
+      color: "from-amber-400 to-orange-500",
+      buttonColor: "bg-amber-500 hover:bg-amber-600"
+    },
+    {
+      id: 3,
+      name: "Deluxe Pork Special",
+      description: "Cheese Pork Ramen + Pork Fried Rice + Ginger Beer",
+      items: [
+        { id: "68a69fe228e35b54d0874ec0", name: "Cheese Pork Ramen", price: 1350, image: "cheesePork.jpg", category: "Ramen" },
+        { id: "68a69fe228e35b54d0874ec6", name: "Pork Fried Rice", price: 1300, image: "porkRice.jpg", category: "Rice" },
+        { id: "68a69fe228e35b54d0874ece", name: "Ginger Beer", price: 350, image: "gingerBeer.png", category: "Drinks" }
+      ],
+      originalPrice: 3000,
+      offerPrice: 2500,
+      savings: 500,
+      emoji: "🥘🍖",
+      color: "from-green-400 to-lime-500",
+      buttonColor: "bg-green-500 hover:bg-green-600"
+    }
+  ];
+
+  const handleOrderCombo = (combo) => {
+    // Add all items in the combo to cart
+    combo.items.forEach(item => {
+      addToCart({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        image: item.image,
+        category: item.category,
+        description: `Part of ${combo.name}`
+      });
+    });
+
+    // Show success message
+    alert(`✅ ${combo.name} added to cart!\n\n${combo.items.length} items added successfully.`);
+
+    // Navigate to cart
+    navigate('/cart');
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -148,101 +242,279 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* Cross-Selling Offers Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-bold text-gray-900 sm:text-4xl">
-              Special <span className="text-red-600">Offers</span> Just for You!
+      {/* Cross-Selling Offers Section - Enhanced */}
+      <section className="relative py-20 overflow-hidden bg-gradient-to-br from-gray-50 via-red-50 to-orange-50">
+        {/* Animated background elements */}
+        <div className="absolute top-0 left-0 w-64 h-64 bg-red-200 rounded-full opacity-20 blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-orange-200 rounded-full opacity-20 blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
+
+        <div className="relative px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+          {/* Header with enhanced styling */}
+          <div className="mb-16 text-center">
+            <div className="inline-block px-4 py-2 mb-4 text-sm font-semibold text-red-600 bg-red-100 rounded-full animate-bounce">
+              🎉 Limited Time Offers
+            </div>
+            <h2 className="mb-4 text-4xl font-extrabold text-gray-900 sm:text-5xl lg:text-6xl">
+              Special <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500">Combo Deals</span>
             </h2>
-            <p className="max-w-2xl mx-auto text-lg text-gray-600">
-              Don't miss out on these amazing deals and combo offers
+            <p className="max-w-3xl mx-auto text-xl text-gray-600">
+              Save big with our exclusive combo offers! Perfectly paired meals for the best value.
             </p>
+            <div className="flex items-center justify-center gap-2 mt-4">
+              <span className="w-16 h-1 bg-red-600 rounded-full"></span>
+              <span className="w-2 h-2 bg-red-600 rounded-full"></span>
+              <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+            </div>
           </div>
 
+          {/* Enhanced combo cards */}
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {/* Offer 1 - Ultimate Ramen Deal */}
-            <div className="overflow-hidden transition-shadow duration-300 bg-white shadow-lg rounded-2xl hover:shadow-xl group">
-              <div className="relative p-6 text-white bg-gradient-to-br from-red-500 to-red-700">
-                <div className="absolute px-3 py-1 text-sm font-bold text-white bg-red-600 rounded-full top-4 right-4">
-                  SAVE 30%
-                </div>
-                <div className="mb-2 text-4xl">🍜🥢</div>
-                <h3 className="mb-2 text-xl font-bold">Ultimate Ramen Combo</h3>
-                <p className="text-orange-100">Authentic Japanese ramen experience</p>
-              </div>
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-2xl font-bold text-gray-900">Rs.16.99</span>
-                  <span className="text-gray-500 line-through">Rs.24.99</span>
-                </div>
-                <p className="mb-4 text-gray-600">Choice of Tonkotsu, Miso, or Shoyu ramen + gyoza + fresh juice</p>
-                <button className="w-full py-3 font-semibold text-white transition-colors duration-300 transform bg-red-600 hover:bg-red-700 rounded-xl group-hover:scale-105">
-                  Order Ramen Deal
-                </button>
-              </div>
-            </div>
+            {combos.map((combo, idx) => (
+              <div
+                key={combo.id}
+                className={`relative overflow-hidden transition-all duration-500 transform bg-white shadow-2xl rounded-3xl hover:shadow-3xl hover:-translate-y-3 group ${combo.id === 2 ? 'md:col-span-2 lg:col-span-1' : ''}`}
+                style={{animationDelay: `${idx * 0.2}s`}}
+              >
+                {/* Sparkle effect on hover */}
+                <div className="absolute inset-0 transition-opacity duration-500 opacity-0 bg-gradient-to-br from-white/50 via-transparent to-transparent group-hover:opacity-100 pointer-events-none"></div>
 
-            {/* Offer 2 - Fresh Juice Trio */}
-            <div className="overflow-hidden transition-shadow duration-300 bg-white shadow-lg rounded-2xl hover:shadow-xl group">
-              <div className="relative p-6 text-white bg-gradient-to-br from-green-400 to-lime-500">
-                <div className="absolute px-3 py-1 text-sm font-bold text-green-900 bg-yellow-500 rounded-full top-4 right-4">
-                  FRESH DAILY
-                </div>
-                <div className="mb-2 text-4xl">🥤🍊🥭</div>
-                <h3 className="mb-2 text-xl font-bold">Triple Juice Special</h3>
-                <p className="text-green-100">Freshly squeezed goodness</p>
-              </div>
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-2xl font-bold text-gray-900">Rs.12.99</span>
-                  <span className="text-gray-500 line-through">Rs.18.99</span>
-                </div>
-                <p className="mb-4 text-gray-600">Orange + Mango + Green Apple juice (16oz each) - Perfect for sharing!</p>
-                <button className="w-full py-3 font-semibold text-white transition-colors duration-300 transform bg-green-500 hover:green-600 rounded-xl group-hover:scale-105">
-                  Order Juice Pack
-                </button>
-              </div>
-            </div>
+                {/* Header section with gradient */}
+                <div className={`relative p-8 text-white bg-gradient-to-br ${combo.color} overflow-hidden`}>
+                  {/* Animated background pattern */}
+                  <div className="absolute inset-0 opacity-10">
+                    <div className="absolute w-32 h-32 bg-white rounded-full -top-10 -right-10 animate-pulse"></div>
+                    <div className="absolute w-24 h-24 bg-white rounded-full -bottom-8 -left-8 animate-pulse" style={{animationDelay: '0.5s'}}></div>
+                  </div>
 
-            {/* Offer 3 - Rice Bowl Feast */}
-            <div className="overflow-hidden transition-shadow duration-300 bg-white shadow-lg rounded-2xl hover:shadow-xl group md:col-span-2 lg:col-span-1">
-              <div className="relative p-6 text-white bg-gradient-to-br from-amber-400 to-orange-500">
-                <div className="absolute px-3 py-1 text-sm font-bold text-white bg-red-500 rounded-full top-4 right-4">
-                  BEST VALUE
+                  {/* Savings badge */}
+                  <div className="absolute px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-red-600 to-red-700 rounded-full shadow-lg top-4 right-4 animate-bounce">
+                    💰 SAVE Rs.{combo.savings}
+                  </div>
+
+                  {/* Emoji with animation */}
+                  <div className="relative mb-3 text-6xl transition-transform duration-300 group-hover:scale-125 group-hover:rotate-12">
+                    {combo.emoji}
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="mb-3 text-2xl font-extrabold drop-shadow-lg">{combo.name}</h3>
+                  <p className="text-sm font-medium text-white/90">{combo.description}</p>
+
+                  {/* Decorative wave */}
+                  <div className="absolute bottom-0 left-0 right-0">
+                    <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-8 fill-white">
+                      <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z"></path>
+                    </svg>
+                  </div>
                 </div>
-                <div className="mb-2 text-4xl">🍚🥩🥬</div>
-                <h3 className="mb-2 text-xl font-bold">Rice Bowl Feast</h3>
-                <p className="text-amber-100">Complete meal satisfaction</p>
-              </div>
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-2xl font-bold text-gray-900">Rs.14.99</span>
-                  <span className="text-gray-500 line-through">Rs.21.99</span>
+
+                {/* Content section */}
+                <div className="p-8">
+                  {/* Price section with enhanced styling */}
+                  <div className="flex items-center justify-between p-4 mb-6 bg-gray-50 rounded-2xl">
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 uppercase">Special Price</p>
+                      <span className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500">
+                        Rs.{combo.offerPrice}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-semibold text-gray-500 uppercase">Was</p>
+                      <span className="text-xl font-bold text-gray-400 line-through">Rs.{combo.originalPrice}</span>
+                    </div>
+                  </div>
+
+                  {/* Items list with icons */}
+                  <div className="mb-6">
+                    <p className="flex items-center mb-3 text-sm font-bold text-gray-700">
+                      <span className="mr-2">📦</span> This Combo Includes:
+                    </p>
+                    <ul className="space-y-2">
+                      {combo.items.map((item, index) => (
+                        <li key={index} className="flex items-start text-sm text-gray-600">
+                          <span className="mr-2 text-green-500">✓</span>
+                          <span className="font-medium">{item.name}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Enhanced button with ripple effect */}
+                  <button
+                    onClick={() => handleOrderCombo(combo)}
+                    className={`relative w-full py-4 font-bold text-white transition-all duration-300 transform ${combo.buttonColor} rounded-2xl shadow-lg hover:shadow-2xl group-hover:scale-105 overflow-hidden`}
+                  >
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      <span>🛒 Order Now</span>
+                      <svg className="w-5 h-5 transition-transform group-hover:translate-x-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </span>
+                    {/* Ripple effect background */}
+                    <div className="absolute inset-0 transition-transform duration-300 transform scale-0 bg-white/20 rounded-2xl group-hover:scale-100"></div>
+                  </button>
+
+                  {/* Trending indicator for first combo */}
+                  {combo.id === 1 && (
+                    <div className="flex items-center justify-center gap-1 mt-4 text-xs font-semibold text-orange-600">
+                      <span>🔥</span>
+                      <span>Most Popular Choice!</span>
+                      <span>🔥</span>
+                    </div>
+                  )}
                 </div>
-                <p className="mb-4 text-gray-600">Teriyaki chicken rice bowl + miso soup + side salad + green tea</p>
-                <button className="w-full py-3 font-semibold text-white transition-colors duration-300 transform bg-amber-500 hover:bg-amber-600 rounded-xl group-hover:scale-105">
-                  Order Rice Bowl
-                </button>
+
+                {/* Corner badge for best value */}
+                {combo.id === 2 && (
+                  <div className="absolute top-0 left-0">
+                    <div className="px-3 py-1 text-xs font-bold text-white bg-gradient-to-r from-yellow-400 to-orange-500 rounded-br-2xl rounded-tl-3xl shadow-lg">
+                      ⭐ BEST VALUE
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
+            ))}
           </div>
 
-          {/* Additional promotional banner */}
-          <div className="relative p-8 mt-12 overflow-hidden text-center text-white bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl">
-            <div className="relative z-10">
-              <h3 className="mb-4 text-2xl font-bold sm:text-3xl">🎉 Weekend Flash Sale! 🎉</h3>
-              <p className="mb-6 text-lg opacity-90">Order 2 or more items and get FREE delivery + 10% off your entire order!</p>
-              <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <button className="px-8 py-3 font-bold text-orange-500 transition-colors bg-white rounded-full hover:bg-gray-100">
-                  Order Now & Save
-                </button>
-                <span className="text-sm opacity-80">*Valid until Sunday midnight</span>
+          {/* Weekend Flash Sale Banner - Compact Version */}
+          <div className="relative mt-12 overflow-hidden shadow-xl bg-gradient-to-br from-red-600 via-orange-600 to-red-700 rounded-2xl">
+            {/* Background overlay pattern */}
+            <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px'}}></div>
+
+            {/* Animated gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer"></div>
+
+            <div className="relative grid gap-4 p-6 lg:grid-cols-2 lg:gap-6 lg:p-8">
+              {/* Left side - Content */}
+              <div className="relative z-10 flex flex-col justify-center space-y-3 text-white">
+                {/* Animated badge */}
+                <div className="inline-flex items-center self-start gap-1 px-3 py-1 text-xs font-bold bg-yellow-400 rounded-full shadow-md text-gray-900 animate-pulse">
+                  <span>⭐ WEEKEND SPECIAL</span>
+                </div>
+
+                {/* Main heading - Smaller */}
+                <div>
+                  <h3 className="mb-2 text-2xl font-extrabold leading-tight sm:text-3xl drop-shadow-lg">
+                    🎉 Flash Sale!
+                  </h3>
+                  <p className="text-lg font-bold text-yellow-300 sm:text-xl drop-shadow-md">
+                    Up to 25% OFF
+                  </p>
+                </div>
+
+                {/* Offer details - Compact */}
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🚚</span>
+                    <p className="font-medium">FREE Delivery over Rs.2000</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🎁</span>
+                    <p className="font-medium">Extra 10% OFF on 2+ items</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">⏰</span>
+                    <p className="font-medium">Valid until Sunday!</p>
+                  </div>
+                </div>
+
+                {/* CTA Button - Smaller */}
+                <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center">
+                  <button
+                    onClick={() => navigate('/menu')}
+                    className="relative px-6 py-3 text-base font-bold text-red-600 transition-all duration-300 transform bg-white shadow-lg rounded-xl hover:scale-105 group overflow-hidden"
+                  >
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      <span>Order Now</span>
+                      <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </span>
+                  </button>
+                  <div className="text-xs text-yellow-200">
+                    ⚡ Limited time
+                  </div>
+                </div>
+              </div>
+
+              {/* Right side - Food Images Collage */}
+              <div className="relative hidden lg:block">
+                <div className="relative h-full">
+                  {/* Main large image */}
+                  <div className="absolute inset-0 z-10 transition-transform duration-500 transform group hover:scale-105">
+                    <div className="relative h-full overflow-hidden shadow-2xl rounded-3xl">
+                      <img
+                        src={ramen}
+                        alt="Delicious ramen bowl"
+                        className="object-cover w-full h-full"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+                      {/* Floating price tag */}
+                      <div className="absolute px-4 py-2 text-lg font-bold text-white bg-red-600 shadow-lg bottom-4 left-4 rounded-xl">
+                        Starting from Rs.850
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Small image top right */}
+                  <div className="absolute z-20 transition-all duration-500 transform top-4 -right-4 hover:scale-110 hover:rotate-3">
+                    <div className="w-32 h-32 overflow-hidden bg-white border-4 border-white shadow-2xl rounded-2xl">
+                      <img
+                        src={food}
+                        alt="Tasty food"
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                    {/* Animated ping badge */}
+                    <div className="absolute flex items-center justify-center w-10 h-10 -top-2 -right-2">
+                      <span className="absolute inline-flex w-full h-full bg-yellow-400 rounded-full opacity-75 animate-ping"></span>
+                      <span className="relative inline-flex items-center justify-center w-10 h-10 text-xs font-bold bg-yellow-400 rounded-full">
+                        HOT
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Small image bottom left */}
+                  <div className="absolute z-20 transition-all duration-500 transform bottom-4 -left-4 hover:scale-110 hover:-rotate-3">
+                    <div className="w-40 h-32 overflow-hidden bg-white border-4 border-white shadow-2xl rounded-2xl">
+                      <img
+                        src={chefCooking}
+                        alt="Chef cooking"
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                    {/* Badge */}
+                    <div className="absolute px-3 py-1 text-xs font-bold text-white bg-green-500 shadow-lg -bottom-2 -right-2 rounded-xl">
+                      Fresh Daily 🌱
+                    </div>
+                  </div>
+
+                  {/* Decorative elements */}
+                  <div className="absolute w-24 h-24 bg-yellow-400 rounded-full -top-8 -left-8 opacity-20 blur-2xl animate-pulse"></div>
+                  <div className="absolute w-32 h-32 bg-orange-400 rounded-full -bottom-12 -right-12 opacity-20 blur-2xl animate-pulse" style={{animationDelay: '1s'}}></div>
+                </div>
+              </div>
+
+              {/* Mobile images (visible on smaller screens) */}
+              <div className="grid grid-cols-3 gap-4 lg:hidden">
+                <div className="relative overflow-hidden shadow-xl rounded-2xl aspect-square">
+                  <img src={ramen} alt="Ramen" className="object-cover w-full h-full" />
+                </div>
+                <div className="relative overflow-hidden shadow-xl rounded-2xl aspect-square">
+                  <img src={food} alt="Food" className="object-cover w-full h-full" />
+                </div>
+                <div className="relative overflow-hidden shadow-xl rounded-2xl aspect-square">
+                  <img src={chefCooking} alt="Chef" className="object-cover w-full h-full" />
+                </div>
               </div>
             </div>
-            {/* Background decoration */}
-            <div className="absolute top-0 right-0 w-32 h-32 translate-x-16 -translate-y-16 bg-white rounded-full opacity-10"></div>
-            <div className="absolute bottom-0 left-0 w-24 h-24 -translate-x-12 translate-y-12 bg-white rounded-full opacity-10"></div>
+
+            {/* Bottom decorative wave */}
+            <div className="absolute bottom-0 left-0 right-0">
+              <svg viewBox="0 0 1200 100" preserveAspectRatio="none" className="w-full h-8">
+                <path d="M0,50 Q300,80 600,50 T1200,50 L1200,100 L0,100 Z" fill="rgba(255,255,255,0.1)" />
+              </svg>
+            </div>
           </div>
         </div>
       </section>

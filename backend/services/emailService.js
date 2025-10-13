@@ -267,9 +267,127 @@ The Mian Taste Team
   }
 };
 
+// Send cancellation notification email to customers
+const sendCancellationEmail = async (orderData) => {
+  try {
+    const transporter = createGmailTransporter();
+
+    const { orderId, orderType, customerName, customerEmail } = orderData;
+
+    if (!customerEmail) {
+      console.warn(`⚠️ No email for order ${orderId} - cannot send cancellation email`);
+      return false;
+    }
+
+    let orderTypeText = '';
+
+    switch (orderType) {
+      case 'pre':
+        orderTypeText = 'Pre-Order';
+        break;
+      case 'reservation':
+        orderTypeText = 'Table Reservation';
+        break;
+      default:
+        orderTypeText = 'Order';
+    }
+
+    const mailOptions = {
+      from: `"Mian Taste Restaurant" <${process.env.GMAIL_USER}>`,
+      to: customerEmail,
+      subject: `⚠️ Your ${orderTypeText} Has Been Cancelled - ${orderId}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+          <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #dc2626; margin: 0; font-size: 28px;">🍜 Mian Taste</h1>
+              <p style="color: #666; margin: 5px 0 0 0; font-size: 14px;">Authentic Asian Cuisine</p>
+            </div>
+
+            <h2 style="color: #333; margin-bottom: 20px;">Hi ${customerName},</h2>
+
+            <div style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+              <p style="color: #991b1b; margin: 0; font-weight: bold;">⚠️ ${orderTypeText} Cancelled</p>
+            </div>
+
+            <p style="color: #555; line-height: 1.6; margin-bottom: 20px;">
+              We regret to inform you that your ${orderTypeText.toLowerCase()} <strong>${orderId}</strong> has been cancelled due to unavoidable circumstances.
+            </p>
+
+            <p style="color: #555; line-height: 1.6; margin-bottom: 20px;">
+              We sincerely apologize for any inconvenience this may have caused. This was an unexpected situation and we deeply regret having to cancel your ${orderTypeText.toLowerCase()}.
+            </p>
+
+            <p style="color: #555; line-height: 1.6; margin-bottom: 30px;">
+              If you have already made a payment, it will be refunded within 3-5 business days. For any questions or concerns, please don't hesitate to contact us.
+            </p>
+
+            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+              <h3 style="color: #333; margin: 0 0 10px 0; font-size: 16px;">Need Assistance?</h3>
+              <p style="color: #555; margin: 0; line-height: 1.6;">
+                Please contact us if you have any questions:<br>
+                📞 Phone: +94 XX XXX XXXX<br>
+                📧 Email: ${process.env.GMAIL_USER}
+              </p>
+            </div>
+
+            <p style="color: #555; line-height: 1.6; margin-bottom: 20px;">
+              We value your patronage and hope to serve you again soon. Thank you for your understanding.
+            </p>
+
+            <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px;">
+              <p style="color: #888; font-size: 12px; margin: 0;">
+                Sorry for any inconvenience caused,<br>
+                <strong>The Mian Taste Team</strong>
+              </p>
+            </div>
+          </div>
+
+          <div style="text-align: center; margin-top: 20px;">
+            <p style="color: #999; font-size: 11px;">
+              This email was sent because your ${orderTypeText.toLowerCase()} was cancelled by our staff.
+            </p>
+          </div>
+        </div>
+      `,
+      text: `
+Hi ${customerName},
+
+We regret to inform you that your ${orderTypeText.toLowerCase()} ${orderId} has been cancelled due to unavoidable circumstances.
+
+We sincerely apologize for any inconvenience this may have caused. This was an unexpected situation and we deeply regret having to cancel your ${orderTypeText.toLowerCase()}.
+
+If you have already made a payment, it will be refunded within 3-5 business days.
+
+For any questions or concerns, please contact us:
+Phone: +94 XX XXX XXXX
+Email: ${process.env.GMAIL_USER}
+
+We value your patronage and hope to serve you again soon.
+
+Sorry for any inconvenience caused,
+The Mian Taste Team
+      `
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('✅ Cancellation email sent successfully:', {
+      orderId,
+      email: customerEmail,
+      messageId: result.messageId
+    });
+
+    return true;
+  } catch (error) {
+    console.error('❌ Error sending cancellation email:', error);
+    return false;
+  }
+};
+
 module.exports = {
   sendFeedbackEmail,
   sendPasswordResetEmail,
+  sendCancellationEmail,
   testEmailConfig,
   sendTestEmail
 };

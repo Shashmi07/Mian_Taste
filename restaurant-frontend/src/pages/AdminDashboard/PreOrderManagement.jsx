@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, CheckCircle, User, Phone, MapPin, Car, Package, UtensilsCrossed, Filter, ChevronDown, Eye, X, RefreshCw } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, User, Phone, MapPin, Car, Package, UtensilsCrossed, Filter, ChevronDown, Eye, X, RefreshCw, XCircle } from 'lucide-react';
 
 const PreOrderManagement = () => {
   const [selectedFilter, setSelectedFilter] = useState('all');
@@ -108,6 +108,34 @@ const PreOrderManagement = () => {
     }
   };
 
+  const cancelOrder = async (orderId) => {
+    if (!window.confirm('Are you sure you want to cancel this pre-order? The customer will be notified.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/pre-orders/${orderId}/cancel`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        alert('Pre-order cancelled successfully. Customer has been notified.');
+        fetchPreOrders(); // Refresh orders
+      } else {
+        alert(data.message || 'Failed to cancel pre-order');
+      }
+    } catch (error) {
+      console.error('Error cancelling preorder:', error);
+      alert('Failed to cancel pre-order. Please try again.');
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString();
   };
@@ -194,16 +222,28 @@ const PreOrderManagement = () => {
         </button>
       </td>
       <td className="px-6 py-4">
-        {order.status === 'confirmed' ? (
-          <button 
-            onClick={() => updateOrderStatus(order._id, 'completed')}
-            className="bg-green-600 text-white px-3 py-1 rounded-md text-sm hover:bg-green-700 transition-colors"
-          >
-            Mark Complete
-          </button>
-        ) : (
-          <span className="text-green-600 font-medium">✅ Completed</span>
-        )}
+        <div className="flex items-center gap-2">
+          {order.status === 'confirmed' ? (
+            <>
+              <button
+                onClick={() => updateOrderStatus(order._id, 'completed')}
+                className="bg-green-600 text-white px-3 py-1 rounded-md text-sm hover:bg-green-700 transition-colors flex items-center gap-1"
+              >
+                <CheckCircle className="w-4 h-4" />
+                Complete
+              </button>
+              <button
+                onClick={() => cancelOrder(order._id)}
+                className="bg-red-600 text-white px-3 py-1 rounded-md text-sm hover:bg-red-700 transition-colors flex items-center gap-1"
+              >
+                <XCircle className="w-4 h-4" />
+                Cancel
+              </button>
+            </>
+          ) : (
+            <span className="text-green-600 font-medium">✅ Completed</span>
+          )}
+        </div>
       </td>
     </tr>
   );

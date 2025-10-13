@@ -4,7 +4,8 @@ const {
   getPreOrders,
   createPreOrder,
   updatePreOrderStatus,
-  getPreOrdersByDate
+  getPreOrdersByDate,
+  cancelPreOrder
 } = require('../controllers/preOrderController');
 const auth = require('../middleware/auth');
 
@@ -26,6 +27,7 @@ const preOrderValidation = [
 router.get('/', auth, getPreOrders);
 router.get('/by-date', auth, getPreOrdersByDate);
 router.put('/:id/status', auth, updatePreOrderStatus);
+router.put('/:id/cancel', auth, cancelPreOrder);
 
 // Public routes (no auth required)
 router.post('/', preOrderValidation, createPreOrder); // Public preorder creation

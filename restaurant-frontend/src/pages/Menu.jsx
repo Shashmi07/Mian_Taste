@@ -139,25 +139,33 @@ const Menu = () => {
     }
   }, []);
   
-  // Check if this is a QR code access
+  // Check if this is a QR code access - OPTION B: Clear QR data when user arrives without QR params
   useEffect(() => {
     try {
       const qrParam = searchParams.get('qr');
       const tableParam = searchParams.get('table');
-      
+
       console.log('QR params:', { qrParam, tableParam });
-      
+
       if (qrParam === 'true' || tableParam) {
+        // User came with QR parameters - this is a QR table order
         setIsQROrder(true);
         if (tableParam && tableParam.trim()) {
           const cleanTableParam = tableParam.trim();
           console.log('Setting QR table from URL:', cleanTableParam);
           setSelectedTable(cleanTableParam);
-          // Store table number in localStorage for the entire session
+          // Store table number in localStorage for the QR session
           localStorage.setItem('qrTableNumber', cleanTableParam);
         } else {
           setShowTableModal(true);
         }
+      } else {
+        // User arrived WITHOUT QR parameters - clear any old QR data (Option B)
+        console.log('No QR params detected - clearing old QR data');
+        setIsQROrder(false);
+        setSelectedTable(null);
+        localStorage.removeItem('qrTableNumber');
+        console.log('✅ Old QR data cleared - this is NOT a QR order');
       }
     } catch (error) {
       console.error('Error processing QR parameters:', error);

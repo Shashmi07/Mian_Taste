@@ -634,15 +634,19 @@ export default function PaymentGateway() {
         
         // Show confirmation with option to track
         const trackNow = window.confirm(confirmationMessage + '\n\nClick OK to track your order now, or Cancel to stay here.');
-        
+
         if (trackNow) {
           // Store the order ID for easy access
           sessionStorage.setItem('trackingOrderId', orderData.orderId);
           navigate('/live-tracking');
           return;
         }
-        
-        // Clean up ALL order and cart data
+
+        // Clear cart FIRST in real-time before any navigation
+        clearCart();
+        console.log('✅ Cart cleared in real-time');
+
+        // Then clean up ALL order and cart data from localStorage
         localStorage.removeItem('currentOrder');
         localStorage.removeItem('pendingReservation');
         localStorage.removeItem('reservationContext');
@@ -651,12 +655,15 @@ export default function PaymentGateway() {
         localStorage.removeItem('cartItems');
         localStorage.removeItem('reservationState');
         localStorage.removeItem('returnAfterLogin');
-        clearCart(); // Clear cart context after successful QR order
-        
+        localStorage.removeItem('deliveryContext');
+        localStorage.removeItem('preorderContext');
+
         console.log('🧹 Cleared all QR order and cart data after successful payment');
-        
-        // Navigate to home (QR orders don't have tracking - customers wait at table)
-        navigate('/');
+
+        // Use setTimeout to ensure cart state updates propagate before navigation
+        setTimeout(() => {
+          navigate('/');
+        }, 100);
       } else if (orderData?.type === 'delivery') {
         // Handle online delivery order payment
         console.log('🎉 Processing online delivery order payment');

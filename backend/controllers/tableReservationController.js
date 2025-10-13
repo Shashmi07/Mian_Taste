@@ -1,6 +1,6 @@
 const { getCustomerConnection } = require('../config/customerDatabase');
 const { schema: tableReservationSchema } = require('../models/TableReservation');
-const { sendFeedbackEmail } = require('../services/emailService');
+const { sendFeedbackEmail, sendCancellationEmail } = require('../services/emailService');
 
 // Get TableReservation model using customer database connection
 const getTableReservationModel = () => {
@@ -283,7 +283,7 @@ const updateReservationStatus = async (req, res) => {
     const { reservationId } = req.params;
     const { status } = req.body;
 
-    const validStatuses = ['confirmed', 'completed'];
+    const validStatuses = ['confirmed', 'completed', 'cancelled'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
@@ -356,9 +356,26 @@ const cancelReservation = async (req, res) => {
       });
     }
 
+    // Send cancellation email to customer
+    if (reservation.customerEmail) {
+      console.log(`📧 Sending cancellation email for table reservation ${reservation.reservationId}`);
+
+      const emailData = {
+        orderId: reservation.reservationId,
+        orderType: 'reservation',
+        customerName: reservation.customerName,
+        customerEmail: reservation.customerEmail
+      };
+
+      // Send email asynchronously (don't wait for it)
+      sendCancellationEmail(emailData).catch(error => {
+        console.error(`Failed to send cancellation email for ${reservation.reservationId}:`, error);
+      });
+    }
+
     res.json({
       success: true,
-      message: 'Reservation cancelled successfully',
+      message: 'Reservation cancelled successfully and customer has been notified',
       reservation
     });
 
