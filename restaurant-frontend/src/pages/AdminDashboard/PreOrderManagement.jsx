@@ -228,37 +228,49 @@ const PreOrderManagement = () => {
         <div className="font-bold text-purple-600">Rs.{order.totalAmount}</div>
       </td>
       <td className="px-6 py-4">
-        <button
-          onClick={() => {
-            setSelectedOrder(order);
-            setIsModalOpen(true);
-          }}
-          className="text-blue-600 hover:text-blue-800 transition-colors"
-        >
-          <Eye className="w-5 h-5" />
-        </button>
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
+          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+        </span>
       </td>
       <td className="px-6 py-4">
-        <div className="flex items-center gap-2">
-          {order.status === 'confirmed' ? (
+        <div className="flex space-x-1">
+          <button
+            onClick={() => {
+              setSelectedOrder(order);
+              setIsModalOpen(true);
+            }}
+            className="text-blue-600 hover:text-blue-800 p-1"
+            title="View Details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          {order.status === 'confirmed' && (
             <>
               <button
                 onClick={() => updateOrderStatus(order._id, 'completed')}
-                className="bg-green-600 text-white px-3 py-1 rounded-md text-sm hover:bg-green-700 transition-colors flex items-center gap-1"
+                className="text-green-600 hover:text-green-800 p-1"
+                title="Mark as Completed"
               >
                 <CheckCircle className="w-4 h-4" />
-                Complete
               </button>
               <button
                 onClick={() => cancelOrder(order._id)}
-                className="bg-red-600 text-white px-3 py-1 rounded-md text-sm hover:bg-red-700 transition-colors flex items-center gap-1"
+                className="text-red-600 hover:text-red-800 p-1"
+                title="Cancel Order"
               >
                 <XCircle className="w-4 h-4" />
-                Cancel
               </button>
             </>
-          ) : (
-            <span className="text-green-600 font-medium">✅ Completed</span>
+          )}
+          {order.status === 'completed' && (
+            <span className="text-green-600" title="Order Completed">
+              <CheckCircle className="w-4 h-4" />
+            </span>
+          )}
+          {order.status === 'cancelled' && (
+            <span className="text-red-600" title="Order Cancelled">
+              <XCircle className="w-4 h-4" />
+            </span>
           )}
         </div>
       </td>
@@ -281,8 +293,8 @@ const PreOrderManagement = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Scheduled</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">View</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -471,6 +483,7 @@ const PreOrderManagement = () => {
             <option value="all">All Orders ({orders.length})</option>
             <option value="confirmed">Confirmed Orders ({confirmedCount})</option>
             <option value="completed">Completed Orders ({completedCount})</option>
+            <option value="cancelled">Cancelled Orders ({cancelledCount})</option>
           </select>
           <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
         </div>
@@ -492,6 +505,9 @@ const PreOrderManagement = () => {
               {/* Completed Orders */}
               {completedCount > 0 && renderTable('✅ Completed Orders', getFilteredOrders('completed'), false)}
               
+              {/* Cancelled Orders */}
+              {cancelledCount > 0 && renderTable('❌ Cancelled Orders', getFilteredOrders('cancelled'), false)}
+              
               {orders.length === 0 && (
                 <div className="text-center py-12">
                   <p className="text-gray-500 text-lg">No pre-orders found</p>
@@ -503,6 +519,7 @@ const PreOrderManagement = () => {
           
           {selectedFilter === 'confirmed' && renderTable('Confirmed Orders', getFilteredOrders('confirmed'))}
           {selectedFilter === 'completed' && renderTable('Completed Orders', getFilteredOrders('completed'))}
+          {selectedFilter === 'cancelled' && renderTable('Cancelled Orders', getFilteredOrders('cancelled'))}
         </div>
       )}
     </div>
