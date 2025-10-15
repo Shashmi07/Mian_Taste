@@ -122,6 +122,9 @@ const loginCustomer = async (req, res) => {
       });
     }
 
+    // Update last login
+    await customer.updateLastLogin();
+
     // Generate token
     const token = generateToken(customer._id);
 

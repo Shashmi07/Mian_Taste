@@ -32,6 +32,7 @@ const getCustomerModel = () => {
         phoneNumber: String,
         address: String,
         isActive: { type: Boolean, default: true },
+        lastLogin: { type: Date, default: null },
         orders: [{ type: require('mongoose').Schema.Types.ObjectId, ref: 'Order' }],
         createdAt: { type: Date, default: Date.now },
         updatedAt: { type: Date, default: Date.now },
@@ -83,6 +84,7 @@ const getAllUsers = async (req, res) => {
       phoneNumber: customer.phoneNumber,
       address: customer.address,
       isActive: customer.isActive,
+      lastLogin: customer.lastLogin,
       role: 'customer',
       createdAt: customer.createdAt,
       updatedAt: customer.updatedAt,
@@ -248,6 +250,11 @@ const updateUser = async (req, res) => {
     const { userType } = req.query; // 'staff' or 'customer'
     const updateData = req.body;
 
+    console.log('=== UPDATE USER BACKEND ===');
+    console.log('User ID:', id);
+    console.log('User Type:', userType);
+    console.log('Update Data:', updateData);
+
     // Remove sensitive fields from update
     delete updateData.password;
     delete updateData._id;
@@ -255,6 +262,7 @@ const updateUser = async (req, res) => {
 
     if (userType === 'customer') {
       const Customer = getCustomerModel();
+      console.log('Updating customer...');
       const updatedCustomer = await Customer.findByIdAndUpdate(
         id,
         { ...updateData, updatedAt: new Date() },
@@ -262,12 +270,14 @@ const updateUser = async (req, res) => {
       );
 
       if (!updatedCustomer) {
+        console.log('Customer not found');
         return res.status(404).json({
           success: false,
           message: 'Customer not found'
         });
       }
 
+      console.log('Customer updated successfully:', updatedCustomer);
       return res.status(200).json({
         success: true,
         message: 'Customer updated successfully',
@@ -279,6 +289,7 @@ const updateUser = async (req, res) => {
       });
     }
 
+    console.log('Updating staff user...');
     const AdminUser = getAdminUserModel();
     const updatedUser = await AdminUser.findByIdAndUpdate(
       id,
@@ -290,12 +301,14 @@ const updateUser = async (req, res) => {
     ).select('-password');
 
     if (!updatedUser) {
+      console.log('Staff user not found');
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
 
+    console.log('Staff user updated successfully:', updatedUser);
     res.status(200).json({
       success: true,
       message: 'User updated successfully',

@@ -47,6 +47,10 @@ const customerSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  lastLogin: {
+    type: Date,
+    default: null
+  },
   orders: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Order'
@@ -77,6 +81,12 @@ customerSchema.pre('save', async function(next) {
 // Method to compare password
 customerSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
+};
+
+// Method to update last login
+customerSchema.methods.updateLastLogin = function() {
+  this.lastLogin = new Date();
+  return this.save({ validateBeforeSave: false });
 };
 
 // Update the updatedAt field before saving
