@@ -20,7 +20,7 @@ const TableReservation = () => {
       // Only show loading states for manual refresh
       if (showRefreshing && !silentMode) {
         setRefreshing(true);
-      } else if (!silentMode && !loading && !refreshing) {
+      } else if (!silentMode) {
         setLoading(true);
       }
 
@@ -68,7 +68,7 @@ const TableReservation = () => {
         setRefreshing(false);
       }
     }
-  }, [API_URL, selectedDate, selectedStatus, loading, refreshing]);
+  }, [API_URL, selectedDate, selectedStatus]);
 
   // Update reservation status (only to completed)
   const markAsCompleted = async (reservationId) => {
@@ -161,6 +161,7 @@ const TableReservation = () => {
   // Load reservations on component mount and when filters change
   useEffect(() => {
     let isSubscribed = true;
+    let interval;
     
     const fetch = async () => {
       if (isSubscribed) {
@@ -172,14 +173,17 @@ const TableReservation = () => {
     fetchReservations();
     
     // Set up silent real-time polling every 30 seconds
-    const interval = setInterval(fetch, 30000);
+    interval = setInterval(fetch, 30000);
     
     // Cleanup function
     return () => {
       isSubscribed = false;
-      clearInterval(interval);
+      if (interval) {
+        clearInterval(interval);
+      }
     };
-  }, [fetchReservations]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate, selectedStatus]);
 
   const handleMarkAsCompleted = async (reservationId) => {
     if (window.confirm('Mark this reservation as completed?')) {

@@ -93,34 +93,7 @@ const Cart = () => {
       }
     }
 
-    // Priority 3: Check for delivery context (direct website visitors)
-    const deliveryContext = localStorage.getItem('deliveryContext');
-    if (deliveryContext === 'true') {
-      console.log('Cart: Delivery context found - checking authentication');
-      const customerToken = localStorage.getItem('customerToken');
-      const customerUser = localStorage.getItem('customerUser');
-
-      if (customerToken && customerUser) {
-        try {
-          const userData = JSON.parse(customerUser);
-          console.log('Cart: Authenticated delivery order for:', userData.name || userData.username);
-          setIsTableOrder(false); // Delivery order, not table order
-          setIsDeliveryOrder(true);
-          setCustomerName(userData.name || userData.username || '');
-          setNeedsAuthentication(false);
-          return; // Exit early - authenticated delivery order
-        } catch (error) {
-          console.error('Error parsing customer data for delivery:', error);
-        }
-      } else {
-        console.log('Cart: Delivery order requires authentication');
-        setIsDeliveryOrder(true);
-        setNeedsAuthentication(true);
-        return; // Exit early - will handle in UI
-      }
-    }
-
-    // Priority 4: Check for pending table+food reservation
+    // Priority 3: Check for pending table+food reservation (HIGH PRIORITY - before delivery)
     const pendingReservation = localStorage.getItem('pendingReservation');
     if (pendingReservation) {
       try {
@@ -145,6 +118,7 @@ const Cart = () => {
           setReservationContext(context);
           setIsReservationOrder(true);
           setIsTableOrder(true);
+          setIsDeliveryOrder(false); // ✅ NOT a delivery order!
           setTableNumber(reservationData.selectedTables.join(', '));
           setCustomerName(reservationData.customerName);
           console.log('Cart: Table+Food reservation activated:', context);
@@ -156,7 +130,7 @@ const Cart = () => {
       }
     }
     
-    // Priority 5: Check for legacy reservation context (lowest priority)
+    // Priority 4: Check for legacy reservation context
     const storedReservationContext = localStorage.getItem('reservationContext');
     if (storedReservationContext) {
       try {
@@ -165,12 +139,40 @@ const Cart = () => {
         setReservationContext(context);
         setIsReservationOrder(true);
         setIsTableOrder(true);
+        setIsDeliveryOrder(false); // ✅ NOT a delivery order!
         setTableNumber(context.tableDetails.tables.join(', '));
         setCustomerName(context.customerName);
         return; // Exit early
       } catch (error) {
         console.error('Cart: Error parsing reservation context:', error);
         localStorage.removeItem('reservationContext');
+      }
+    }
+
+    // Priority 5: Check for delivery context (direct website visitors - LOWEST priority)
+    const deliveryContext = localStorage.getItem('deliveryContext');
+    if (deliveryContext === 'true') {
+      console.log('Cart: Delivery context found - checking authentication');
+      const customerToken = localStorage.getItem('customerToken');
+      const customerUser = localStorage.getItem('customerUser');
+
+      if (customerToken && customerUser) {
+        try {
+          const userData = JSON.parse(customerUser);
+          console.log('Cart: Authenticated delivery order for:', userData.name || userData.username);
+          setIsTableOrder(false); // Delivery order, not table order
+          setIsDeliveryOrder(true);
+          setCustomerName(userData.name || userData.username || '');
+          setNeedsAuthentication(false);
+          return; // Exit early - authenticated delivery order
+        } catch (error) {
+          console.error('Error parsing customer data for delivery:', error);
+        }
+      } else {
+        console.log('Cart: Delivery order requires authentication');
+        setIsDeliveryOrder(true);
+        setNeedsAuthentication(true);
+        return; // Exit early - will handle in UI
       }
     }
     

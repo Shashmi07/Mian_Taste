@@ -1,4 +1,10 @@
 import * as yup from 'yup';
+import moment from 'moment-timezone';
+
+// Get Sri Lankan date for validation
+const getSriLankanDate = () => {
+  return moment.tz('Asia/Colombo').startOf('day').toDate();
+};
 
 // Common validation schemas
 export const emailValidation = yup
@@ -95,7 +101,7 @@ export const tableReservationSchema = yup.object({
   customerPhone: phoneValidation,
   reservationDate: yup
     .date()
-    .min(new Date(), 'Reservation date cannot be in the past')
+    .min(getSriLankanDate(), 'Reservation date cannot be in the past')
     .required('Reservation date is required'),
   timeSlot: yup.string().required('Time slot is required'),
   selectedTables: yup
@@ -107,7 +113,7 @@ export const tableReservationSchema = yup.object({
 export const tableSelectionSchema = yup.object({
   reservationDate: yup
     .date()
-    .min(new Date(), 'Reservation date cannot be in the past')
+    .min(getSriLankanDate(), 'Reservation date cannot be in the past')
     .required('Reservation date is required'),
   timeSlot: yup.string().required('Time slot is required'),
   selectedTables: yup

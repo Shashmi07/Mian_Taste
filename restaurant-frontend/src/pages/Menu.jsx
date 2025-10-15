@@ -127,7 +127,8 @@ const Menu = () => {
     // If user is not from QR, preorder, or reservation - they are delivery customers
     const hasValidContext = localStorage.getItem('qrTableNumber') ||
                            localStorage.getItem('preorderContext') ||
-                           localStorage.getItem('reservationContext');
+                           localStorage.getItem('reservationContext') ||
+                           localStorage.getItem('pendingReservation'); // ✅ ALSO CHECK pendingReservation!
     
     if (!hasValidContext) {
       // Clean up any old/stale contexts that might interfere
@@ -136,6 +137,9 @@ const Menu = () => {
       
       localStorage.setItem('deliveryContext', 'true');
       console.log('Direct visitor - set as delivery order');
+    } else {
+      // ✅ User has a valid context - DON'T set deliveryContext
+      console.log('Valid context found - NOT setting deliveryContext');
     }
   }, []);
   

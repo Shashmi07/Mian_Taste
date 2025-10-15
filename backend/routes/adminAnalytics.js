@@ -1,5 +1,6 @@
 const express = require('express');
 const auth = require('../middleware/auth');
+const { getCustomerConnection } = require('../config/customerDatabase');
 const router = express.Router();
 
 // All admin analytics routes require authentication
@@ -31,18 +32,31 @@ router.get('/data', async (req, res) => {
       };
     }
 
+    // Get customer database connection for table reservations
+    const customerConnection = getCustomerConnection();
+    const { schema: tableReservationSchema } = require('../models/TableReservation');
+    const TableReservation = customerConnection.model('TableReservation', tableReservationSchema);
+
     // Fetch all order data in parallel
-    const [qrOrders, regularOrders, preOrders] = await Promise.all([
+    const [qrOrders, regularOrders, preOrders, tableReservations] = await Promise.all([
       QrOrder.find(dateFilter).lean(),
       Order.find(dateFilter).lean(),
-      PreOrder.find(dateFilter).lean()
+      PreOrder.find(dateFilter).lean(),
+      TableReservation.find(dateFilter).lean()
     ]);
 
     // Combine all orders for processing
     const allOrders = [
       ...qrOrders.map(order => ({ ...order, orderType: 'QR', source: 'qr' })),
       ...regularOrders.map(order => ({ ...order, orderType: 'Regular', source: 'regular' })),
-      ...preOrders.map(order => ({ ...order, orderType: 'Pre-Order', source: 'pre' }))
+      ...preOrders.map(order => ({ ...order, orderType: 'Pre-Order', source: 'pre' })),
+      ...tableReservations.map(reservation => ({ 
+        ...reservation, 
+        orderType: 'Table Reservation', 
+        source: 'reservation',
+        totalAmount: reservation.totalAmount || 0,
+        createdAt: reservation.createdAt || reservation.date
+      }))
     ];
 
     // Process orders summary for the dashboard
@@ -73,9 +87,11 @@ router.get('/data', async (req, res) => {
           qrOrders: 0,
           preOrders: 0,
           regularOrders: 0,
+          reservationOrders: 0,
           qrRevenue: 0,
           preRevenue: 0,
-          regularRevenue: 0
+          regularRevenue: 0,
+          reservationRevenue: 0
         });
       }
 
@@ -89,6 +105,9 @@ router.get('/data', async (req, res) => {
       } else if (order.source === 'pre') {
         existing.preOrders += 1;
         existing.preRevenue += order.totalAmount || 0;
+      } else if (order.source === 'reservation') {
+        existing.reservationOrders += 1;
+        existing.reservationRevenue += order.totalAmount || 0;
       } else {
         existing.regularOrders += 1;
         existing.regularRevenue += order.totalAmount || 0;
@@ -106,7 +125,8 @@ router.get('/data', async (req, res) => {
         revenue: 0,
         qrCount: 0,
         preCount: 0,
-        regularCount: 0
+        regularCount: 0,
+        reservationCount: 0
       });
     }
 
@@ -120,6 +140,8 @@ router.get('/data', async (req, res) => {
         existing.qrCount += 1;
       } else if (order.source === 'pre') {
         existing.preCount += 1;
+      } else if (order.source === 'reservation') {
+        existing.reservationCount += 1;
       } else {
         existing.regularCount += 1;
       }

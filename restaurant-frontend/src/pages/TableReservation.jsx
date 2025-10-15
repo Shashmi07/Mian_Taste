@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, CheckCircle, UtensilsCrossed, CreditCard, Users, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Calendar, Clock, UtensilsCrossed, CreditCard, Users, ArrowLeft } from 'lucide-react';
 import moment from 'moment-timezone';
-import { useNavigate } from 'react-router-dom';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
@@ -10,11 +9,10 @@ import CustomDatePicker from '../components/CustomDatePicker';
 import { useCart } from '../context/CartContext';
 import { tableSelectionSchema } from '../utils/validation';
 
-// Table pricing constant
+// Constants
 const TABLE_PRICE_PER_TABLE = 500;
 
 export default function TableReservation() {
-  const navigate = useNavigate();
   const { clearCart } = useCart();
   
   // Step management
@@ -30,6 +28,7 @@ export default function TableReservation() {
   const [specialRequests, setSpecialRequests] = useState('');
   
   // Customer info for validation
+  // eslint-disable-next-line no-unused-vars
   const [customerInfo, setCustomerInfo] = useState({
     customerName: '',
     customerEmail: '',
@@ -37,21 +36,35 @@ export default function TableReservation() {
   });
 
   const timeSlots = [
-    '09:00 - 10:00', '10:00 - 11:00', '11:00 - 12:00', '12:00 - 13:00',
-    '13:00 - 14:00', '14:00 - 15:00', '15:00 - 16:00', '16:00 - 17:00',
-    '17:00 - 18:00', '18:00 - 19:00', '19:00 - 20:00', '20:00 - 21:00'
+    '11:00-12:00',
+    '12:00-13:00',
+    '13:00-14:00',
+    '14:00-15:00',
+    '17:00-18:00',
+    '18:00-19:00',
+    '19:00-20:00',
+    '20:00-21:00',
+    '21:00-22:00'
   ];
 
-  // Get minimum allowed date (today in Sri Lanka)
+  // Get minimum allowed date (today in Sri Lankan time)
   const getMinDate = () => {
-    return moment().tz('Asia/Colombo').format('YYYY-MM-DD');
+    return moment.tz('Asia/Colombo').format('YYYY-MM-DD');
   };
 
-  // Check if a date is valid (today to next 30 days)
+  // Check if date is valid (today to next 30 days in Sri Lankan time)
   const isValidDate = (date) => {
-    const today = moment().tz('Asia/Colombo').startOf('day');
-    const maxDate = moment().tz('Asia/Colombo').add(30, 'days').endOf('day');
-    const selectedDate = moment.tz(date, 'Asia/Colombo').startOf('day');
+    const today = moment.tz('Asia/Colombo').startOf('day');
+    const maxDate = moment.tz('Asia/Colombo').add(30, 'days').endOf('day');
+    const selectedDate = moment(date).startOf('day');
+    
+    console.log('Date validation:', {
+      today: today.format('YYYY-MM-DD'),
+      maxDate: maxDate.format('YYYY-MM-DD'),
+      selectedDate: selectedDate.format('YYYY-MM-DD'),
+      isValid: selectedDate.isSameOrAfter(today) && selectedDate.isSameOrBefore(maxDate)
+    });
+
     return selectedDate.isSameOrAfter(today) && selectedDate.isSameOrBefore(maxDate);
   };
 
@@ -59,21 +72,28 @@ export default function TableReservation() {
   const isTimeSlotPast = (timeSlot) => {
     if (!selectedDate) return false;
 
-    const now = moment().tz('Asia/Colombo');
-    const selectedMoment = moment.tz(selectedDate, 'Asia/Colombo');
+    const now = moment.tz('Asia/Colombo'); // Use Sri Lankan time
+    const selectedMoment = moment(selectedDate).startOf('day');
     
     // If selected date is in the future, all slots are available
     if (selectedMoment.isAfter(now, 'day')) {
       return false;
     }
 
-    // If selected date is today, check time with 30-minute buffer
+    // If selected date is today, check if time has passed
     if (selectedMoment.isSame(now, 'day')) {
-      const [startTime] = timeSlot.split(' - ');
+      // Parse time slot (e.g., "11:00-12:00")
+      const [startTime] = timeSlot.split('-');
       const slotTime = moment.tz(selectedDate + ' ' + startTime, 'YYYY-MM-DD HH:mm', 'Asia/Colombo');
       
-      // Add 30-minute buffer to current time
-      return slotTime.isSameOrBefore(now.add(30, 'minutes'));
+      console.log('Today slot check:', {
+        currentTime: now.format('YYYY-MM-DD HH:mm'),
+        slotTime: slotTime.format('YYYY-MM-DD HH:mm'),
+        isPast: slotTime.isBefore(now)
+      });
+      
+      // Return true only if slot start time has already passed
+      return slotTime.isBefore(now);
     }
 
     // If selected date is in the past, all slots are unavailable
@@ -141,7 +161,7 @@ export default function TableReservation() {
         localStorage.removeItem('returnAfterLogin');
       }
     }
-  }, []); // Remove clearCart dependency to prevent infinite loop
+  }, [clearCart]); // Include clearCart dependency
 
   // Handle reservation type selection
   const handleReservationTypeSelect = (type) => {
@@ -150,7 +170,7 @@ export default function TableReservation() {
   };
 
   // Check availability when date or time changes
-  const checkTableAvailability = async () => {
+  const checkTableAvailability = useCallback(async () => {
     if (!selectedDate || !selectedTimeSlot) return;
     
     try {
@@ -178,12 +198,13 @@ export default function TableReservation() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedDate, selectedTimeSlot]);
 
   useEffect(() => {
     if (selectedDate && selectedTimeSlot) {
       checkTableAvailability();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, selectedTimeSlot]);
 
   const handleTableSelect = (tableId) => {
@@ -212,6 +233,12 @@ export default function TableReservation() {
   };
 
   const handleProceed = async () => {
+    // Prevent multiple clicks
+    if (loading) {
+      console.log('Already processing, please wait...');
+      return;
+    }
+
     console.log('🔍 PROCEED CLICKED - Current selection:', {
       date: selectedDate,
       timeSlot: selectedTimeSlot,
@@ -249,8 +276,10 @@ export default function TableReservation() {
       return;
     }
 
+    // Set loading state for UI feedback
+    setLoading(true);
+
     try {
-      setLoading(true);
       const userData = JSON.parse(customerUser);
 
       if (reservationType === 'table-only') {
@@ -268,14 +297,15 @@ export default function TableReservation() {
           total: getTableTotal()
         };
         
-        console.log('Using customer data for table-only reservation:', {
+        console.log('✅ Table-only reservation - Preparing data');
+        console.log('Customer:', {
           name: userData.username || userData.name,
           email: userData.email,
           phone: userData.phoneNumber || userData.phone
         });
 
         // Store reservation data for payment (PaymentGateway expects this format)
-        localStorage.setItem('pendingReservation', JSON.stringify({
+        const pendingReservation = {
           type: 'reservation',
           data: {
             ...reservationData,
@@ -290,17 +320,18 @@ export default function TableReservation() {
           },
           total: getTableTotal(),
           createdAt: new Date().toISOString()
-        }));
-
-        // Navigate to payment - force full page reload to ensure PaymentGateway loads properly
-        console.log('Navigating to payment gateway...');
+        };
         
-        // Use window.location for guaranteed page reload
-        setTimeout(() => {
-          window.location.href = '/payment';
-        }, 100);
+        localStorage.setItem('pendingReservation', JSON.stringify(pendingReservation));
+        console.log('✅ Stored pendingReservation:', pendingReservation);
+
+        // Navigate to payment immediately
+        console.log('🚀 Navigating to payment gateway...');
+        window.location.href = '/payment';
+        
       } else if (reservationType === 'table-food') {
-        console.log('Using customer data for table+food reservation:', {
+        console.log('✅ Table+Food reservation - Preparing data');
+        console.log('Customer:', {
           name: userData.username || userData.name,
           email: userData.email,
           phone: userData.phoneNumber || userData.phone
@@ -331,6 +362,7 @@ export default function TableReservation() {
         };
         
         localStorage.setItem('pendingReservation', JSON.stringify(tableReservationData));
+        console.log('✅ Stored pendingReservation:', tableReservationData);
         
         // ALSO create reservationContext for Menu/Cart compatibility
         const reservationContext = {
@@ -345,17 +377,16 @@ export default function TableReservation() {
         };
         
         localStorage.setItem('reservationContext', JSON.stringify(reservationContext));
-        
-        console.log('🔍 Stored both pendingReservation and reservationContext for table+food');
+        console.log('✅ Stored reservationContext:', reservationContext);
         
         // Navigate to menu for food selection
-        navigate('/menu');
+        console.log('🚀 Navigating to menu page...');
+        window.location.href = '/menu';
       }
     } catch (error) {
-      console.error('Error processing reservation:', error);
-      alert('Error processing reservation. Please try again.');
-    } finally {
-      setLoading(false);
+      console.error('❌ Error processing reservation:', error);
+      alert('Error processing reservation: ' + error.message + '\n\nPlease try again.');
+      setLoading(false); // ✅ Reset loading state on error
     }
   };
 
@@ -518,6 +549,7 @@ export default function TableReservation() {
                               return;
                             }
                             
+                            console.log('Date selected:', date);
                             setFieldValue('reservationDate', date);
                             setSelectedDate(date);
                             // Clear selected time slot when date changes
@@ -536,28 +568,31 @@ export default function TableReservation() {
                         <Field
                           name="timeSlot"
                           as="select"
+                          value={values.timeSlot}
                           className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 ${
                             errors.timeSlot && touched.timeSlot ? 'border-red-500' : 'border-gray-300'
                           }`}
                           onChange={(e) => {
-                            setFieldValue('timeSlot', e.target.value);
-                            setSelectedTimeSlot(e.target.value);
+                            const value = e.target.value;
+                            setFieldValue('timeSlot', value);
+                            setSelectedTimeSlot(value);
+                            console.log('Time slot selected:', value);
                           }}
                         >
-                          <option value="">Select time slot</option>
-                          {timeSlots.map((slot) => {
-                            const isPast = isTimeSlotPast(slot);
+                          <option value="">Choose time slot</option>
+                          {timeSlots.map((time) => {
+                            const isPast = isTimeSlotPast(time);
                             return (
                               <option 
-                                key={slot} 
-                                value={slot} 
+                                key={time} 
+                                value={time} 
                                 disabled={isPast}
                                 style={{
                                   color: isPast ? '#ff0000' : 'inherit',
                                   backgroundColor: isPast ? '#ffebeb' : 'inherit'
                                 }}
                               >
-                                {slot} {isPast ? '(Past)' : ''}
+                                {time} {isPast ? '(Past)' : ''}
                               </option>
                             );
                           })}

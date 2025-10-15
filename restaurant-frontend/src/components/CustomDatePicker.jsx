@@ -13,17 +13,17 @@ const CustomDatePicker = ({ selectedDate, onChange, minDate }) => {
   // Convert string date to Date object for DatePicker
   const dateValue = selectedDate ? new Date(selectedDate) : null;
   
-  // Set minimum date as today
-  const today = moment().tz('Asia/Colombo').startOf('day').toDate();
+  // Set minimum date as today in Sri Lankan timezone
+  const today = moment.tz('Asia/Colombo').startOf('day').toDate();
   
   // Set maximum date as 30 days from today
-  const maxDate = moment().tz('Asia/Colombo').add(30, 'days').endOf('day').toDate();
+  const maxDate = moment.tz('Asia/Colombo').add(30, 'days').endOf('day').toDate();
 
   // Filter function to disable dates outside our range
   const filterDate = (date) => {
     const currentDate = moment(date).startOf('day');
-    const minMoment = moment().tz('Asia/Colombo').startOf('day');
-    const maxMoment = moment().tz('Asia/Colombo').add(30, 'days').endOf('day');
+    const minMoment = moment.tz('Asia/Colombo').startOf('day');
+    const maxMoment = moment.tz('Asia/Colombo').add(30, 'days').endOf('day');
     return currentDate.isSameOrAfter(minMoment) && currentDate.isSameOrBefore(maxMoment);
   };
 

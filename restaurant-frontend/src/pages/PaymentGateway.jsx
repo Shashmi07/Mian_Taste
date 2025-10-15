@@ -64,38 +64,49 @@ export default function PaymentGateway() {
           const reservation = JSON.parse(pendingReservation);
           
           console.log('🔍 PaymentGateway: Found both savedOrder and pendingReservation');
-          console.log('🔍 SavedOrder type:', order.type);
+          console.log('🔍 SavedOrder:', order);
+          console.log('🔍 SavedOrder.type:', order.type);
+          console.log('🔍 SavedOrder.items:', order.items);
           console.log('🔍 PendingReservation type:', reservation.type);
           
           // If both exist and pending reservation is table-food, use savedOrder (cart data) as it has food items
-          if (reservation.type === 'table-food' && order.items && order.items.length > 0) {
-            console.log('🔍 Using savedOrder for table+food as it has food items');
-            setOrderData(order);
+          if (reservation.type === 'table-food') {
+            console.log('✅ Table+food reservation detected');
+            console.log('🔍 Checking if order.items exists:', !!order.items);
+            console.log('🔍 Order.items length:', order.items?.length);
             
-            // Pre-fill customer info
-            const customerData = {
-              name: order.customerName || '',
-              email: order.customerEmail || '',
-              phone: order.customerPhone || ''
-            };
-            
-            // Enhance with stored customer data
-            try {
-              const storedUser = localStorage.getItem('customerUser');
-              if (storedUser) {
-                const userData = JSON.parse(storedUser);
-                customerData.name = customerData.name || userData.username || userData.name || '';
-                customerData.email = customerData.email || userData.email || '';
-                customerData.phone = customerData.phone || userData.phoneNumber || userData.phone || '';
+            if (order.items && order.items.length > 0) {
+              console.log('✅ Using savedOrder for table+food as it has food items');
+              setOrderData(order);
+              
+              // Pre-fill customer info
+              const customerData = {
+                name: order.customerName || '',
+                email: order.customerEmail || '',
+                phone: order.customerPhone || ''
+              };
+              
+              // Enhance with stored customer data
+              try {
+                const storedUser = localStorage.getItem('customerUser');
+                if (storedUser) {
+                  const userData = JSON.parse(storedUser);
+                  customerData.name = customerData.name || userData.username || userData.name || '';
+                  customerData.email = customerData.email || userData.email || '';
+                  customerData.phone = customerData.phone || userData.phoneNumber || userData.phone || '';
+                }
+              } catch (error) {
+                console.warn('Could not parse stored customer data:', error);
               }
-            } catch (error) {
-              console.warn('Could not parse stored customer data:', error);
+              
+              setCustomerInfo(customerData);
+              // Set payment method - card for all order types
+              setPaymentMethod('card');
+              return; // Exit early, don't process pendingReservation
+            } else {
+              console.error('❌ savedOrder exists but has NO items!');
+              console.error('❌ This means Cart did not properly store food items');
             }
-            
-            setCustomerInfo(customerData);
-            // Set payment method - card for all order types
-            setPaymentMethod('card');
-            return; // Exit early, don't process pendingReservation
           }
         } catch (error) {
           console.error('Error checking savedOrder vs pendingReservation:', error);
@@ -111,14 +122,35 @@ export default function PaymentGateway() {
           const reservationData = reservation.data || reservation; // table-food has .data, table-only doesn't
           console.log('🔍 PaymentGateway: Extracted reservationData:', reservationData);
           
+          // For table-food reservations, we MUST get food items from savedOrder (currentOrder)
+          let items = [];
+          if (reservation.type === 'table-food' && savedOrder) {
+            try {
+              const order = JSON.parse(savedOrder);
+              console.log('🔍 PaymentGateway: Loading food items from savedOrder for table-food');
+              console.log('🔍 SavedOrder.items:', order.items);
+              items = order.items || [];
+              
+              if (items.length === 0) {
+                console.error('❌ CRITICAL: Table+food reservation but savedOrder has NO items!');
+                console.error('❌ SavedOrder:', order);
+              } else {
+                console.log('✅ Found', items.length, 'food items from savedOrder');
+              }
+            } catch (e) {
+              console.error('❌ Failed to parse savedOrder for food items:', e);
+            }
+          }
+          
           setOrderData({
             type: reservation.type || 'reservation', // Preserve original type (table-only, table-food, etc.)
             total: reservation.total,
             customerName: reservationData.customerName,
             reservationData: reservationData,
+            items: items, // Add food items here for table-food reservations
             createdAt: reservation.createdAt
           });
-          console.log('🔍 PaymentGateway: Set orderData for reservation');
+          console.log('🔍 PaymentGateway: Set orderData for reservation with', items.length, 'food items');
           
           // Pre-fill customer info if available from reservation data
           const customerData = {
@@ -395,6 +427,8 @@ export default function PaymentGateway() {
       // Handle table+food reservation payment
       else if (orderData?.type === 'table-food') {
         console.log('🔍 Processing table-food reservation:', orderData);
+        console.log('🔍 orderData.items:', orderData.items);
+        console.log('🔍 orderData.reservationDetails:', orderData.reservationDetails);
         
         // For table+food, get reservation data from orderData.reservationData (which comes from pendingReservation)
         const reservationData = orderData.reservationData || orderData.data;
@@ -406,12 +440,14 @@ export default function PaymentGateway() {
         console.log('🔍 Checking for food items in orderData.items:', orderData.items);
         console.log('🔍 Checking reservationData:', reservationData);
         console.log('🔍 Checking for food items in reservationData.preOrder:', reservationData?.preOrder);
+        console.log('🔍 Checking for food items in reservationData.foodItems:', reservationData?.foodItems);
+        
+        // Priority 1: Food items from orderData.items (from Cart -> currentOrder)
         if (orderData.items && orderData.items.length > 0) {
-          // Food items from cart/order data (most reliable)
-          console.log('🔍 Using food items from orderData.items');
+          console.log('✅ Using food items from orderData.items (Cart data)');
           console.log('🔍 Raw food items:', orderData.items);
           foodItems = orderData.items.map(item => {
-            const quantity = item.quantity || item.count || 1; // Handle missing quantity
+            const quantity = item.quantity || item.count || 1;
             const price = typeof item.price === 'number' ? item.price : parseInt(item.price) || 0;
             console.log(`🔍 Processing item: ${item.name}, quantity: ${quantity}, price: ${price}`);
             return {
@@ -426,22 +462,38 @@ export default function PaymentGateway() {
             console.log(`🔍 Item total for ${item.name}: ${item.price} x ${item.quantity} = ${itemTotal}`);
             return total + itemTotal;
           }, 0);
-          console.log('🔍 Calculated food total:', foodTotal);
-        } else if (reservationData.preOrder?.items && reservationData.preOrder.items.length > 0) {
-          // Food items from preOrder
-          console.log('🔍 Using food items from preOrder');
+          console.log('✅ Calculated food total from items:', foodTotal);
+        }
+        // Priority 2: Food items from reservationDetails (backup)
+        else if (orderData.reservationDetails?.foodItems && orderData.reservationDetails.foodItems.length > 0) {
+          console.log('✅ Using food items from reservationDetails.foodItems');
+          foodItems = orderData.reservationDetails.foodItems;
+          foodTotal = orderData.reservationDetails.foodTotal || 0;
+        }
+        // Priority 3: Food items from reservationData
+        else if (reservationData?.foodItems && reservationData.foodItems.length > 0) {
+          console.log('✅ Using food items from reservationData.foodItems');
+          foodItems = reservationData.foodItems;
+          foodTotal = reservationData.foodTotal || 0;
+        }
+        // Priority 4: Food items from preOrder
+        else if (reservationData?.preOrder?.items && reservationData.preOrder.items.length > 0) {
+          console.log('✅ Using food items from preOrder');
           foodItems = reservationData.preOrder.items;
           foodTotal = reservationData.preOrder.totalAmount || 0;
         } else {
-          console.log('❌ NO FOOD ITEMS FOUND - this should not happen for table+food reservations');
+          console.error('❌ NO FOOD ITEMS FOUND - this should not happen for table+food reservations');
+          console.error('❌ orderData:', JSON.stringify(orderData, null, 2));
         }
         
         // Get table total - check multiple sources for cart-based orders
         let tableTotal = 0;
         if (orderData.reservationDetails?.tableAmount) {
           tableTotal = orderData.reservationDetails.tableAmount;
-        } else if (reservationData.tableCost?.totalTableCost) {
+        } else if (reservationData?.tableCost?.totalTableCost) {
           tableTotal = reservationData.tableCost.totalTableCost;
+        } else if (reservationData?.tableTotal) {
+          tableTotal = reservationData.tableTotal;
         }
         
         // Calculate totals
