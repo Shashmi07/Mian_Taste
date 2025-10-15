@@ -243,90 +243,6 @@ const createAdminUser = async (req, res) => {
   }
 };
 
-// Update user
-const updateUser = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { userType } = req.query; // 'staff' or 'customer'
-    const updateData = req.body;
-
-    console.log('=== UPDATE USER BACKEND ===');
-    console.log('User ID:', id);
-    console.log('User Type:', userType);
-    console.log('Update Data:', updateData);
-
-    // Remove sensitive fields from update
-    delete updateData.password;
-    delete updateData._id;
-    delete updateData.__v;
-
-    if (userType === 'customer') {
-      const Customer = getCustomerModel();
-      console.log('Updating customer...');
-      const updatedCustomer = await Customer.findByIdAndUpdate(
-        id,
-        { ...updateData, updatedAt: new Date() },
-        { new: true, runValidators: true }
-      );
-
-      if (!updatedCustomer) {
-        console.log('Customer not found');
-        return res.status(404).json({
-          success: false,
-          message: 'Customer not found'
-        });
-      }
-
-      console.log('Customer updated successfully:', updatedCustomer);
-      return res.status(200).json({
-        success: true,
-        message: 'Customer updated successfully',
-        data: {
-          ...updatedCustomer.toObject(),
-          role: 'customer',
-          userType: 'customer'
-        }
-      });
-    }
-
-    console.log('Updating staff user...');
-    const AdminUser = getAdminUserModel();
-    const updatedUser = await AdminUser.findByIdAndUpdate(
-      id,
-      { 
-        ...updateData, 
-        updatedBy: req.user ? req.user._id : null 
-      },
-      { new: true, runValidators: true }
-    ).select('-password');
-
-    if (!updatedUser) {
-      console.log('Staff user not found');
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-
-    console.log('Staff user updated successfully:', updatedUser);
-    res.status(200).json({
-      success: true,
-      message: 'User updated successfully',
-      data: {
-        ...updatedUser.toObject(),
-        userType: 'staff'
-      }
-    });
-  } catch (error) {
-    console.error('Update user error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to update user',
-      error: error.message
-    });
-  }
-};
-
 // Delete user (soft delete - set isActive to false)
 const deleteUser = async (req, res) => {
   try {
@@ -491,7 +407,6 @@ module.exports = {
   getAllUsers,
   getUsersByRole,
   createAdminUser,
-  updateUser,
   deleteUser,
   toggleUserStatus,
   getUserStats

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit2, Trash2, User, Mail, Phone, Shield, UserCheck, RefreshCw, AlertCircle, X } from 'lucide-react';
+import { Search, Plus, Trash2, User, Mail, Phone, Shield, UserCheck, RefreshCw, AlertCircle, X, Eye } from 'lucide-react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { userManagementService } from '../../services/userManagementAPI';
-import { addUserSchema, editUserSchema } from '../../utils/validation';
+import { addUserSchema } from '../../utils/validation';
 
 const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,21 +26,12 @@ const UserManagement = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [addUserLoading, setAddUserLoading] = useState(false);
-  const [showEditUserModal, setShowEditUserModal] = useState(false);
-  const [editUserLoading, setEditUserLoading] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
+  const [showViewUserModal, setShowViewUserModal] = useState(false);
+  const [viewingUser, setViewingUser] = useState(null);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
-    fullName: '',
-    role: 'waiter',
-    phoneNumber: '',
-    address: ''
-  });
-  const [editFormData, setEditFormData] = useState({
-    username: '',
-    email: '',
     fullName: '',
     role: 'waiter',
     phoneNumber: '',
@@ -90,19 +81,18 @@ const UserManagement = () => {
       setError(null);
       const response = await userManagementService.toggleUserStatus(userId, userType);
       if (response.success) {
+        // Show success message
+        const action = response.message.includes('activated') ? 'activated' : 'deactivated';
+        alert(`✅ Success!\n\nUser has been ${action} successfully.`);
+        
         // Refresh the users list
         await fetchUsers();
-        // Show brief success message
-        const action = response.message.includes('activated') ? 'activated' : 'deactivated';
-        console.log(`User ${action} successfully`);
       }
     } catch (error) {
       console.error('Error toggling user status:', error);
-      if (error.response && error.response.data && error.response.data.message) {
-        setError(error.response.data.message);
-      } else {
-        setError('Failed to update user status. Please try again.');
-      }
+      const errorMessage = error.response?.data?.message || 'Failed to update user status. Please try again.';
+      setError(errorMessage);
+      alert(`❌ Error\n\n${errorMessage}`);
     }
   };
 
@@ -112,22 +102,22 @@ const UserManagement = () => {
     const user = users.find(u => u._id === userId);
     const userName = user ? (user.fullName || user.username) : 'this user';
     
-    if (window.confirm(`Are you sure you want to permanently deactivate ${userName}? This action will set their status to inactive.`)) {
+    if (window.confirm(`⚠️ Confirm Deactivation\n\nAre you sure you want to deactivate ${userName}?\nThis will set their status to inactive.`)) {
       try {
         setError(null);
         const response = await userManagementService.deleteUser(userId, userType);
         if (response.success) {
+          // Show success message
+          alert(`✅ User Deactivated\n\n${userName} has been deactivated successfully.`);
+          
           // Refresh the users list
           await fetchUsers();
-          console.log('User deactivated successfully');
         }
       } catch (error) {
         console.error('Error deactivating user:', error);
-        if (error.response && error.response.data && error.response.data.message) {
-          setError(error.response.data.message);
-        } else {
-          setError('Failed to deactivate user. Please try again.');
-        }
+        const errorMessage = error.response?.data?.message || 'Failed to deactivate user. Please try again.';
+        setError(errorMessage);
+        alert(`❌ Error\n\n${errorMessage}`);
       }
     }
   };
@@ -210,89 +200,16 @@ const UserManagement = () => {
     setShowAddUserModal(true);
   };
 
-  // Handle edit user form input changes
-  const handleEditFormChange = (e) => {
-    const { name, value } = e.target;
-    setEditFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  // Handle opening view user modal
+  const handleOpenViewUserModal = (user) => {
+    setViewingUser(user);
+    setShowViewUserModal(true);
   };
 
-  // Reset edit form data
-  const resetEditForm = () => {
-    setEditFormData({
-      username: '',
-      email: '',
-      fullName: '',
-      role: 'waiter',
-      phoneNumber: '',
-      address: ''
-    });
-    setEditingUser(null);
-    setError(null);
-  };
-
-  // Handle opening edit user modal
-  const handleOpenEditUserModal = (user) => {
-    setEditingUser(user);
-    setEditFormData({
-      username: user.username || '',
-      email: user.email || '',
-      fullName: user.fullName || user.username || '',
-      role: user.role || 'waiter',
-      phoneNumber: user.phoneNumber || '',
-      address: user.address || ''
-    });
-    setError(null);
-    setShowEditUserModal(true);
-  };
-
-  // Handle edit user submission
-  const handleEditUser = async (e) => {
-    e.preventDefault();
-    if (!editingUser) return;
-
-    setEditUserLoading(true);
-    setError(null);
-
-    try {
-      // Validate required fields
-      if (!editFormData.username || !editFormData.email || !editFormData.fullName || !editFormData.phoneNumber) {
-        setError('All required fields must be filled out.');
-        return;
-      }
-
-      // Validate email format
-      const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
-      if (!emailRegex.test(editFormData.email)) {
-        setError('Please enter a valid email address.');
-        return;
-      }
-
-      const response = await userManagementService.updateUser(
-        editingUser._id,
-        editFormData,
-        editingUser.userType
-      );
-      
-      if (response.success) {
-        // Success - close modal and refresh users
-        setShowEditUserModal(false);
-        resetEditForm();
-        await fetchUsers();
-        setError(null);
-      }
-    } catch (error) {
-      console.error('Error updating user:', error);
-      if (error.response && error.response.data && error.response.data.message) {
-        setError(error.response.data.message);
-      } else {
-        setError('Failed to update user. Please try again.');
-      }
-    } finally {
-      setEditUserLoading(false);
-    }
+  // Handle closing view user modal
+  const handleCloseViewUserModal = () => {
+    setViewingUser(null);
+    setShowViewUserModal(false);
   };
 
   // Fetch data on component mount
@@ -466,82 +383,78 @@ const UserManagement = () => {
               </div>
             </div>
 
-          <div className="data-table">
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Contact</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Join Date</th>
-                  <th>Last Login</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
+          {/* Scrollable table wrapper */}
+          <div className="overflow-x-auto -mx-6 px-6">
+            <div className="inline-block min-w-full align-middle">
+              <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 rounded-lg">
+                <table className="min-w-full divide-y divide-gray-300">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">User</th>
+                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Contact</th>
+                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Role</th>
+                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
+                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Join Date</th>
+                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Last Login</th>
+                      <th scope="col" className="px-3 py-3.5 pr-4 text-left text-sm font-semibold text-gray-900 sm:pr-6 sticky right-0 bg-gray-50">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white">
                 {filteredUsers.map(user => (
-                  <tr key={user._id}>
-                    <td>
+                  <tr key={user._id} className="hover:bg-gray-50">
+                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center">
-                          <span className="text-white font-medium">
+                        <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-white font-medium text-xs">
                             {(user.fullName || user.username || 'U').split(' ').map(n => n[0]).join('').substring(0, 2)}
                           </span>
                         </div>
-                        <div>
-                          <div className="font-medium text-gray-800">{user.fullName || user.username}</div>
-                          <div className="text-sm text-gray-500">ID: {user._id.substring(0, 8)}...</div>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium text-gray-900 truncate">{user.fullName || user.username}</div>
+                          <div className="text-xs text-gray-500 truncate">ID: {user._id.substring(0, 8)}...</div>
                         </div>
                       </div>
                     </td>
-                    <td>
-                      <div className="text-sm text-gray-800 flex items-center space-x-1">
-                        <Mail className="w-4 h-4 text-gray-400" />
-                        <span>{user.email}</span>
+                    <td className="whitespace-nowrap px-3 py-4 text-sm">
+                      <div className="text-gray-900 flex items-center space-x-1 mb-1">
+                        <Mail className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                        <span className="truncate max-w-[200px]">{user.email}</span>
                       </div>
                       {user.phoneNumber && (
-                        <div className="text-sm text-gray-600 flex items-center space-x-1">
-                          <Phone className="w-4 h-4 text-gray-400" />
+                        <div className="text-gray-600 flex items-center space-x-1">
+                          <Phone className="w-3 h-3 text-gray-400 flex-shrink-0" />
                           <span>{user.phoneNumber}</span>
                         </div>
                       )}
                     </td>
-                    <td>
-                      <span className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${getRoleColor(user.role)}`}>
+                    <td className="whitespace-nowrap px-3 py-4 text-sm">
+                      <span className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
                         {getRoleIcon(user.role)}
                         <span className="capitalize">{user.role}</span>
                       </span>
                     </td>
-                    <td>
+                    <td className="whitespace-nowrap px-3 py-4 text-sm">
                       <span className={getStatusColor(user.isActive)}>
                         {user.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="text-sm text-gray-600">
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-600">
                       {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
                     </td>
-                    <td className="text-sm text-gray-600">
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-600">
                       {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
                     </td>
-                    <td>
-                      <div className="flex space-x-2">
+                    <td className="whitespace-nowrap py-4 pl-3 pr-4 text-sm font-medium sm:pr-6 sticky right-0 bg-white shadow-[-2px_0_4px_rgba(0,0,0,0.05)]">
+                      <div className="flex space-x-1 justify-end">
                         <button 
-                          onClick={() => handleOpenEditUserModal(user)}
-                          className="text-blue-600 hover:text-blue-800 transition-colors"
-                          title="Edit user"
+                          onClick={() => handleOpenViewUserModal(user)}
+                          className="text-indigo-600 hover:text-indigo-900 transition-colors p-1 hover:bg-indigo-50 rounded"
+                          title="View user details"
                         >
-                          <Edit2 className="w-4 h-4" />
+                          <Eye className="w-4 h-4" />
                         </button>
                         <button 
-                          className={`transition-colors ${user.isActive ? 'text-orange-600 hover:text-orange-800' : 'text-green-600 hover:text-green-800'}`}
-                          onClick={() => handleToggleStatus(user._id, user.userType)}
-                          title={user.isActive ? 'Deactivate user' : 'Activate user'}
-                        >
-                          <UserCheck className="w-4 h-4" />
-                        </button>
-                        <button 
-                          className="text-red-600 hover:text-red-800 transition-colors"
+                          className="text-red-600 hover:text-red-900 transition-colors p-1 hover:bg-red-50 rounded"
                           onClick={() => handleDeleteUser(user._id, user.userType)}
                           title="Delete user"
                         >
@@ -553,6 +466,8 @@ const UserManagement = () => {
                 ))}
               </tbody>
             </table>
+              </div>
+            </div>
           </div>
 
           {filteredUsers.length === 0 && !loading && (
@@ -764,190 +679,211 @@ const UserManagement = () => {
         </div>
       )}
 
-      {/* Edit User Modal */}
-      {showEditUserModal && editingUser && (
+      {/* View User Details Modal */}
+      {showViewUserModal && viewingUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-800">
-                Edit User: {editingUser.fullName || editingUser.username}
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 flex items-center space-x-2">
+                <User className="w-7 h-7 text-indigo-600" />
+                <span>User Details</span>
               </h2>
               <button
-                onClick={() => setShowEditUserModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                onClick={handleCloseViewUserModal}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-4 flex items-center space-x-2">
-                <AlertCircle className="w-5 h-5" />
-                <span className="text-sm">{error}</span>
+            <div className="space-y-6">
+              {/* User Header */}
+              <div className="flex items-center space-x-4 pb-4 border-b border-gray-200">
+                <div className="w-20 h-20 bg-gradient-to-r from-green-400 to-green-500 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-2xl">
+                    {(viewingUser.fullName || viewingUser.username || 'U').split(' ').map(n => n[0]).join('').substring(0, 2)}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-800">
+                    {viewingUser.fullName || viewingUser.username}
+                  </h3>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <span className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${getRoleColor(viewingUser.role)}`}>
+                      {getRoleIcon(viewingUser.role)}
+                      <span className="capitalize">{viewingUser.role}</span>
+                    </span>
+                    <span className={getStatusColor(viewingUser.isActive)}>
+                      {viewingUser.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                </div>
               </div>
-            )}
 
-            <Formik
-              initialValues={{
-                username: editingUser?.username || '',
-                email: editingUser?.email || '',
-                fullName: editingUser?.fullName || '',
-                role: editingUser?.role || 'waiter',
-                phoneNumber: editingUser?.phoneNumber || '',
-                address: editingUser?.address || ''
-              }}
-              validationSchema={editUserSchema}
-              enableReinitialize={true}
-              onSubmit={async (values, { setSubmitting }) => {
-                try {
-                  setEditUserLoading(true);
-                  setError(null);
+              {/* User Information Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Basic Information */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-700 flex items-center space-x-2">
+                    <User className="w-5 h-5 text-indigo-600" />
+                    <span>Basic Information</span>
+                  </h4>
                   
-                  const response = await userManagementService.updateStaffUser(editingUser._id, values);
-                  
-                  if (response.success) {
-                    await fetchUsers();
-                    setShowEditUserModal(false);
-                    setEditingUser(null);
-                  } else {
-                    throw new Error(response.message || 'Failed to update user');
-                  }
-                } catch (err) {
-                  console.error('Edit user error:', err);
-                  setError(err.message || 'Failed to update user. Please try again.');
-                } finally {
-                  setEditUserLoading(false);
-                  setSubmitting(false);
-                }
-              }}
-            >
-              {({ errors, touched }) => (
-                <Form className="space-y-4">
                   <div>
-                    <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-                      Full Name <span className="text-red-500">*</span>
-                    </label>
-                    <Field
-                      name="fullName"
-                      type="text"
-                      placeholder="Enter full name"
-                      className={`form-input w-full ${
-                        errors.fullName && touched.fullName ? 'border-red-500' : ''
-                      }`}
-                    />
-                    <ErrorMessage name="fullName" component="div" className="text-red-500 text-sm mt-1" />
+                    <label className="text-sm font-medium text-gray-500">Username</label>
+                    <p className="text-gray-800 font-medium">{viewingUser.username || 'N/A'}</p>
                   </div>
 
                   <div>
-                    <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                      Username <span className="text-red-500">*</span>
-                    </label>
-                    <Field
-                      name="username"
-                      type="text"
-                      placeholder="Enter username"
-                      className={`form-input w-full ${
-                        errors.username && touched.username ? 'border-red-500' : ''
-                      }`}
-                    />
-                    <ErrorMessage name="username" component="div" className="text-red-500 text-sm mt-1" />
+                    <label className="text-sm font-medium text-gray-500">Full Name</label>
+                    <p className="text-gray-800 font-medium">{viewingUser.fullName || viewingUser.username || 'N/A'}</p>
                   </div>
 
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                      Email <span className="text-red-500">*</span>
-                    </label>
-                    <Field
-                      name="email"
-                      type="email"
-                      placeholder="Enter email address"
-                      className={`form-input w-full ${
-                        errors.email && touched.email ? 'border-red-500' : ''
-                      }`}
-                    />
-                    <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
-                  </div>
-
-                  {editingUser?.userType === 'staff' && (
-                    <div>
-                      <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-                        Role <span className="text-red-500">*</span>
-                      </label>
-                      <Field
-                        name="role"
-                        as="select"
-                        className={`form-select w-full ${
-                          errors.role && touched.role ? 'border-red-500' : ''
-                        }`}
-                      >
-                        <option value="admin">Admin</option>
-                        <option value="chef">Chef</option>
-                        <option value="waiter">Waiter</option>
-                      </Field>
-                      <ErrorMessage name="role" component="div" className="text-red-500 text-sm mt-1" />
-                    </div>
-                  )}
-
-                  <div>
-                    <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                      Phone Number <span className="text-red-500">*</span>
-                    </label>
-                    <Field
-                      name="phoneNumber"
-                      type="tel"
-                      placeholder="Enter phone number (e.g., +1234567890 or 0771234567)"
-                      className={`form-input w-full ${
-                        errors.phoneNumber && touched.phoneNumber ? 'border-red-500' : ''
-                      }`}
-                    />
-                    <ErrorMessage name="phoneNumber" component="div" className="text-red-500 text-sm mt-1" />
+                    <label className="text-sm font-medium text-gray-500">User ID</label>
+                    <p className="text-gray-800 font-mono text-sm">{viewingUser._id}</p>
                   </div>
 
                   <div>
-                    <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                      Address
-                    </label>
-                    <Field
-                      name="address"
-                      as="textarea"
-                      placeholder="Enter address (optional)"
-                      rows={2}
-                      className={`form-input w-full ${
-                        errors.address && touched.address ? 'border-red-500' : ''
-                      }`}
-                    />
-                    <ErrorMessage name="address" component="div" className="text-red-500 text-sm mt-1" />
+                    <label className="text-sm font-medium text-gray-500">User Type</label>
+                    <p className="text-gray-800 font-medium capitalize">{viewingUser.userType || 'N/A'}</p>
+                  </div>
+                </div>
+
+                {/* Contact Information */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-700 flex items-center space-x-2">
+                    <Mail className="w-5 h-5 text-indigo-600" />
+                    <span>Contact Information</span>
+                  </h4>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Email</label>
+                    <p className="text-gray-800 font-medium break-all">{viewingUser.email || 'N/A'}</p>
                   </div>
 
-                  <div className="flex space-x-3 pt-4">
-                    <button
-                      type="button"
-                      onClick={() => setShowEditUserModal(false)}
-                      className="btn-secondary flex-1"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={editUserLoading}
-                      className="btn-primary flex-1 flex items-center justify-center space-x-2"
-                    >
-                      {editUserLoading ? (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Phone Number</label>
+                    <p className="text-gray-800 font-medium">{viewingUser.phoneNumber || 'N/A'}</p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Address</label>
+                    <p className="text-gray-800">{viewingUser.address || 'Not provided'}</p>
+                  </div>
+                </div>
+
+                {/* Account Information */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-700 flex items-center space-x-2">
+                    <Shield className="w-5 h-5 text-indigo-600" />
+                    <span>Account Information</span>
+                  </h4>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Join Date</label>
+                    <p className="text-gray-800 font-medium">
+                      {viewingUser.createdAt ? new Date(viewingUser.createdAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      }) : 'N/A'}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Last Updated</label>
+                    <p className="text-gray-800 font-medium">
+                      {viewingUser.updatedAt ? new Date(viewingUser.updatedAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      }) : 'N/A'}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Last Login</label>
+                    <p className="text-gray-800 font-medium">
+                      {viewingUser.lastLogin ? (
                         <>
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                          <span>Updating...</span>
+                          {new Date(viewingUser.lastLogin).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                          <span className="text-sm text-gray-500 ml-2">
+                            at {new Date(viewingUser.lastLogin).toLocaleTimeString('en-US', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
                         </>
                       ) : (
-                        <>
-                          <Edit2 className="w-4 h-4" />
-                          <span>Update User</span>
-                        </>
+                        <span className="text-gray-500">Never logged in</span>
                       )}
-                    </button>
+                    </p>
                   </div>
-                </Form>
-              )}
-            </Formik>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">Account Status</label>
+                    <p>
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                        viewingUser.isActive 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {viewingUser.isActive ? '● Active' : '● Inactive'}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Permissions (for staff only) */}
+                {viewingUser.userType === 'staff' && viewingUser.permissions && (
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-semibold text-gray-700 flex items-center space-x-2">
+                      <Shield className="w-5 h-5 text-indigo-600" />
+                      <span>Permissions</span>
+                    </h4>
+
+                    <div className="space-y-2">
+                      {Object.entries(viewingUser.permissions).map(([key, value]) => (
+                        <div key={key} className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600 capitalize">
+                            {key.replace(/([A-Z])/g, ' $1').trim()}
+                          </span>
+                          <span className={`text-sm font-medium ${value ? 'text-green-600' : 'text-red-600'}`}>
+                            {value ? '✓ Allowed' : '✗ Denied'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Customer Specific Info */}
+                {viewingUser.userType === 'customer' && (
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-semibold text-gray-700">Customer Information</h4>
+                    
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Total Orders</label>
+                      <p className="text-gray-800 font-medium text-2xl">{viewingUser.orderCount || 0}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 pt-6 mt-6 border-t border-gray-200">
+              <button
+                onClick={handleCloseViewUserModal}
+                className="btn-primary"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

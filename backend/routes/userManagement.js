@@ -4,7 +4,6 @@ const {
   getAllUsers,
   getUsersByRole,
   createAdminUser,
-  updateUser,
   deleteUser,
   toggleUserStatus,
   getUserStats
@@ -26,10 +25,6 @@ router.get('/stats', getUserStats);
 
 // POST /api/user-management/users - Create new admin user (admin, chef, waiter)
 router.post('/users', createAdminUser);
-
-// PUT /api/user-management/users/:id - Update user
-// Query parameter: userType (staff or customer)
-router.put('/users/:id', updateUser);
 
 // DELETE /api/user-management/users/:id - Soft delete user (set isActive to false)
 // Query parameter: userType (staff or customer)
