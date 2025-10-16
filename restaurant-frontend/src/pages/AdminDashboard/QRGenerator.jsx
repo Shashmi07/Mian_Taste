@@ -141,22 +141,7 @@ const QRGenerator = () => {
           </div>
         </div>
 
-        {/* URL Configuration based on selection */}
-
-        {selectedUrlType === 'production' && (
-          <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-4">
-            <p className="text-sm text-gray-700">
-              <strong>🚀 Production Mode:</strong> QR codes will point to your AWS S3 deployed frontend.
-            </p>
-            <p className="text-xs text-gray-600 mt-2">
-              Current URL: <code className="bg-white px-2 py-1 rounded">{productionURL}</code>
-            </p>
-            <p className="text-xs text-gray-500 mt-1">
-              💡 Update <code>REACT_APP_FRONTEND_URL</code> in .env.production if this is incorrect.
-            </p>
-          </div>
-        )}
-
+     
         {selectedUrlType === 'network-ip' && (
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">

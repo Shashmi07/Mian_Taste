@@ -161,7 +161,8 @@ export default function TableReservation() {
         localStorage.removeItem('returnAfterLogin');
       }
     }
-  }, [clearCart]); // Include clearCart dependency
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // ✅ Empty dependency array - run only once on mount to prevent infinite loop
 
   // Handle reservation type selection
   const handleReservationTypeSelect = (type) => {
@@ -204,8 +205,16 @@ export default function TableReservation() {
     if (selectedDate && selectedTimeSlot) {
       checkTableAvailability();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate, selectedTimeSlot]);
+  }, [selectedDate, selectedTimeSlot, checkTableAvailability]);
+  
+  // Cleanup effect to ensure no lingering state blocks navigation
+  useEffect(() => {
+    return () => {
+      // Cleanup on unmount - ensure loading is reset
+      setLoading(false);
+      console.log('TableReservation: Component unmounting, cleanup complete');
+    };
+  }, []);
 
   const handleTableSelect = (tableId) => {
     if (!availableTables.includes(tableId)) return;
@@ -592,7 +601,7 @@ export default function TableReservation() {
                                   backgroundColor: isPast ? '#ffebeb' : 'inherit'
                                 }}
                               >
-                                {time} {isPast ? '(Past)' : ''}
+                                {time}
                               </option>
                             );
                           })}

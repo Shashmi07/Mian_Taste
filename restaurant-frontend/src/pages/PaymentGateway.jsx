@@ -685,16 +685,9 @@ export default function PaymentGateway() {
           `🍽️ Enjoy your meal at Mian Taste!`;
         
         // Show confirmation with option to track
-        const trackNow = window.confirm(confirmationMessage + '\n\nClick OK to track your order now, or Cancel to stay here.');
+        const trackNow = window.confirm(confirmationMessage + '\n\nClick OK to track your order now, or Cancel to go home.');
 
-        if (trackNow) {
-          // Store the order ID for easy access
-          sessionStorage.setItem('trackingOrderId', orderData.orderId);
-          navigate('/live-tracking');
-          return;
-        }
-
-        // Clear cart FIRST in real-time before any navigation
+        // Clear cart FIRST in real-time BEFORE any navigation (whether tracking or home)
         clearCart();
         console.log('✅ Cart cleared in real-time');
 
@@ -714,7 +707,14 @@ export default function PaymentGateway() {
 
         // Use setTimeout to ensure cart state updates propagate before navigation
         setTimeout(() => {
-          navigate('/');
+          if (trackNow) {
+            // Store the order ID for easy access and navigate to tracking
+            sessionStorage.setItem('trackingOrderId', orderData.orderId);
+            navigate('/live-tracking');
+          } else {
+            // Navigate to home
+            navigate('/');
+          }
         }, 100);
       } else if (orderData?.type === 'delivery') {
         // Handle online delivery order payment

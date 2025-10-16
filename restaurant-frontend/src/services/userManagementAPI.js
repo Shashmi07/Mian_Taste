@@ -81,6 +81,17 @@ export const userManagementService = {
     }
   },
 
+  // Update staff user (alias for updateUser for backward compatibility)
+  updateStaffUser: async (userId, userData) => {
+    try {
+      const response = await userManagementAPI.put(`/users/${userId}?userType=staff`, userData);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating staff user:', error);
+      throw error;
+    }
+  },
+
   // Delete user (soft delete)
   deleteUser: async (userId, userType = 'staff') => {
     try {

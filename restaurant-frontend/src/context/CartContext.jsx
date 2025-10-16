@@ -118,6 +118,10 @@ export const CartProvider = ({ children }) => {
 
   const clearCart = () => {
     dispatch({ type: CART_ACTIONS.CLEAR_CART });
+    
+    // Also clear QR table number when cart is cleared
+    localStorage.removeItem('qrTableNumber');
+    console.log('🧹 Cart cleared - QR table number removed');
   };
 
   // Computed values

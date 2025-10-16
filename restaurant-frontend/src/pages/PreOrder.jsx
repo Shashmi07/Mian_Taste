@@ -437,7 +437,7 @@ function PreOrder() {
                                       backgroundColor: isPast ? '#ffebeb' : 'inherit'
                                     }}
                                   >
-                                    {time} {isPast ? '(Past)' : ''}
+                                    {time}
                                   </option>
                                 );
                               })}
