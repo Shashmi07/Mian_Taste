@@ -4,6 +4,8 @@ A modern, full-stack intelligent restaurant management platform designed to stre
 
 Built specifically for **Grand Minato Restaurant**, Kottawa to enable seamless dining experiences with real-time synchronization across all modules.
 
+🌐 **Live Application**: [http://mian-taste-restaurant.s3-website-us-east-1.amazonaws.com/](http://mian-taste-restaurant.s3-website-us-east-1.amazonaws.com/)
+
 ## ✨ Features
 
 ### � **Customer Features**
